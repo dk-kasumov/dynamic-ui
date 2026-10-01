@@ -49,10 +49,11 @@ These rules are fixed and must not be eroded as the project grows:
 ```
 libs/
 ├── studio/                 # Core: studio logic, DSL, validation. No UI.
-├── studio-ui-react/        # (planned) React UI implementation
-├── studio-ui-angular/      # (planned) Angular UI implementation
-├── studio-ui-vue/          # (planned) Vue UI implementation
+├── ngx-studio/             # Angular 22 UI implementation (Material + CDK)
+├── react-studio/           # (planned) React UI implementation
+├── vue-studio/             # (planned) Vue UI implementation
 └── adapters/
+    ├── jsonforms/          # (planned) Reference adapter — JSONForms target
     ├── react-hook-form/    # (planned) Reference adapter
     └── angular-reactive/   # (planned) Reference adapter
 ```
@@ -62,8 +63,11 @@ libs/
 ## Tech stack
 
 - **Nx** monorepo.
-- Core is written in **TypeScript** with no DOM or framework dependencies.
-- Tests use **Jest**.
+- Core (`@dynamic-ui/studio`) is written in strict **TypeScript** with no DOM or framework dependencies.
+- Angular UI (`@dynamic-ui/ngx-studio`) uses **Angular 22**, **Angular Material 22**, standalone components, and the `ds-` selector prefix.
+- Tests use **Vitest 4** (Angular projects) and **Jest** (core).
+- **Storybook 10** is set up for the Angular UI package.
+- **Prettier** with a minimalist config (120 cols, no semicolons, single quotes).
 
 ## Where to start
 

@@ -20,6 +20,9 @@
     "paths": {
       "@dynamic-ui/studio": [
         "./libs/studio/src/index.ts"
+      ],
+      "@dynamic-ui/ngx-studio": [
+        "./libs/ngx-studio/src/index.ts"
       ]
     }
   },

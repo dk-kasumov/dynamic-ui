@@ -18,10 +18,19 @@ For the overall project vision, see the [root README](../../README.md).
 
 ## What's NOT in this package
 
-- The **visual editor UI** (canvas, sidebar, gear panel). Lives in framework-specific packages (`@dynamic-ui/studio-ui-react`, `@dynamic-ui/studio-ui-angular`, etc.).
+- The **visual editor UI** (canvas, sidebar, gear panel). Lives in framework-specific packages — currently [`@dynamic-ui/ngx-studio`](../ngx-studio/README.md) for Angular; React/Vue implementations are planned.
 - **Adapters** to runtime form libraries. Each adapter is a separate package.
 - **Live form preview.** The core does not know how to render a form; that is strictly the adapter's job.
 - Anything DOM- or framework-specific. The core is pure TypeScript.
+
+## Public API surface
+
+Only **one** class is exported — `Studio`. It is both:
+
+- A **facade** — a `Studio` instance owns the registry, the node tree, selection, and subscriptions.
+- A **DSL namespace** — all schema factories (`Studio.text()`, `Studio.relation()`, …) are static methods on it, along with `Studio.defineComponent()` and `Studio.createNode()`.
+
+Internal classes (`Registry`, `Store`, `Tree`) are **not** exported. The only other export is `StudioError` for `instanceof` discrimination plus the TypeScript types consumers need.
 
 ### Why UI is not here, and not web components
 
@@ -60,9 +69,9 @@ If a concept can be expressed as "another component the developer registers", it
 A developer tells the studio which components exist, what props each one accepts, and what relations each one can express. The studio uses this metadata to render the sidebar palette and the per-node gear panel.
 
 ```ts
-import { Studio, defineComponent } from '@dynamic-ui/studio'
+import { Studio } from '@dynamic-ui/studio'
 
-const textInput = defineComponent({
+const textInput = Studio.defineComponent({
   name: 'Controls/TextInput',
 
   props: {
@@ -87,7 +96,7 @@ That's a complete component definition. The core has no built-in knowledge that 
 Any component that should accept children declares a `children` configuration:
 
 ```ts
-const stepper = defineComponent({
+const stepper = Studio.defineComponent({
   name: 'Containers/Stepper',
 
   children: {
@@ -104,6 +113,45 @@ const stepper = defineComponent({
 ```
 
 There is no concept of "slot" or "named region". If you need a container with structurally distinct child positions (e.g., an accordion with multiple panels), you register the composition explicitly: a parent container that accepts specific child kinds, which in turn accept their own children. See [Composition patterns](#composition-patterns) below.
+
+---
+
+## Instantiating the studio
+
+Once components are defined, create a `Studio` with them and a root node. From this point on, the UI package (or any consumer) talks to the studio instance directly — mutations, inspection, subscriptions:
+
+```ts
+import { Studio } from '@dynamic-ui/studio'
+
+const studio = new Studio({
+  components: [form, textInput, button],
+  root: Studio.createNode({ name: 'Containers/Form' })
+})
+
+// Palette: list every registered component, look one up by name.
+studio.getComponents()
+studio.getComponent('Controls/TextInput')
+
+// Canvas: walk the tree, inspect a specific node.
+studio.root
+studio.findNode(someId)
+studio.parentOf(someId)
+
+// Mutations — forward to the internal store, which emits after each change.
+const fieldId = studio.addNode(studio.root.id, { name: 'Controls/TextInput' })
+studio.setProp(fieldId, ['label'], 'Email')
+studio.setRelation(fieldId, 'required', {
+  variant: 'builtin',
+  returns: 'boolean',
+  ast: { op: 'eq', lhs: { kind: 'ref', nodeId: 'role-id' }, rhs: { kind: 'value', value: 'admin' } }
+})
+
+// Selection and subscriptions — UI uses these to render the gear and re-render on changes.
+studio.select(fieldId)
+const unsubscribe = studio.subscribe(() => renderCanvas(studio))
+```
+
+That is the entire public API. `Registry`, `Store`, and `Tree` live inside the facade and are not exported — swapping their implementations is a non-breaking change.
 
 ---
 

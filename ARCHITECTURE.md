@@ -111,48 +111,50 @@ Project name / schema switcher, undo/redo, export (download or copy the DSL), me
 
 ## Core / UI contract
 
-The core is a pure state container. The UI is a view that dispatches commands and renders state. This is a deliberately classical split (model-view, store-and-subscribe) because it is boring, well-understood, and framework-portable.
+The core is a pure state container exposed as a single facade class — `Studio`. The UI is a view that calls methods on the studio instance and subscribes to its change events. Classical model-view split, flat API: no command objects, no action dispatchers, no middleware layer.
 
 ```mermaid
 graph TB
     subgraph CORE["Core (@dynamic-ui/studio)"]
-        Registry[Component registry]
-        Model[Node tree model]
-        AST[Relation AST engine]
-        Validator[Validator]
-        Serializer[DSL serializer]
-        History[Undo / redo history]
+        Studio[Studio facade]
+        Studio -.-> Registry[Registry · internal]
+        Studio -.-> Store[Store · internal]
+        Store -.-> Tree[Tree · internal]
     end
 
     subgraph UIP["Studio UI package (per framework)"]
         Palette[Palette view]
         Canvas[Canvas view]
-        Tree[Layer tree view]
+        Layers[Layer tree view]
         Gear[Gear panel view]
     end
 
-    UIP -->|read: registry, tree, selection| CORE
-    UIP -->|dispatch: commands| CORE
-    CORE -->|subscribe: change events| UIP
+    UIP -->|read: root, selectedId, components| Studio
+    UIP -->|call: mutation methods| Studio
+    Studio -->|subscribe: change events| UIP
 ```
 
 ### What the core exposes
 
-- **Registry API**: `register(component)`, `getComponents()`, `getComponent(name)`.
-- **Tree queries**: `getTree()`, `getNode(id)`, `getParent(id)`, `getSelection()`.
-- **Commands** (every mutation is a named command, so history and middlewares are trivial):
-  - `addNode({ parentId, name, index })`
-  - `removeNode({ id })`
-  - `moveNode({ id, newParentId, newIndex })`
-  - `setProp({ nodeId, path, value })`
-  - `setRelation({ nodeId, name, ast })`
-  - `select({ id })`
-  - `undo()` / `redo()`
-- **Subscriptions**: `onChange(cb)`, scoped channels for tree, selection, specific node ids.
-- **Serialization**: `toDSL()`, `fromDSL(json)`.
-- **Validation**: `validate()` (full), `validateNode(id)`.
+Only two names are exported — the `Studio` class and the `StudioError` class. Everything else is a TypeScript type (`Node`, `NodeId`, `ComponentDefinition`, `RelationInstance`, etc.) consumers need to type their own code.
 
-The exact API is still being iterated. The important part is the shape: commands in, state out, events on change. No DOM, no framework.
+The `Studio` instance surface:
+
+- **Palette**: `getComponents()`, `getComponent(name)`.
+- **Tree inspection**: `root`, `findNode(id)`, `parentOf(id)`.
+- **Selection**: `selectedId`, `select(id | null)`.
+- **Mutations** (each emits a change event after it succeeds):
+  - `addNode(parentId, input, index?) → NodeId`
+  - `removeNode(id)`
+  - `moveNode(id, newParentId, index?)`
+  - `setProp(id, path, value)`
+  - `setRelation(id, name, value)`
+  - `removeRelation(id, name)`
+- **Reactivity**: `subscribe(() => void) → unsubscribe`.
+- **DSL (static)**: `Studio.defineComponent(...)`, `Studio.createNode(...)`, `Studio.text()`, `Studio.decimal()`, `Studio.checkbox()`, `Studio.select()`, `Studio.enum([...])`, `Studio.group({...})`, `Studio.relation({...})`, `Studio.relation.custom({...})`.
+- **Error type**: `StudioError` — single error class, used for all core-raised errors (duplicate component name, missing node, cycle on move, etc.).
+
+Serialization (`toDSL` / `fromDSL`), validation (`validate`), and undo/redo are planned additions that will land as further methods on the same facade. The internal `Registry`/`Store`/`Tree` classes are not exported; swapping their implementations is a non-breaking change.
 
 ### What the UI package does
 
@@ -175,27 +177,27 @@ sequenceDiagram
     participant Palette
     participant Canvas
     participant Gear
-    participant Core
+    participant Studio
 
     Mgr->>Palette: drag "TextInput"
     Palette->>Canvas: drop over Form container
-    Canvas->>Core: addNode({ parent: form-1, name: "Controls/TextInput" })
-    Core-->>Canvas: event: tree changed; new id: field-7
-    Core-->>Tree: event: tree changed
+    Canvas->>Studio: addNode(form-1, { name: "Controls/TextInput" })
+    Studio-->>Canvas: emit; returns id: field-7
+    Studio-->>Tree: emit
     Mgr->>Canvas: click gear on field-7
-    Canvas->>Core: select({ id: field-7 })
-    Core-->>Gear: event: selection changed
-    Gear->>Core: getNode(field-7) + getComponent("Controls/TextInput")
+    Canvas->>Studio: select(field-7)
+    Studio-->>Gear: emit
+    Gear->>Studio: findNode(field-7) + getComponent("Controls/TextInput")
     Gear-->>Mgr: render props + relations rows
     Mgr->>Gear: type "Email" into label
-    Gear->>Core: setProp({ nodeId: field-7, path: "label", value: "Email" })
-    Core-->>Canvas: event: node changed
+    Gear->>Studio: setProp(field-7, ["label"], "Email")
+    Studio-->>Canvas: emit
     Mgr->>Gear: configure required relation (role == admin)
-    Gear->>Core: setRelation({ nodeId: field-7, name: "required", ast: {...} })
-    Core-->>Canvas: event: node changed (relation summary updates on card)
+    Gear->>Studio: setRelation(field-7, "required", { variant: "builtin", returns: "boolean", ast: {...} })
+    Studio-->>Canvas: emit (relation summary updates on card)
 ```
 
-Every arrow from UI to core is a named command. Every arrow back is a subscription event. There are no direct view-to-view communications.
+Every arrow from UI to the studio is a direct method call. Every arrow back is a `subscribe()` callback firing — subscribers pull current state via `studio.root`, `studio.selectedId`, `studio.findNode(id)` after being notified. There are no direct view-to-view communications.
 
 ---
 
@@ -231,14 +233,15 @@ Nothing in the DSL is framework-specific. The same JSON file is consumed by a Re
 
 ## Package layout and responsibilities
 
-| Package                                | Responsibility                                 | Framework-dependent? | Status      |
-| -------------------------------------- | ---------------------------------------------- | -------------------- | ----------- |
-| `@dynamic-ui/studio`                   | Core logic, DSL, validation, history           | No                   | In progress |
-| `@dynamic-ui/studio-ui-react`          | React implementation of the three-panel editor | Yes                  | Planned     |
-| `@dynamic-ui/studio-ui-angular`        | Angular implementation                         | Yes                  | Planned     |
-| `@dynamic-ui/studio-ui-vue`            | Vue implementation                             | Yes                  | Planned     |
-| `@dynamic-ui/adapter-react-hook-form`  | Reference adapter                              | Yes                  | Planned     |
-| `@dynamic-ui/adapter-angular-reactive` | Reference adapter                              | Yes                  | Planned     |
+| Package                                | Responsibility                                                | Framework-dependent? | Status      |
+| -------------------------------------- | ------------------------------------------------------------- | -------------------- | ----------- |
+| `@dynamic-ui/studio`                   | Core logic, DSL, validation, history                          | No                   | In progress |
+| `@dynamic-ui/ngx-studio`               | Angular 22 implementation of the editor (uses Material + CDK) | Yes                  | In progress |
+| `@dynamic-ui/react-studio`             | React implementation                                          | Yes                  | Planned     |
+| `@dynamic-ui/vue-studio`               | Vue implementation                                            | Yes                  | Planned     |
+| `@dynamic-ui/adapter-react-hook-form`  | Reference adapter                                             | Yes                  | Planned     |
+| `@dynamic-ui/adapter-angular-reactive` | Reference adapter                                             | Yes                  | Planned     |
+| `@dynamic-ui/adapter-jsonforms`        | Reference adapter targeting the JSONForms output format       | Yes                  | Planned     |
 
 A consumer picks exactly one UI package (matching their stack) and exactly one adapter (matching their runtime). Both are optional in principle — a programmatic-only user who writes DSL by hand needs only `@dynamic-ui/studio` and an adapter; a design-only user who hands off JSON to someone else needs only the core and a UI package.
 
