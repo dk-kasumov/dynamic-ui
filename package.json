@@ -1,0 +1,27 @@
+{
+  "name": "dynamic-ui",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "private": true,
+  "devDependencies": {
+    "@nx/jest": "23.2.1",
+    "@nx/js": "23.2.1",
+    "@nx/workspace": "23.2.1",
+    "@swc/helpers": "~0.5.18",
+    "@types/jest": "~30.0.0",
+    "@types/node": "^22.0.0",
+    "jest": "~30.3.0",
+    "jest-environment-node": "~30.3.0",
+    "jest-util": "~30.3.0",
+    "nx": "23.2.1",
+    "prettier": "^3.9.9",
+    "ts-jest": "^29.4.7",
+    "ts-node": "10.9.1",
+    "tslib": "^2.3.0",
+    "typescript": "~6.0.3"
+  }
+}

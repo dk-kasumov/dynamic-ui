@@ -1,0 +1,396 @@
+# @dynamic-ui/studio
+
+Core library for the Dynamic UI toolkit: **logic only, no UI**.
+
+This package contains everything the studio needs to describe components, build and validate node trees, model cross-node relations, and serialize the result to a canonical DSL. It has no DOM dependencies, no framework dependencies, and does not render anything.
+
+For the overall project vision, see the [root README](../../README.md).
+
+---
+
+## What's in this package
+
+- **Component registration API** — primitives for declaring the shape of each component's props and relations.
+- **Node and tree model** — the single-shape node contract that the entire editor manipulates.
+- **Relation AST** — the structured expression tree used to describe conditional and computed links between nodes.
+- **Canonical DSL** — serialization and deserialization of the node tree into pure JSON.
+- **Validation** — schema-level and instance-level checks (type correctness, broken references, cardinality violations).
+
+## What's NOT in this package
+
+- The **visual editor UI** (canvas, sidebar, gear panel). Lives in framework-specific packages (`@dynamic-ui/studio-ui-react`, `@dynamic-ui/studio-ui-angular`, etc.).
+- **Adapters** to runtime form libraries. Each adapter is a separate package.
+- **Live form preview.** The core does not know how to render a form; that is strictly the adapter's job.
+- Anything DOM- or framework-specific. The core is pure TypeScript.
+
+### Why UI is not here, and not web components
+
+The UI needs to be stylable by whoever embeds the studio — brand colors, spacing, typography, dark mode, you name it. Web components isolate styles behind Shadow DOM, and real-world styling then requires `::part`, `exportparts`, and manual CSS custom property wiring. That becomes a chore the moment anyone wants to make the studio look like it belongs in their product.
+
+Shipping separate UI packages per framework lets consumers style the studio with the mechanisms they already use (CSS modules, Tailwind, styled-components, Angular view encapsulation, SFC `<style>` blocks). The core stays framework-agnostic; UI packages stay stylable.
+
+---
+
+## Mental model
+
+Every element in a tree is a **node**, and every node has exactly the same shape:
+
+```ts
+type Node = {
+  id: string // stable instance identifier
+  name: string // registered component name
+  props: object // static values the component consumes
+  relations: object // dynamic links to other nodes
+  children?: Node[] // only present if the component is a container
+}
+```
+
+This is the entire contract. The core has no notion of "input", "field", "section", "validator", "layout", or "form". Those meanings exist exclusively in the component registrations provided by the developer and in the adapter that interprets the output DSL.
+
+### Why only four fields
+
+Keeping the model this small is a deliberate design discipline. Every additional concept (slots, groups, fieldsets, forms-as-first-class, ...) would leak domain assumptions into the core and tie it to form-shaped use cases. We want the same core to build forms, tables, dashboards, email templates, or anything else that is a tree of configurable components.
+
+If a concept can be expressed as "another component the developer registers", it belongs in user-land, not in the core.
+
+---
+
+## Registering components
+
+A developer tells the studio which components exist, what props each one accepts, and what relations each one can express. The studio uses this metadata to render the sidebar palette and the per-node gear panel.
+
+```ts
+import { Studio, defineComponent } from '@dynamic-ui/studio'
+
+const textInput = defineComponent({
+  name: 'Controls/TextInput',
+
+  props: {
+    label: Studio.text(),
+    placeholder: Studio.text(),
+    disabled: Studio.checkbox(),
+    maxLength: Studio.decimal()
+  },
+
+  relations: {
+    visible: Studio.relation({ returns: 'boolean' }),
+    disabled: Studio.relation({ returns: 'boolean' }),
+    required: Studio.relation({ returns: 'boolean' })
+  }
+})
+```
+
+That's a complete component definition. The core has no built-in knowledge that this is a "text input"; from its point of view it's just a leaf component (no `children` key) with a declared prop shape and three available relations.
+
+### Containers
+
+Any component that should accept children declares a `children` configuration:
+
+```ts
+const stepper = defineComponent({
+  name: 'Containers/Stepper',
+
+  children: {
+    cardinality: 'many', // 'none' | 'one' | 'many'
+    kinds: ['Containers/Step'], // whitelist of allowed child component names
+    min: 1, // optional
+    max: 10 // optional
+  },
+
+  props: {
+    orientation: Studio.enum(['horizontal', 'vertical'])
+  }
+})
+```
+
+There is no concept of "slot" or "named region". If you need a container with structurally distinct child positions (e.g., an accordion with multiple panels), you register the composition explicitly: a parent container that accepts specific child kinds, which in turn accept their own children. See [Composition patterns](#composition-patterns) below.
+
+---
+
+## The `Studio.*` primitives
+
+Primitives are used in two places: to declare the shape of **props** on a component, and (as `Studio.relation`) to declare the shape of **relations**.
+
+| Primitive                         | Purpose                                                                           |
+| --------------------------------- | --------------------------------------------------------------------------------- |
+| `Studio.text()`                   | Single-line string value.                                                         |
+| `Studio.decimal()`                | Numeric value.                                                                    |
+| `Studio.checkbox()`               | Boolean value.                                                                    |
+| `Studio.select()`                 | Single choice from a dynamic set of options.                                      |
+| `Studio.enum([...])`              | Single choice from a fixed set of options defined at registration time.           |
+| `Studio.group({ ... })`           | Nested object of primitives. Useful for grouping related props in the gear panel. |
+| `Studio.relation(options?)`       | A dynamic link to one or more other nodes. See [Relations](#relations).           |
+| `Studio.relation.custom({ ... })` | Escape hatch for domain-specific relations with a developer-supplied editor.      |
+
+Each primitive produces a descriptor the studio uses to:
+
+1. Render the appropriate input in the gear panel.
+2. Validate values on save.
+3. Serialize the configured value into the DSL.
+
+The primitive set is intentionally small. The core does not try to cover every possible input type; richer widgets (date pickers, color pickers, code editors) belong in the UI packages or in developer-provided custom primitives.
+
+---
+
+## Props vs relations
+
+Every component declares two separate bags: `props` and `relations`. They are different in kind, not just in name.
+
+- **`props`** are values the component **consumes directly**. The adapter copies them into the rendered component. Example: `label`, `placeholder`, `maxLength`, `multiple`.
+- **`relations`** describe **behavior around the component** that depends on other nodes. The adapter wires them up reactively. Example: `visible`, `disabled`, `required`, a computed `value`.
+
+The rule of thumb: **does the component itself need to know this value to render?** If yes → `props`. If no (the surrounding runtime applies it) → `relations`.
+
+Separating these two is what keeps the adapter clean: props are a simple projection, relations require a reactive walker over an AST. Mixing them in one bag would force every adapter to re-discover the distinction at runtime.
+
+### When a prop and a relation overlap
+
+Sometimes the same semantic (e.g., `disabled`) can be either static or dynamic. The core allows both to be declared, and defines the override rule:
+
+> If both `props.X` and `relations.X` are set on an instance, the relation wins.
+
+Adapters implement this once; consumers get both ergonomics (set a static boolean when that's enough) and expressiveness (replace with a relation when needed).
+
+---
+
+## Relations
+
+Relations are first-class. They are the mechanism by which a dynamic UI stays dynamic.
+
+### Return types
+
+Every relation declares what it produces:
+
+| `returns`     | Meaning                         | Typical use                                   |
+| ------------- | ------------------------------- | --------------------------------------------- |
+| `'boolean'`   | Condition.                      | `visible`, `disabled`, `required`.            |
+| `'value'`     | Computed value of a given type. | `placeholder = "Hi, " + firstName.value`.     |
+| `'nodeRef'`   | A reference to one other node.  | "This field depends on that field."           |
+| `'nodeRef[]'` | A list of node references.      | "These fields together determine the result." |
+
+### Structured AST, not expression strings
+
+A relation's output in the DSL is a structured JSON AST, not a string expression. Operators are nodes, operands are nodes, composition uses `and` / `or` / `not`.
+
+```json
+{
+  "op": "and",
+  "args": [
+    { "op": "eq", "lhs": { "ref": "country-5" }, "rhs": { "value": "US" } },
+    { "op": "isValid", "arg": { "ref": "email-3" } }
+  ]
+}
+```
+
+Why an AST rather than a string:
+
+- **No parser needed.** Every adapter is a straightforward tree walker (~a few hundred lines of code).
+- **Validation is easy.** Broken refs, type mismatches, unknown operators — all caught structurally.
+- **The gear panel renders directly from the AST.** Each node of the tree corresponds to a visual row.
+- **Translating to runtime-specific condition formats** (JSONForms rules, Formily reactions, FormIO conditions, SurveyJS expressions) is a case-by-case mapping over the AST, not a string rewrite.
+
+### Built-in operators (initial set)
+
+Comparison: `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `matches`.
+Predicates: `isEmpty`, `isValid`, `isTouched`, `formValid`.
+Composition: `and`, `or`, `not`.
+Arithmetic (for `returns: 'value'`): `add`, `sub`, `mul`, `div`, `concat`.
+
+Operators are the only part of the DSL that is versioned by the core itself. Future additions bump `schemaVersion`; adapters document which operators they support.
+
+### Configuring a relation at registration
+
+```ts
+Studio.relation({
+  returns: 'boolean',
+
+  // Studio-time constraints on what the gear panel offers.
+  // These do NOT appear in the output DSL.
+  targetFilter: {
+    kinds: ['Controls/TextInput', 'Controls/Dropdown'],
+    scope: 'form' // 'form' | 'siblings' | 'any'
+  },
+
+  // Whitelist of operators shown in the UI.
+  // Omit to allow all built-ins.
+  operators: ['eq', 'neq', 'isEmpty', 'isValid'],
+
+  // 'simple' = flat list of rules; 'advanced' = grouped composition (AND/OR groups).
+  mode: 'simple',
+
+  // Named presets that pre-fill the AST.
+  presets: [
+    {
+      label: 'Shown when target is valid',
+      ast: { op: 'isValid', arg: { ref: '$pick' } }
+      // $pick is a placeholder — the manager fills it by picking a node in the UI.
+    }
+  ],
+
+  default: false
+})
+```
+
+### Custom relations
+
+When a developer needs a relation with a domain-specific UI (e.g., a time-slot picker, a tax-bracket editor, a cron expression builder), they register it with their own editor component:
+
+```ts
+Studio.relation.custom({
+  id: 'timeSlotAvailability',
+  editor: TimeSlotEditor, // framework-specific component
+  schema: timeSlotPayloadSchema, // Zod/JSON Schema describing payload shape
+  summary: v => `${v.from}–${v.to}`, // short string shown on the node card
+  default: { from: '09:00', to: '18:00' }
+})
+```
+
+Custom relations serialize into the DSL under their `id`. Adapters that know this `id` interpret the payload; adapters that don't either skip the relation or emit a warning. This is the extension point that lets the ecosystem grow beyond what the core ships with — without the core needing to anticipate every domain.
+
+---
+
+## Composition patterns
+
+The core deliberately has no slots, no named regions, no "input" vs "container" dichotomy — only components that may or may not accept children.
+
+Any structural pattern reduces to composition:
+
+**Stepper:** a `Stepper` container that accepts `Step` children. `Step` is itself a container that accepts arbitrary form controls.
+
+**Accordion:** an `Accordion` container that accepts `AccordionPanel` children. `AccordionPanel` is a container that accepts arbitrary content.
+
+**Card with header / body / footer:** a `Card` container that accepts a `CardHeader`, a `CardBody`, and a `CardFooter` (constrained via `kinds` and `max: 1` per kind on each).
+
+**If/Else:** an `IfCondition` component with a boolean relation, whose children are rendered only when the condition holds. A sibling `ElseBranch` component captures the fallback.
+
+Each of these is "just a component" from the core's point of view. The developer encodes the semantics by naming components, choosing child kinds, and writing the adapter.
+
+---
+
+## Identifiers
+
+Two different identifiers exist, and they must not be conflated:
+
+- **`id`** — the stable instance identifier assigned by the studio when a node is created. Never shown to the end user, never editable, never reused. Everything that references a node (relations, parent-child, selection state, undo history) uses this id.
+- **`name`** — the registered component name (e.g., `Controls/TextInput`). Set by the developer at registration time.
+
+A separate human-facing name (e.g., `email` as the field name under which the value is stored in the final form) is typically a **prop** of the component (`fieldName: Studio.text()`), not something the core manages. The adapter uses that prop when wiring the final form.
+
+---
+
+## Canonical DSL output
+
+The studio serializes the tree to pure JSON:
+
+```json
+{
+  "schemaVersion": 1,
+  "root": {
+    "id": "root-1",
+    "name": "Containers/Form",
+    "props": {},
+    "relations": {},
+    "children": [
+      {
+        "id": "field-2",
+        "name": "Controls/TextInput",
+        "props": {
+          "label": "Email",
+          "placeholder": "you@example.com",
+          "maxLength": 120
+        },
+        "relations": {
+          "required": {
+            "variant": "builtin",
+            "returns": "boolean",
+            "ast": {
+              "op": "eq",
+              "lhs": { "ref": "role-3" },
+              "rhs": { "value": "admin" }
+            }
+          }
+        }
+      },
+      {
+        "id": "role-3",
+        "name": "Controls/Dropdown",
+        "props": {
+          "label": "Role",
+          "options": ["user", "admin"]
+        },
+        "relations": {}
+      }
+    ]
+  }
+}
+```
+
+Guarantees of the DSL:
+
+1. **Pure JSON.** No functions, no `Symbol`, no circular references, no framework-specific values.
+2. **Versioned.** The `schemaVersion` field exists from day one so future migrations are mechanical.
+3. **Validatable.** The DSL has a published JSON Schema; adapters validate inputs before interpreting.
+4. **Portable.** The same DSL feeds any adapter. Nothing in it is React-specific, Angular-specific, or tied to any form library.
+
+---
+
+## Adapters
+
+An adapter is a function from DSL → working UI in some target framework/library.
+
+The adapter contract is intentionally minimal — in essence:
+
+```ts
+interface Adapter {
+  render(dsl: CanonicalDsl, host: HostContext): RuntimeHandle
+}
+```
+
+What an adapter does:
+
+- Walks the node tree.
+- Maps each `name` to a concrete component in the host framework.
+- Projects `props` directly onto the component.
+- Walks each relation's AST and wires it up using the host runtime's reactivity (RxJS, signals, hooks, computed, whatever).
+- Returns a handle the host application can mount, read values from, and submit.
+
+What an adapter does **not** do:
+
+- Interpret component semantics the core doesn't know about. The adapter is only responsible for faithful translation, not for inventing missing features.
+- Report runtime limitations as bugs in the core. If the target form library cannot express something the DSL describes, the adapter either translates with a workaround, emits a warning, or clearly documents the limitation.
+
+Reference adapters will live in `libs/adapters/*`.
+
+---
+
+## Architectural invariants
+
+These are the rules the core will not break, and reviewers should push back on any PR that erodes them:
+
+### 1. Studio renders abstract DSL cards, not real forms
+
+The canvas shows configured nodes as cards (name, labels, summary of relations). It never attempts to render the actual UI of registered components. The moment the core tries to do this, it has to pick a runtime, and the whole adapter abstraction collapses.
+
+Live preview is the job of an **external plugin** that pairs a specific UI package with a specific adapter. The core is unaware of it.
+
+### 2. The DSL is pure data
+
+No function references, no closures, no `Symbol`, no class instances in the serialized output. Anything that can't survive `JSON.stringify` + `JSON.parse` round-trip does not belong in the DSL. This is what keeps the DSL portable across frameworks, storable in databases, and reviewable in diffs.
+
+### 3. Runtime capability mismatches are adapter concerns
+
+The DSL may describe behaviors that a particular runtime cannot express declaratively. That is not a flaw in the DSL; it is a limit of the runtime. Adapters document the mismatch; the core keeps its full expressiveness.
+
+### 4. "Everything is a component"
+
+No special categories: no inputs, no containers-as-a-separate-concept, no slots, no validator primitives, no form-level magic. Any such concept is expressed by a developer-registered component (plus its props, relations, and children configuration).
+
+---
+
+## Status
+
+Early. The public API will change as the primitives, relation AST, and DSL stabilize. Do not depend on this package in production yet.
+
+## License
+
+MIT.
