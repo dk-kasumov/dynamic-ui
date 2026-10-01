@@ -1,10 +1,9 @@
 /**
- * The studio state container: holds the tree, the component registry, and
- * the current selection; forwards mutations to the tree and notifies
- * subscribers after each change.
+ * State container: tree + registry + selection + listeners.
  *
- * Minimal on purpose. Validation, undo/redo, and serialization are separate
- * modules that compose on top of this.
+ * Internal to the studio — Studio composes a Store and delegates to it.
+ * Mutations go through here so the emit-after-change invariant lives in one
+ * place.
  */
 
 import type { NodeId } from './node'
@@ -21,8 +20,6 @@ export class Store {
     readonly registry: Registry
   ) {}
 
-  // Selection ---------------------------------------------------------------
-
   get selectedId(): NodeId | null {
     return this.#selectedId
   }
@@ -32,8 +29,6 @@ export class Store {
     this.#selectedId = id
     this.#emit()
   }
-
-  // Mutations ---------------------------------------------------------------
 
   addNode(parentId: NodeId, input: NewNode, index?: number): NodeId {
     const id = this.tree.add(parentId, input, index)
@@ -66,8 +61,6 @@ export class Store {
     this.tree.removeRelation(id, name)
     this.#emit()
   }
-
-  // Subscriptions -----------------------------------------------------------
 
   subscribe(listener: () => void): () => void {
     this.#listeners.add(listener)

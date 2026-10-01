@@ -1,18 +1,14 @@
 /**
- * The node tree. Mutable; mutations go through class methods so invariants
- * stay enforceable in one place.
+ * The node tree. Internal to the studio — accessed through the Studio facade.
  *
  * Structural invariants (parent exists, no cycles, root cannot be removed)
- * are checked here. Schema invariants (allowed child kinds, cardinality,
- * prop types) live in the Validator — Tree stays independent of Registry.
+ * are enforced here. Schema invariants (allowed child kinds, prop types)
+ * belong to a separate Validator — Tree is unaware of Registry.
  */
 
+import { StudioError } from './error'
 import type { Node, NodeId } from './node'
 import type { RelationInstance } from './relations'
-
-export class TreeError extends Error {
-  override readonly name = 'TreeError'
-}
 
 export interface NewNode {
   name: string
@@ -53,18 +49,18 @@ export class Tree {
   }
 
   remove(id: NodeId): void {
-    if (id === this.root.id) throw new TreeError('Cannot remove the root')
+    if (id === this.root.id) throw new StudioError('Cannot remove the root node')
     const parent = findParent(this.root, id)
-    if (!parent) throw new TreeError(`Node "${id}" not found`)
+    if (!parent) throw new StudioError(`Node "${id}" not found`)
     parent.children = parent.children!.filter(c => c.id !== id)
   }
 
   move(id: NodeId, newParentId: NodeId, index?: number): void {
-    if (id === this.root.id) throw new TreeError('Cannot move the root')
-    if (id === newParentId) throw new TreeError('Cannot move a node into itself')
+    if (id === this.root.id) throw new StudioError('Cannot move the root node')
+    if (id === newParentId) throw new StudioError('Cannot move a node into itself')
     const node = this.require(id)
     const newParent = this.require(newParentId)
-    if (contains(node, newParentId)) throw new TreeError('Cannot move a node into one of its descendants')
+    if (contains(node, newParentId)) throw new StudioError('Cannot move a node into one of its descendants')
 
     this.remove(id)
     newParent.children ??= []
@@ -72,7 +68,7 @@ export class Tree {
   }
 
   setProp(id: NodeId, path: readonly string[], value: unknown): void {
-    if (path.length === 0) throw new TreeError('Prop path cannot be empty')
+    if (path.length === 0) throw new StudioError('Prop path cannot be empty')
     const node = this.require(id)
     let container: Record<string, unknown> = node.props
     for (let i = 0; i < path.length - 1; i++) {
@@ -94,7 +90,7 @@ export class Tree {
 
   private require(id: NodeId): Node {
     const node = find(this.root, id)
-    if (!node) throw new TreeError(`Node "${id}" not found`)
+    if (!node) throw new StudioError(`Node "${id}" not found`)
     return node
   }
 }

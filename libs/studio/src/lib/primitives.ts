@@ -1,9 +1,9 @@
 /**
  * Primitive descriptors — atomic shapes used in a component's `props`.
  *
- * The value type each primitive carries lives in a phantom slot keyed by a
- * module-private symbol: it never leaks into IntelliSense, serialized data,
- * or `Omit`-derived option types. Extract it with {@link ValueOf}.
+ * Each primitive carries its value type in a phantom slot keyed by a
+ * module-private symbol so it never leaks into IntelliSense or data.
+ * Extract it in types with {@link ValueOf}.
  */
 
 declare const VALUE: unique symbol
@@ -39,20 +39,12 @@ export interface EnumPrimitive<Options extends readonly string[]> extends Primit
   default?: Options[number]
 }
 
-export interface GroupPrimitive<Shape extends Record<string, AnyPrimitive>> extends Primitive<
+export interface GroupPrimitive<Shape extends Record<string, Primitive>> extends Primitive<
   'group',
   { [K in keyof Shape]: ValueOf<Shape[K]> }
 > {
   shape: Shape
 }
-
-export type AnyPrimitive =
-  | TextPrimitive
-  | DecimalPrimitive
-  | CheckboxPrimitive
-  | SelectPrimitive<unknown>
-  | EnumPrimitive<readonly string[]>
-  | GroupPrimitive<Record<string, AnyPrimitive>>
 
 export type ValueOf<P extends Primitive> = P extends Primitive<string, infer V> ? V : never
 
@@ -83,7 +75,7 @@ export function enumeration<const O extends readonly string[]>(
   return { kind: 'enum', options, ...opts }
 }
 
-export function group<const Shape extends Record<string, AnyPrimitive>>(
+export function group<const Shape extends Record<string, Primitive>>(
   shape: Shape,
   opts: Options<GroupPrimitive<Shape>, 'shape'> = {}
 ): GroupPrimitive<Shape> {

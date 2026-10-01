@@ -1,47 +1,96 @@
-/**
- * The studio facade.
- *
- * One class with two faces:
- *   - instance: wires Registry + Tree + Store at construction time.
- *   - static: schema DSL — `Studio.text()`, `Studio.relation()`, etc.
- *
- *   const textInput = defineComponent({
- *     name: 'Controls/TextInput',
- *     props: { label: Studio.text(), disabled: Studio.checkbox() },
- *     relations: { visible: Studio.relation({ returns: 'boolean' }) }
- *   })
- *
- *   const studio = new Studio({
- *     components: [textInput],
- *     root: createNode({ name: 'Form' })
- *   })
- *   studio.store.addNode(studio.store.tree.root.id, { name: 'Controls/TextInput' })
- */
-
-import type { AnyComponentDefinition } from './component'
-import type { Node } from './node'
-import { Registry } from './registry'
-import { Store } from './store'
+import { defineComponent, type ComponentDefinition } from './component'
+import type { Node, NodeId } from './node'
+import type { RelationInstance } from './relations'
 import { checkbox, decimal, enumeration, group, select, text } from './primitives'
 import { relation } from './relations'
-import { Tree } from './tree'
+import { Registry } from './registry'
+import { Store } from './store'
+import { Tree, createNode, type NewNode } from './tree'
 
 export interface StudioOptions {
-  components: Iterable<AnyComponentDefinition>
+  components: Iterable<ComponentDefinition>
   root: Node
 }
 
 export class Studio {
-  readonly registry: Registry
-  readonly store: Store
+  readonly #store: Store
 
   constructor(options: StudioOptions) {
-    this.registry = new Registry()
-    this.registry.registerAll(options.components)
-    this.store = new Store(new Tree(options.root), this.registry)
+    const registry = new Registry()
+    registry.registerAll(options.components)
+    this.#store = new Store(new Tree(options.root), registry)
   }
 
-  // Schema DSL --------------------------------------------------------------
+  // State --------------------------------------------------------------------
+
+  get root(): Node {
+    return this.#store.tree.root
+  }
+
+  get selectedId(): NodeId | null {
+    return this.#store.selectedId
+  }
+
+  // Registry (component palette) --------------------------------------------
+
+  getComponents(): readonly ComponentDefinition[] {
+    return this.#store.registry.getAll()
+  }
+
+  getComponent(name: string): ComponentDefinition | undefined {
+    return this.#store.registry.get(name)
+  }
+
+  // Tree inspection ----------------------------------------------------------
+
+  findNode(id: NodeId): Node | undefined {
+    return this.#store.tree.find(id)
+  }
+
+  parentOf(id: NodeId): Node | undefined {
+    return this.#store.tree.parentOf(id)
+  }
+
+  // Mutations ----------------------------------------------------------------
+
+  addNode(parentId: NodeId, input: NewNode, index?: number): NodeId {
+    return this.#store.addNode(parentId, input, index)
+  }
+
+  removeNode(id: NodeId): void {
+    this.#store.removeNode(id)
+  }
+
+  moveNode(id: NodeId, newParentId: NodeId, index?: number): void {
+    this.#store.moveNode(id, newParentId, index)
+  }
+
+  setProp(id: NodeId, path: readonly string[], value: unknown): void {
+    this.#store.setProp(id, path, value)
+  }
+
+  setRelation(id: NodeId, name: string, value: RelationInstance): void {
+    this.#store.setRelation(id, name, value)
+  }
+
+  removeRelation(id: NodeId, name: string): void {
+    this.#store.removeRelation(id, name)
+  }
+
+  select(id: NodeId | null): void {
+    this.#store.select(id)
+  }
+
+  // Reactivity ---------------------------------------------------------------
+
+  subscribe(listener: () => void): () => void {
+    return this.#store.subscribe(listener)
+  }
+
+  // DSL (static) -------------------------------------------------------------
+
+  static defineComponent = defineComponent
+  static createNode = createNode
 
   static text = text
   static decimal = decimal
@@ -52,28 +101,14 @@ export class Studio {
   static relation = relation
 }
 
-// Runtime ------------------------------------------------------------------
+// Public exports -------------------------------------------------------------
 
-export { defineComponent } from './component'
-export { Registry, RegistryError } from './registry'
-export { Tree, TreeError, createNode } from './tree'
-export { Store } from './store'
+export { StudioError } from './error'
 
-// Component types ----------------------------------------------------------
-
+export type { NewNode } from './tree'
+export type { Node, NodeId } from './node'
+export type { ChildrenCardinality, ChildrenConfig, ComponentDefinition, PropsOf, RelationNamesOf } from './component'
 export type {
-  AnyComponentDefinition,
-  ChildrenCardinality,
-  ChildrenConfig,
-  ComponentDefinition,
-  PropsOf,
-  RelationNamesOf
-} from './component'
-
-// Primitive types ----------------------------------------------------------
-
-export type {
-  AnyPrimitive,
   CheckboxPrimitive,
   DecimalPrimitive,
   EnumPrimitive,
@@ -83,9 +118,6 @@ export type {
   TextPrimitive,
   ValueOf
 } from './primitives'
-
-// Relation types -----------------------------------------------------------
-
 export type {
   ArithmeticOp,
   BuiltinOp,
@@ -103,8 +135,3 @@ export type {
   RelationReturns,
   TargetFilter
 } from './relations'
-
-// Tree types ---------------------------------------------------------------
-
-export type { Node, NodeId } from './node'
-export type { NewNode } from './tree'

@@ -1,38 +1,30 @@
 /**
- * Registry of component definitions. The studio's component catalog —
- * a typed map with validation on insert. Validation of a node against a
- * definition, custom-relation handlers, and UI grouping live elsewhere.
+ * Component catalog. Internal to the studio — accessed through the Studio
+ * facade, not exported from the package.
  */
 
-import type { AnyComponentDefinition } from './component'
+import type { ComponentDefinition } from './component'
+import { StudioError } from './error'
 
-export class RegistryError extends Error {
-  override readonly name = 'RegistryError'
-}
-
-export class Registry implements Iterable<AnyComponentDefinition> {
-  readonly #components = new Map<string, AnyComponentDefinition>()
+export class Registry implements Iterable<ComponentDefinition> {
+  readonly #components = new Map<string, ComponentDefinition>()
 
   get size() {
     return this.#components.size
   }
 
-  register(def: AnyComponentDefinition) {
+  register(def: ComponentDefinition) {
     if (typeof def.name !== 'string' || def.name.length === 0) {
-      throw new RegistryError(`Component name must be a non-empty string, got ${JSON.stringify(def.name)}`)
+      throw new StudioError(`Component name must be a non-empty string, got ${JSON.stringify(def.name)}`)
     }
     if (this.#components.has(def.name)) {
-      throw new RegistryError(`Component "${def.name}" is already registered`)
+      throw new StudioError(`Component "${def.name}" is already registered`)
     }
     this.#components.set(def.name, def)
   }
 
-  registerAll(defs: Iterable<AnyComponentDefinition>) {
+  registerAll(defs: Iterable<ComponentDefinition>) {
     for (const def of defs) this.register(def)
-  }
-
-  unregister(name: string) {
-    return this.#components.delete(name)
   }
 
   has(name: string) {
@@ -43,23 +35,8 @@ export class Registry implements Iterable<AnyComponentDefinition> {
     return this.#components.get(name)
   }
 
-  /** Like {@link get} but throws when missing. Use when absence indicates a bug. */
-  require(name: string): AnyComponentDefinition {
-    const def = this.#components.get(name)
-    if (!def) throw new RegistryError(`Component "${name}" is not registered`)
-    return def
-  }
-
-  getAll() {
+  getAll(): readonly ComponentDefinition[] {
     return Array.from(this.#components.values())
-  }
-
-  getNames() {
-    return Array.from(this.#components.keys())
-  }
-
-  clear() {
-    this.#components.clear()
   }
 
   [Symbol.iterator]() {

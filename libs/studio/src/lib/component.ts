@@ -1,16 +1,16 @@
 /**
  * `ComponentDefinition` is what a developer passes to the studio to register
- * a component. The shape splits into `props`, `relations`, and `children`.
+ * a component. Split into `props`, `relations`, and `children`.
  */
 
-import type { AnyPrimitive, ValueOf } from './primitives'
+import type { Primitive, ValueOf } from './primitives'
 import type { RelationDescriptor } from './relations'
 
 export type ChildrenCardinality = 'none' | 'one' | 'many'
 
 export interface ChildrenConfig {
   cardinality: ChildrenCardinality
-  /** Whitelist of allowed child component names. Studio-time constraint used by drop targets. */
+  /** Whitelist of allowed child component names. Studio-time constraint for drop targets. */
   kinds?: readonly string[]
   min?: number
   max?: number
@@ -18,7 +18,7 @@ export interface ChildrenConfig {
 
 export interface ComponentDefinition<
   Name extends string = string,
-  Props extends Record<string, AnyPrimitive> = Record<string, AnyPrimitive>,
+  Props extends Record<string, Primitive> = Record<string, Primitive>,
   Relations extends Record<string, RelationDescriptor> = Record<string, RelationDescriptor>,
   Children extends ChildrenConfig | undefined = ChildrenConfig | undefined
 > {
@@ -30,14 +30,11 @@ export interface ComponentDefinition<
   children: Children
 }
 
-/** Erased variant used when the specific generics do not matter. */
-export type AnyComponentDefinition = ComponentDefinition
-
 const EMPTY_RELATIONS = Object.freeze({})
 
 export function defineComponent<
   const Name extends string,
-  const Props extends Record<string, AnyPrimitive>,
+  const Props extends Record<string, Primitive>,
   const Relations extends Record<string, RelationDescriptor> = Record<string, never>,
   const Children extends ChildrenConfig | undefined = undefined
 >(def: {
@@ -59,9 +56,9 @@ export function defineComponent<
 }
 
 /** Materialized prop values for an instance of this component. */
-export type PropsOf<C extends AnyComponentDefinition> = {
+export type PropsOf<C extends ComponentDefinition> = {
   [K in keyof C['props']]: ValueOf<C['props'][K]>
 }
 
 /** The names of relations declared on this component. */
-export type RelationNamesOf<C extends AnyComponentDefinition> = keyof C['relations'] & string
+export type RelationNamesOf<C extends ComponentDefinition> = keyof C['relations'] & string
