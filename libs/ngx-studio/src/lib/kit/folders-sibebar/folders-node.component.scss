@@ -1,0 +1,136 @@
+$indent: 16px;
+$row-height: 32px;
+
+:host {
+  display: block;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  min-height: $row-height;
+  padding-left: calc(var(--level, 0) * #{$indent});
+  border-radius: 6px;
+
+  &:hover {
+    background: var(--ds-hover, #eef0f2);
+  }
+
+  &--active {
+    background: var(--ds-active, #dfe9fd);
+
+    &:hover {
+      background: var(--ds-active, #dfe9fd);
+    }
+  }
+}
+
+.toggle,
+.toggle-spacer {
+  flex: none;
+  width: 24px;
+  height: 24px;
+}
+
+.toggle {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: var(--ds-text-muted, #7a828a);
+  background: none;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+
+  &::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(-45deg);
+    transition: transform 0.15s ease;
+  }
+
+  &--open::before {
+    transform: rotate(45deg);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ds-accent, #2f6fed);
+  }
+}
+
+.label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px 4px 0;
+  font: inherit;
+  color: var(--ds-text, #1f2328);
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--ds-accent, #2f6fed);
+    border-radius: 4px;
+  }
+}
+
+.icon {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--ds-folder, #8a929b);
+}
+
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.children {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toggle::before {
+    transition: none;
+  }
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  min-height: $row-height;
+  padding: 0 8px 0 calc(var(--level, 0) * #{$indent});
+  border-radius: 6px;
+
+  // &:hover {
+  //   background: var(--ds-hover, #eef0f2);
+  // }
+
+  &__default {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ds-text, #1f2328);
+  }
+}
+
+.item {
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}

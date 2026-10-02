@@ -1,0 +1,22 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  max-width: 280px;
+  box-sizing: border-box;
+  padding: 12px;
+  background: var(--ds-sidebar-bg, #fff);
+  border-right: 1px solid var(--ds-border, #d8dce0);
+
+  &__tree {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+}
