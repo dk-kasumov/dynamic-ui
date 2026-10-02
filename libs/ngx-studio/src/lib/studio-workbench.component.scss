@@ -1,0 +1,88 @@
+// Single theming root. Override any --ds-* variable on ds-studio-workbench
+// to retheme the entire studio (canvas + palette + sidebar).
+:host {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  height: 100%;
+  min-height: 480px;
+  overflow: hidden;
+  font-family: 'Inter', 'Roboto', system-ui, -apple-system, sans-serif;
+
+  // Accent
+  --ds-accent: #6366f1;
+  --ds-accent-soft: rgba(99, 102, 241, 0.1);
+  --ds-accent-ring: rgba(99, 102, 241, 0.28);
+
+  // Typography & borders
+  --ds-text: #111827;
+  --ds-text-muted: #6b7280;
+  --ds-border: rgba(16, 24, 40, 0.08);
+  --ds-border-dashed: rgba(99, 102, 241, 0.28);
+
+  // Radii
+  --ds-radius: 12px;
+  --ds-radius-sm: 10px;
+
+  // Canvas
+  --ds-canvas-bg: #f4f6fa;
+  --ds-grid-dot: rgba(16, 24, 40, 0.08);
+
+  // Cards
+  --ds-card-bg: #ffffff;
+  --ds-card-bg-container: #fafbfd;
+  --ds-card-border: rgba(16, 24, 40, 0.08);
+  --ds-card-shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.04);
+  --ds-card-shadow-hover: 0 4px 12px rgba(16, 24, 40, 0.08), 0 2px 4px rgba(16, 24, 40, 0.04);
+
+  // Chips & interactive surfaces
+  --ds-chip-bg: rgba(16, 24, 40, 0.04);
+  --ds-chip-bg-hover: rgba(16, 24, 40, 0.08);
+
+  // Dropzone
+  --ds-dropzone-bg-active: rgba(99, 102, 241, 0.06);
+
+  // Sidebar (used by ds-folders-sidebar tokens)
+  --ds-sidebar-bg: #ffffff;
+  --ds-hover: rgba(16, 24, 40, 0.04);
+  --ds-active: rgba(99, 102, 241, 0.1);
+  --ds-folder: var(--ds-accent);
+  --ds-input-bg: rgba(16, 24, 40, 0.04);
+}
+
+// Custom scrollbar for all scrollable children
+:host ::ng-deep {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--ds-border) transparent;
+  }
+
+  *::-webkit-scrollbar { width: 4px; height: 4px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    background: var(--ds-border);
+    border-radius: 999px;
+    &:hover { background: var(--ds-text-muted); }
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :host:not([data-theme='light']) {
+    --ds-canvas-bg: #0b0e14;
+    --ds-card-bg: #171a24;
+    --ds-card-bg-container: #12151e;
+    --ds-card-border: rgba(255, 255, 255, 0.08);
+    --ds-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --ds-card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --ds-text: #e5e7eb;
+    --ds-text-muted: #9ca3af;
+    --ds-border: rgba(255, 255, 255, 0.08);
+    --ds-chip-bg: rgba(255, 255, 255, 0.05);
+    --ds-chip-bg-hover: rgba(255, 255, 255, 0.08);
+    --ds-dropzone-bg-active: rgba(99, 102, 241, 0.12);
+    --ds-grid-dot: rgba(255, 255, 255, 0.07);
+    --ds-sidebar-bg: #141821;
+    --ds-hover: rgba(255, 255, 255, 0.05);
+    --ds-active: rgba(99, 102, 241, 0.15);
+    --ds-input-bg: rgba(255, 255, 255, 0.05);
+  }
+}

@@ -1,1 +1,2 @@
-export * from './lib/ngx-studio/ngx-studio'
+export { StudioWorkbenchComponent } from './lib/studio-workbench.component'
+export * from './lib/kit/canvas'

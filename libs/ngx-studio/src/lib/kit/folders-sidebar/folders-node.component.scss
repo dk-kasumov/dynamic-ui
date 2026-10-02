@@ -1,4 +1,4 @@
-$indent: 16px;
+$indent: 8px;
 $row-height: 32px;
 
 :host {
@@ -109,13 +109,7 @@ $row-height: 32px;
 .item {
   display: flex;
   align-items: center;
-  min-height: $row-height;
-  padding: 0 8px 0 calc(var(--level, 0) * #{$indent});
-  border-radius: 6px;
-
-  // &:hover {
-  //   background: var(--ds-hover, #eef0f2);
-  // }
+  padding: 0 0 0 calc(var(--level, 0) * #{$indent} + 4px);
 
   &__default {
     flex: 1;
@@ -127,10 +121,3 @@ $row-height: 32px;
   }
 }
 
-.item {
-  cursor: grab;
-
-  &:active {
-    cursor: grabbing;
-  }
-}

@@ -1,9 +1,7 @@
 import { NgTemplateOutlet } from '@angular/common'
 import { Component, TemplateRef, computed, input, output, signal } from '@angular/core'
-import { Folder, FolderItem } from './folder.model'
+import { Folder } from './folder.model'
 import { FolderItemContext } from './folder-item.directive'
-
-const DRAG_MIME = 'application/x-ds-folder-item'
 
 @Component({
   selector: 'ds-folders-node',
@@ -15,8 +13,6 @@ const DRAG_MIME = 'application/x-ds-folder-item'
       class="row"
       [class.row--active]="selectedId() === folder().id"
       [style.--level]="level()"
-      (dragover)="onDragOver($event)"
-      (dragleave)="onDragLeave($event)"
     >
       @if (hasContent()) {
         <button
@@ -53,22 +49,12 @@ const DRAG_MIME = 'application/x-ds-folder-item'
               [forceExpanded]="forceExpanded()"
               [itemTemplate]="itemTemplate()"
               (selected)="selected.emit($event)"
-              (itemMoved)="itemMoved.emit($event)"
             />
           </li>
         }
 
         @for (item of folder().items; track item.id) {
-          <li
-            class="item"
-            draggable="true"
-            [style.--level]="level() + 1"
-            (dragstart)="onItemDragStart($event, item)"
-            (dragover)="onItemDragOver($event, item)"
-            (dragleave)="onItemDragLeave($event, item)"
-            (drop)="onItemDrop($event, item)"
-          >
-            <span class="toggle-spacer"></span>
+          <li class="item" [style.--level]="level() + 1">
             <ng-container
               [ngTemplateOutlet]="itemTemplate() ?? defaultItem"
               [ngTemplateOutletContext]="{ $implicit: item, folder: folder() }"
@@ -109,25 +95,5 @@ export class FoldersNodeComponent {
   select() {
     this.selected.emit(this.folder())
     if (this.hasContent()) this.toggle()
-  }
-
-  isDragOver = signal(false)
-
-  onItemDragStart(event: DragEvent, item: FolderItem) {
-    if (!event.dataTransfer) return
-    event.dataTransfer.effectAllowed = 'move'
-    event.dataTransfer.setData(DRAG_MIME, JSON.stringify({ itemId: item.id, fromFolderId: this.folder().id }))
-  }
-
-  onDragOver(event: DragEvent) {
-    if (!event.dataTransfer?.types.includes(DRAG_MIME)) return
-    event.preventDefault()
-    event.dataTransfer.dropEffect = 'move'
-    this.isDragOver.set(true)
-  }
-
-  onDragLeave(event: DragEvent) {
-    const row = event.currentTarget as HTMLElement
-    if (!row.contains(event.relatedTarget as Node)) this.isDragOver.set(false)
   }
 }

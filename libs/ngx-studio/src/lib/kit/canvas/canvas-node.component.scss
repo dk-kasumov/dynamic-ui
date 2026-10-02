@@ -1,0 +1,226 @@
+:host {
+  display: block;
+  // Each new card eases in. Pulled off the floating drag preview so it stays crisp.
+  animation: ds-card-in 180ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.card {
+  position: relative;
+  background: var(--ds-card-bg);
+  border: 1px solid var(--ds-card-border);
+  border-radius: var(--ds-radius);
+  box-shadow: var(--ds-card-shadow);
+  transition: box-shadow 160ms ease, border-color 160ms ease, transform 160ms ease;
+
+  &:hover {
+    box-shadow: var(--ds-card-shadow-hover);
+  }
+
+  &--selected {
+    border-color: var(--ds-accent);
+    box-shadow: 0 0 0 3px var(--ds-accent-ring), var(--ds-card-shadow-hover);
+  }
+
+  &--container {
+    background: var(--ds-card-bg-container);
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 14px;
+    min-height: 56px;
+    box-sizing: border-box;
+    cursor: grab;
+    user-select: none;
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+
+  &__grip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ds-text-muted);
+    opacity: 0.45;
+    transition: opacity 120ms ease;
+    flex: 0 0 auto;
+    margin-right: -4px;
+
+    svg { fill: currentColor; }
+  }
+
+  &:hover:not(:has(.card:hover)) &__grip {
+    opacity: 1;
+  }
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+    color: var(--ds-accent);
+    background: var(--ds-accent-soft);
+    border-radius: 8px;
+    flex: 0 0 auto;
+  }
+
+  &__titles {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  &__title {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--ds-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__subtitle {
+    font-size: 11px;
+    color: var(--ds-text-muted);
+    line-height: 1.2;
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__relations {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    font-size: 11px;
+    color: var(--ds-text-muted);
+    background: var(--ds-chip-bg);
+    border-radius: 999px;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+
+  &__relations-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ds-accent);
+    flex: 0 0 auto;
+  }
+
+  &__delete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--ds-text-muted);
+    border-radius: 6px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 120ms ease, background 120ms ease, color 120ms ease;
+    flex: 0 0 auto;
+
+    &:hover {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.1);
+    }
+  }
+
+  &:hover:not(:has(.card:hover)) &__delete,
+  &--selected &__delete {
+    opacity: 1;
+  }
+
+  &__body {
+    padding: 0 10px 10px;
+  }
+}
+
+.dropzone {
+  // A roomier target so beginners can land a drop without surgical precision.
+  // SortableJS's emptyInsertThreshold adds another ~24px of catchment past
+  // this box so even very narrow misses are forgiving.
+  min-height: 72px;
+  padding: 10px;
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-dropzone-bg);
+  border: 1px dashed transparent;
+  transition: background 160ms ease, border-color 160ms ease, min-height 180ms ease;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &__empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px;
+    font-size: 12px;
+    color: var(--ds-text-muted);
+    border: 1px dashed var(--ds-border-dashed);
+    border-radius: var(--ds-radius-sm);
+    background: transparent;
+    pointer-events: none;
+    min-height: 52px;
+    box-sizing: border-box;
+  }
+
+  &__empty-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ds-accent);
+    background: var(--ds-accent-soft);
+    border-radius: 50%;
+  }
+}
+
+// Expand empty dropzones while any drag is in flight so they're easier to target.
+// The directive adds ds-has-drag to <body> on onStart and removes it on onEnd.
+:host-context(.ds-has-drag) {
+  .dropzone:not(:has(.dropzone__item)) {
+    min-height: 104px;
+    background: var(--ds-dropzone-bg-active);
+    border-color: var(--ds-accent);
+    transition: min-height 180ms ease, background 160ms ease, border-color 160ms ease;
+  }
+
+  .dropzone__empty {
+    min-height: 76px;
+    border-color: var(--ds-accent);
+    color: var(--ds-accent);
+  }
+}
+
+@keyframes ds-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

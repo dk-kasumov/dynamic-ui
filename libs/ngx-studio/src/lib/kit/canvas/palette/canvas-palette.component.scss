@@ -1,0 +1,83 @@
+// The palette wraps ds-folders-sidebar directly — no style overrides.
+// Theming comes from --ds-* token cascade set on ds-studio-workbench.
+:host {
+  display: block;
+  height: 100%;
+  overflow: hidden;
+}
+
+.chip-slot {
+  flex: 1;
+  min-width: 0;
+  padding: 2px 0;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  min-height: 52px;
+  box-sizing: border-box;
+  background: var(--ds-chip-bg);
+  border: 1px solid transparent;
+  border-radius: var(--ds-radius-sm);
+  cursor: grab;
+  user-select: none;
+  transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+
+  &:hover {
+    background: var(--ds-chip-bg-hover);
+    border-color: var(--ds-border);
+    transform: translateX(2px);
+  }
+
+  &:active { cursor: grabbing; }
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    font-size: 15px;
+    color: var(--ds-accent);
+    background: var(--ds-accent-soft);
+    border-radius: 6px;
+    flex: 0 0 auto;
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  &__title {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--ds-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__sub {
+    font-size: 11px;
+    color: var(--ds-text-muted);
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__badge {
+    font-size: 12px;
+    color: var(--ds-accent);
+    opacity: 0.85;
+    flex: 0 0 auto;
+  }
+}
