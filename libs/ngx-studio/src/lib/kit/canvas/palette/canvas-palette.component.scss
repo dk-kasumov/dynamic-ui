@@ -1,5 +1,5 @@
-// The palette wraps ds-folders-sidebar directly — no style overrides.
-// Theming comes from --ds-* token cascade set on ds-studio-workbench.
+// Palette wraps ds-folders-sidebar directly; theming comes from --ds-* tokens
+// set on ds-studio-workbench.
 :host {
   display: block;
   height: 100%;
@@ -32,7 +32,6 @@
     border-color: var(--ds-border);
     transform: translateX(2px);
   }
-
   &:active { cursor: grabbing; }
 
   &__icon {
@@ -41,11 +40,12 @@
     justify-content: center;
     width: 28px;
     height: 28px;
-    font-size: 15px;
     color: var(--ds-accent);
     background: var(--ds-accent-soft);
     border-radius: 6px;
     flex: 0 0 auto;
+
+    .material-icons { font-size: 16px; }
   }
 
   &__text {
@@ -55,29 +55,34 @@
     flex: 1 1 auto;
   }
 
+  &__title,
+  &__sub {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   &__title {
     font-size: 13px;
     font-weight: 600;
     line-height: 1.2;
     color: var(--ds-text);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   &__sub {
     font-size: 11px;
-    color: var(--ds-text-muted);
     margin-top: 2px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    color: var(--ds-text-muted);
   }
 
   &__badge {
-    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     color: var(--ds-accent);
     opacity: 0.85;
     flex: 0 0 auto;
+
+    .material-icons { font-size: 16px; }
   }
 }

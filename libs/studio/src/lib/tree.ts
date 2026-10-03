@@ -16,6 +16,8 @@ export interface NewNode {
   props?: Record<string, unknown>
   relations?: Record<string, RelationInstance>
   children?: Node[]
+  icon?: string
+  title?: string
 }
 
 export function createNode(input: NewNode): Node {
@@ -26,7 +28,15 @@ export function createNode(input: NewNode): Node {
     relations: input.relations ?? {}
   }
   if (input.children) node.children = input.children
+  if (input.icon !== undefined) node.icon = input.icon
+  if (input.title !== undefined) node.title = input.title
   return node
+}
+
+export interface NodeMetaPatch {
+  /** Pass `null` to clear the override and fall back to the component definition. */
+  icon?: string | null
+  title?: string | null
 }
 
 export class Tree {
@@ -78,6 +88,18 @@ export class Tree {
       container = container[key] as Record<string, unknown>
     }
     container[path[path.length - 1]!] = value
+  }
+
+  setMeta(id: NodeId, patch: NodeMetaPatch): void {
+    const node = this.require(id)
+    if ('icon' in patch) {
+      if (patch.icon == null || patch.icon === '') delete node.icon
+      else node.icon = patch.icon
+    }
+    if ('title' in patch) {
+      if (patch.title == null || patch.title === '') delete node.title
+      else node.title = patch.title
+    }
   }
 
   setRelation(id: NodeId, name: string, value: RelationInstance): void {

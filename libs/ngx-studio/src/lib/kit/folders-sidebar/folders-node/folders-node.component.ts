@@ -1,19 +1,15 @@
 import { NgTemplateOutlet } from '@angular/common'
 import { Component, TemplateRef, computed, input, output, signal } from '@angular/core'
-import { Folder } from './folder.model'
-import { FolderItemContext } from './folder-item.directive'
+import { Folder } from '../folder.model'
+import { FolderItemContext } from '../folder-item.directive'
 
 @Component({
   selector: 'ds-folders-node',
   standalone: true,
   imports: [NgTemplateOutlet],
-  styleUrl: './folders-node.component.scss',
+  styleUrl: 'folders-node.component.scss',
   template: `
-    <div
-      class="row"
-      [class.row--active]="selectedId() === folder().id"
-      [style.--level]="level()"
-    >
+    <div class="row" [class.row--active]="selectedId() === folder().id" [style.--level]="level()">
       @if (hasContent()) {
         <button
           type="button"
@@ -52,7 +48,6 @@ import { FolderItemContext } from './folder-item.directive'
             />
           </li>
         }
-
         @for (item of folder().items; track item.id) {
           <li class="item" [style.--level]="level() + 1">
             <ng-container
@@ -88,9 +83,7 @@ export class FoldersNodeComponent {
   hasContent = computed(() => !!this.folder().children?.length || !!this.folder().items?.length)
   expanded = computed(() => this.forceExpanded() || this.isOpen())
 
-  toggle() {
-    this.isOpen.update(open => !open)
-  }
+  toggle() { this.isOpen.update(open => !open) }
 
   select() {
     this.selected.emit(this.folder())

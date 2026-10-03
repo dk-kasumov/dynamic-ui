@@ -2,10 +2,9 @@ import { AfterViewInit, Directive, ElementRef, NgZone, OnDestroy, inject, input,
 import Sortable, { type Options, type SortableEvent } from 'sortablejs'
 
 /**
- * Event emitted after a drop that would change the data. The directive has
- * already reverted SortableJS's DOM mutation at this point, so Angular is
- * still the source of truth — consumers mutate their store and let the
- * next render place the item where it now logically belongs.
+ * Drop event emitted after the directive has already reverted SortableJS's
+ * DOM mutation — Angular remains the source of truth; consumers mutate their
+ * store and let the next render place items where they logically belong.
  */
 export interface DsSortableDropEvent {
   from: HTMLElement
@@ -18,23 +17,13 @@ export interface DsSortableDropEvent {
 }
 
 /**
- * Minimal Angular wrapper around SortableJS.
+ * Minimal Angular wrapper around SortableJS. SortableJS moves DOM nodes
+ * directly during a drag; Angular owns the DOM via `@for`. We let SortableJS
+ * animate during the drag, undo its DOM move in `onEnd`, then emit a semantic
+ * event so the consumer can update data and let Angular re-render.
  *
- * SortableJS is a DOM-first library: it moves nodes around directly as the
- * user drags. Angular owns the DOM via `@for`, so letting SortableJS leave
- * its mutations in place would race with the next change detection cycle.
- * The convention — used by every mature Angular wrapper — is:
- *
- *   1. Let SortableJS reparent/reorder DOM during the drag (so the user
- *      sees the normal animation feedback).
- *   2. In `onEnd`, undo the DOM move so Angular's view model and the DOM
- *      agree again.
- *   3. Emit a semantic event. The consumer updates the data store, which
- *      triggers Angular to render the correct order from scratch.
- *
- * This directive is deliberately unopinionated about `data-*` attributes
- * and payload shape; callers decode `item`/`to`/`from` themselves because
- * the semantics differ between the canvas tree and the palette source.
+ * Deliberately agnostic to `data-*` payloads — callers decode `item`/`to`/
+ * `from` themselves since canvas-tree and palette semantics differ.
  */
 @Directive({
   selector: '[dsSortable]',
@@ -75,34 +64,19 @@ export class DsSortableDirective implements AfterViewInit, OnDestroy {
 
   #handleEnd(evt: SortableEvent): void {
     document.body.classList.remove('ds-has-drag')
-
-    const didMove = evt.from !== evt.to || evt.oldIndex !== evt.newIndex
-    if (!didMove) return
+    if (evt.from === evt.to && evt.oldIndex === evt.newIndex) return
 
     const isClone = (evt as unknown as { pullMode?: string }).pullMode === 'clone'
-    const item = evt.item
+    const { item, from } = evt
+    const oldIndex = evt.oldIndex ?? 0
+    const newIndex = evt.newIndex ?? 0
 
-    // Revert SortableJS's DOM move so Angular's view model matches the DOM
-    // before the next CD cycle runs.
-    if (isClone) {
-      item.parentElement?.removeChild(item)
-    } else if (evt.from !== evt.to) {
-      item.parentElement?.removeChild(item)
-      insertAtIndex(evt.from, item, evt.oldIndex ?? 0)
-    } else {
-      item.parentElement?.removeChild(item)
-      insertAtIndex(evt.from, item, evt.oldIndex ?? 0)
-    }
+    // Revert SortableJS's DOM move so Angular's view model matches the DOM.
+    item.parentElement?.removeChild(item)
+    if (!isClone) insertAtIndex(from, item, oldIndex)
 
     this.#zone.run(() => {
-      this.dsSortableDrop.emit({
-        from: evt.from,
-        to: evt.to,
-        oldIndex: evt.oldIndex ?? 0,
-        newIndex: evt.newIndex ?? 0,
-        item,
-        isClone
-      })
+      this.dsSortableDrop.emit({ from, to: evt.to, oldIndex, newIndex, item, isClone })
     })
   }
 }

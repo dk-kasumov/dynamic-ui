@@ -1,7 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core'
-import type { NodeId } from '@dynamic-ui/studio'
-import type { Options } from 'sortablejs'
-import { CanvasNodeComponent } from './canvas-node.component'
+import { CanvasNodeComponent } from './node/canvas-node.component'
 import { CanvasStore } from './store/canvas-store.service'
 import { DsSortableDirective, type DsSortableDropEvent } from './sortable/sortable.directive'
 
@@ -13,21 +11,18 @@ import { DsSortableDirective, type DsSortableDropEvent } from './sortable/sortab
   styleUrl: './canvas.component.scss',
   template: `
     @let r = root();
-    <div class="canvas" (click)="deselect()">
+    <div class="canvas" (click)="store.select(null)">
       <div class="canvas__inner">
         @if (r) {
           <div
             class="canvas__stack"
             dsSortable
-            [options]="sortOptions"
+            [options]="store.treeSortOptions"
             [attr.data-ds-container-id]="r.id"
             (dsSortableDrop)="onDrop($event)"
           >
             @for (child of children(); track child.id) {
-              <div
-                class="canvas__item ds-sortable-item"
-                [attr.data-ds-node-id]="child.id"
-              >
+              <div class="canvas__item ds-sortable-item" [attr.data-ds-node-id]="child.id">
                 <ds-canvas-node [nodeId]="child.id" />
               </div>
             } @empty {
@@ -51,26 +46,8 @@ import { DsSortableDirective, type DsSortableDropEvent } from './sortable/sortab
 })
 export class CanvasComponent {
   readonly store = inject(CanvasStore)
-
   readonly root = this.store.root
   readonly children = computed(() => this.root()?.children ?? [])
-
-  readonly sortOptions: Partial<Options> = {
-    group: 'ds-canvas',
-    draggable: '.ds-sortable-item',
-    handle: '.ds-sortable-handle',
-    onMove: evt => {
-      const to = (evt.to as HTMLElement).dataset['dsContainerId']
-      const draggedId = evt.dragged.dataset['dsNodeId']
-      if (!to || !draggedId) return true
-      // Prevent dropping a node inside itself or any of its descendants.
-      return !this.store.isDescendant(draggedId as NodeId, to as NodeId)
-    }
-  }
-
-  deselect(): void {
-    this.store.select(null)
-  }
 
   onDrop(event: DsSortableDropEvent): void {
     this.store.applyDrop(event)

@@ -5,7 +5,8 @@ import { checkbox, decimal, enumeration, group, select, text } from './primitive
 import { relation } from './relations'
 import { Registry } from './registry'
 import { Store } from './store'
-import { Tree, createNode, type NewNode } from './tree'
+import { Tree, createNode, type NewNode, type NodeMetaPatch } from './tree'
+import { humanize } from './humanize'
 
 export interface StudioOptions {
   components: Iterable<ComponentDefinition>
@@ -69,6 +70,10 @@ export class Studio {
     this.#store.setProp(id, path, value)
   }
 
+  setMeta(id: NodeId, patch: NodeMetaPatch): void {
+    this.#store.setMeta(id, patch)
+  }
+
   setRelation(id: NodeId, name: string, value: RelationInstance): void {
     this.#store.setRelation(id, name, value)
   }
@@ -99,13 +104,14 @@ export class Studio {
   static enum = enumeration
   static group = group
   static relation = relation
+  static humanize = humanize
 }
 
 // Public exports -------------------------------------------------------------
 
 export { StudioError } from './error'
 
-export type { NewNode } from './tree'
+export type { NewNode, NodeMetaPatch } from './tree'
 export type { Node, NodeId } from './node'
 export type { ChildrenCardinality, ChildrenConfig, ComponentDefinition, PropsOf, RelationNamesOf } from './component'
 export type {

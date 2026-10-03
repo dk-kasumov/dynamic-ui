@@ -2,26 +2,36 @@ import { Component, computed, contentChild, input, output, signal } from '@angul
 import { Folder } from './folder.model';
 import { filterFolders } from './filter-folders';
 import { FolderItemDirective } from './folder-item.directive';
-import { FoldersSearchComponent } from './folders-search.component';
-import { FoldersTreeComponent } from './folders-tree.component';
+import { FoldersSearchComponent } from './folders-search/folders-search.component';
+import { FoldersNodeComponent } from './folders-node/folders-node.component';
 
 @Component({
   selector: 'ds-folders-sidebar',
   standalone: true,
-  imports: [FoldersSearchComponent, FoldersTreeComponent],
+  imports: [FoldersSearchComponent, FoldersNodeComponent],
   styleUrl: './folders-sidebar.component.scss',
   template: `
     <aside class="sidebar">
       <ds-folders-search [(value)]="query" />
 
       <div class="sidebar__tree">
-        <ds-folders-tree
-          [folders]="filteredFolders()"
-          [selectedId]="selectedId()"
-          [forceExpanded]="isSearching()"
-          [itemTemplate]="itemTpl()?.template ?? null"
-          (selected)="onSelect($event)"
-        />
+        @if (filteredFolders().length) {
+          <ul class="tree">
+            @for (folder of filteredFolders(); track folder.id) {
+              <li>
+                <ds-folders-node
+                  [folder]="folder"
+                  [selectedId]="selectedId()"
+                  [forceExpanded]="isSearching()"
+                  [itemTemplate]="itemTpl()?.template ?? null"
+                  (selected)="onSelect($event)"
+                />
+              </li>
+            }
+          </ul>
+        } @else {
+          <p class="empty">{{ isSearching() ? 'Ничего не найдено' : 'Папок пока нет' }}</p>
+        }
       </div>
     </aside>
   `,

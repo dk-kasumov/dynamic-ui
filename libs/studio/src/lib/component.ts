@@ -25,6 +25,8 @@ export interface ComponentDefinition<
   name: Name
   label?: string
   description?: string
+  /** Material Icons ligature name, e.g. 'tune', 'dashboard'. Falls back to a default per component kind. */
+  icon?: string
   props: Props
   relations: Relations
   children: Children
@@ -41,6 +43,7 @@ export function defineComponent<
   name: Name
   label?: string
   description?: string
+  icon?: string
   props: Props
   relations?: Relations
   children?: Children
@@ -49,6 +52,7 @@ export function defineComponent<
     name: def.name,
     label: def.label,
     description: def.description,
+    icon: def.icon,
     props: def.props,
     relations: (def.relations ?? EMPTY_RELATIONS) as Relations,
     children: def.children as Children

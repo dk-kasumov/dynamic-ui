@@ -1,0 +1,49 @@
+:host {
+  display: block;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &__row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  &__icon-preview {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex: 0 0 auto;
+    color: var(--ds-accent);
+    background: var(--ds-accent-soft);
+    border: 1px solid var(--ds-border);
+    border-radius: var(--ds-radius-sm);
+    transition: background 160ms ease, border-color 160ms ease;
+
+    mat-icon { font-size: 20px; width: 20px; height: 20px; }
+  }
+
+  code {
+    padding: 1px 5px;
+    font-size: 10px;
+    background: var(--ds-chip-bg);
+    border-radius: 4px;
+    font-family: 'Roboto Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+}
+
+// Make meta fields use the full remaining width next to the icon preview.
+:host ::ng-deep {
+  .ds-field { width: 100%; display: block; }
+
+  .mat-mdc-form-field {
+    .mat-mdc-text-field-wrapper { padding-bottom: 0; }
+    .mat-mdc-form-field-subscript-wrapper { font-size: 10px; }
+  }
+}

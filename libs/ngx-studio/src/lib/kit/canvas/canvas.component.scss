@@ -52,26 +52,22 @@
   &__empty-hint { font-size: 12px; }
 }
 
-:host ::ng-deep {
-  .ds-sortable-ghost {
-    opacity: 0.45;
-    position: relative;
-
-    > * { visibility: hidden; }
-
-    &::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: var(--ds-accent-soft);
-      border: 1.5px dashed var(--ds-accent);
-      border-radius: var(--ds-radius);
-      pointer-events: none;
-    }
+:host ::ng-deep .ds-sortable-ghost {
+  position: relative;
+  opacity: 0.45;
+  > * { visibility: hidden; }
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--ds-accent-soft);
+    border: 1.5px dashed var(--ds-accent);
+    border-radius: var(--ds-radius);
+    pointer-events: none;
   }
-
-  .ds-sortable-chosen { cursor: grabbing; opacity: 0.7; }
 }
+
+:host ::ng-deep .ds-sortable-chosen { cursor: grabbing; opacity: 0.7; }
 
 @keyframes ds-canvas-pulse {
   0%, 100% { border-color: var(--ds-border-dashed); }

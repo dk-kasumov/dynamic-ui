@@ -9,7 +9,7 @@
 import type { NodeId } from './node'
 import type { Registry } from './registry'
 import type { RelationInstance } from './relations'
-import type { NewNode, Tree } from './tree'
+import type { NewNode, NodeMetaPatch, Tree } from './tree'
 
 export class Store {
   #selectedId: NodeId | null = null
@@ -49,6 +49,11 @@ export class Store {
 
   setProp(id: NodeId, path: readonly string[], value: unknown): void {
     this.tree.setProp(id, path, value)
+    this.#emit()
+  }
+
+  setMeta(id: NodeId, patch: NodeMetaPatch): void {
+    this.tree.setMeta(id, patch)
     this.#emit()
   }
 

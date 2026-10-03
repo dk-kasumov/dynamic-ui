@@ -9,7 +9,7 @@
   gap: 12px;
   height: 100%;
   box-sizing: border-box;
-  padding: 12px 12px 12px 12px;
+  padding: 12px;
   background: var(--ds-sidebar-bg, #fff);
   border-right: 1px solid var(--ds-border, #d8dce0);
 
@@ -18,4 +18,17 @@
     min-height: 0;
     overflow-y: auto;
   }
+}
+
+.tree {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.empty {
+  margin: 0;
+  padding: 16px 8px;
+  color: var(--ds-text-muted, #7a828a);
+  text-align: center;
 }
