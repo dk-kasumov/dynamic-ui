@@ -95,12 +95,10 @@ export class FieldHostComponent {
   readonly change = output<InspectorFieldChange>()
 
   readonly groupEntries = computed(() => {
-    const p = this.primitive() as GroupShape
-    if (p.kind !== 'group') return []
-    return listify(p.shape, (key, prim) => ({
+    return listify((this.primitive() as GroupShape).shape, (key, primitive) => ({
       key,
-      primitive: prim as Primitive,
-      label: prim.label ?? Studio.humanize(key)
+      primitive,
+      label: primitive.label ?? Studio.humanize(key)
     }))
   })
 
@@ -109,8 +107,6 @@ export class FieldHostComponent {
   }
 
   groupValueOf(key: string): unknown {
-    const v = this.value()
-    if (v && typeof v === 'object') return (v as Record<string, unknown>)[key]
-    return undefined
+    return (this.value() as Record<string, unknown> | undefined)?.[key]
   }
 }

@@ -11,8 +11,7 @@ For the overall project vision, see the [root README](../../README.md).
 ## What's in this package
 
 - **Studio shell** — three-panel editor layout (palette, canvas, layer tree, gear panel).
-- **UI kit** (`src/lib/kit/`) — reusable primitives (buttons, inputs, panels, etc.) built on top of Angular Material.
-- **Studio components** (`src/lib/studio/`) — editor-specific components that wire into the `Studio` state class.
+- **Feature folders** (`src/lib/canvas/`, `inspector/`, `folders-sidebar/`, `header/`) — standalone components built on top of Angular Material, wired to the `Studio` state class through `CanvasStore`.
 
 Every component is **standalone** (no NgModules), uses the `ds-` selector prefix (e.g. `<ds-canvas>`, `<ds-palette>`), and participates in the Material theming system.
 
@@ -52,8 +51,11 @@ libs/ngx-studio/
 ├── src/
 │   ├── index.ts             # package public API
 │   └── lib/
-│       ├── kit/             # reusable UI-kit primitives (with Storybook stories)
-│       └── ngx-studio/      # top-level studio shell
+│       ├── canvas/          # canvas, nodes, palette, store, sortable
+│       ├── folders-sidebar/ # generic folder tree used by the palette
+│       ├── header/          # toolbar
+│       ├── inspector/       # props / meta forms and field components
+│       └── ngx-studio.*     # top-level studio component and its story
 ├── ng-package.json
 ├── package.json
 ├── project.json

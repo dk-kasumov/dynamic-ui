@@ -3,8 +3,7 @@ import type { Node, NodeId } from './node'
 import type { RelationInstance } from './relations'
 import { checkbox, decimal, enumeration, group, select, text } from './primitives'
 import { relation } from './relations'
-import { Registry } from './registry'
-import { Store } from './store'
+import { StudioError } from './error'
 import { Tree, createNode, type NewNode, type NodeMetaPatch } from './tree'
 import { humanize } from './humanize'
 
@@ -13,83 +12,107 @@ export interface StudioOptions {
   root: Node
 }
 
+/**
+ * Facade over the node tree and the component catalog. Owns selection and
+ * change listeners; every mutation emits exactly once after it is applied.
+ */
 export class Studio {
-  readonly #store: Store
+  readonly #tree: Tree
+  readonly #components = new Map<string, ComponentDefinition>()
+  readonly #listeners = new Set<() => void>()
+  #selectedId: NodeId | null = null
 
-  constructor(options: StudioOptions) {
-    const registry = new Registry()
-    registry.registerAll(options.components)
-    this.#store = new Store(new Tree(options.root), registry)
+  constructor({ components, root }: StudioOptions) {
+    this.#tree = new Tree(root)
+    for (const def of components) {
+      if (this.#components.has(def.name)) throw new StudioError(`Component "${def.name}" is already registered`)
+      this.#components.set(def.name, def)
+    }
   }
 
   // State --------------------------------------------------------------------
 
   get root(): Node {
-    return this.#store.tree.root
+    return this.#tree.root
   }
 
   get selectedId(): NodeId | null {
-    return this.#store.selectedId
+    return this.#selectedId
   }
 
   // Registry (component palette) --------------------------------------------
 
   getComponents(): readonly ComponentDefinition[] {
-    return this.#store.registry.getAll()
+    return [...this.#components.values()]
   }
 
   getComponent(name: string): ComponentDefinition | undefined {
-    return this.#store.registry.get(name)
+    return this.#components.get(name)
   }
 
   // Tree inspection ----------------------------------------------------------
 
   findNode(id: NodeId): Node | undefined {
-    return this.#store.tree.find(id)
+    return this.#tree.find(id)
   }
 
   parentOf(id: NodeId): Node | undefined {
-    return this.#store.tree.parentOf(id)
+    return this.#tree.parentOf(id)
+  }
+
+  /** The node's own icon token, else its component's; `undefined` when neither sets one (the UI picks a default). */
+  iconOf(node: Node): string | undefined {
+    return node.icon || this.#components.get(node.name)?.icon
   }
 
   // Mutations ----------------------------------------------------------------
 
   addNode(parentId: NodeId, input: NewNode, index?: number): NodeId {
-    return this.#store.addNode(parentId, input, index)
+    return this.#apply(() => this.#tree.add(parentId, input, index))
   }
 
   removeNode(id: NodeId): void {
-    this.#store.removeNode(id)
+    this.#apply(() => {
+      this.#tree.remove(id)
+      if (this.#selectedId === id) this.#selectedId = null
+    })
   }
 
   moveNode(id: NodeId, newParentId: NodeId, index?: number): void {
-    this.#store.moveNode(id, newParentId, index)
+    this.#apply(() => this.#tree.move(id, newParentId, index))
   }
 
   setProp(id: NodeId, path: readonly string[], value: unknown): void {
-    this.#store.setProp(id, path, value)
+    this.#apply(() => this.#tree.setProp(id, path, value))
   }
 
   setMeta(id: NodeId, patch: NodeMetaPatch): void {
-    this.#store.setMeta(id, patch)
+    this.#apply(() => this.#tree.setMeta(id, patch))
   }
 
   setRelation(id: NodeId, name: string, value: RelationInstance): void {
-    this.#store.setRelation(id, name, value)
+    this.#apply(() => this.#tree.setRelation(id, name, value))
   }
 
   removeRelation(id: NodeId, name: string): void {
-    this.#store.removeRelation(id, name)
+    this.#apply(() => this.#tree.removeRelation(id, name))
   }
 
   select(id: NodeId | null): void {
-    this.#store.select(id)
+    if (id !== this.#selectedId) this.#apply(() => void (this.#selectedId = id))
   }
 
   // Reactivity ---------------------------------------------------------------
 
   subscribe(listener: () => void): () => void {
-    return this.#store.subscribe(listener)
+    this.#listeners.add(listener)
+    return () => this.#listeners.delete(listener)
+  }
+
+  #apply<T>(mutation: () => T): T {
+    const result = mutation()
+    this.#listeners.forEach(listener => listener())
+    return result
   }
 
   // DSL (static) -------------------------------------------------------------
@@ -113,7 +136,7 @@ export { StudioError } from './error'
 
 export type { NewNode, NodeMetaPatch } from './tree'
 export type { Node, NodeId } from './node'
-export type { ChildrenCardinality, ChildrenConfig, ComponentDefinition, PropsOf, RelationNamesOf } from './component'
+export type { ComponentDefinition, PropsOf, RelationNamesOf } from './component'
 export type {
   CheckboxPrimitive,
   DecimalPrimitive,
@@ -125,14 +148,14 @@ export type {
   ValueOf
 } from './primitives'
 export type {
-  ArithmeticOp,
-  BuiltinOp,
-  ComparisonOp,
+  ArithmeticOperator,
+  BuiltinOperator,
+  ComparisonOperator,
   JsonValue,
-  LogicalOp,
+  LogicalOperator,
   Operand,
-  PredicateOp,
-  RelationAst,
+  PredicateOperator,
+  RelationExpression,
   RelationDescriptor,
   RelationDescriptorBuiltin,
   RelationDescriptorCustom,

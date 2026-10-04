@@ -36,7 +36,7 @@ export class DsSortableDirective implements AfterViewInit, OnDestroy {
   readonly #el = inject(ElementRef<HTMLElement>)
   readonly #zone = inject(NgZone)
 
-  #sortable?: Sortable
+  #sortable!: Sortable
 
   ngAfterViewInit(): void {
     this.#zone.runOutsideAngular(() => {
@@ -58,8 +58,7 @@ export class DsSortableDirective implements AfterViewInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.#sortable?.destroy()
-    this.#sortable = undefined
+    this.#sortable.destroy()
   }
 
   #handleEnd(evt: SortableEvent): void {
@@ -68,11 +67,11 @@ export class DsSortableDirective implements AfterViewInit, OnDestroy {
 
     const isClone = (evt as unknown as { pullMode?: string }).pullMode === 'clone'
     const { item, from } = evt
-    const oldIndex = evt.oldIndex ?? 0
-    const newIndex = evt.newIndex ?? 0
+    const oldIndex = evt.oldIndex!
+    const newIndex = evt.newIndex!
 
     // Revert SortableJS's DOM move so Angular's view model matches the DOM.
-    item.parentElement?.removeChild(item)
+    item.remove()
     if (!isClone) insertAtIndex(from, item, oldIndex)
 
     this.#zone.run(() => {

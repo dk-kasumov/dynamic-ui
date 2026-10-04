@@ -1,13 +1,12 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core'
 import type { ComponentDefinition } from '@dynamic-ui/studio'
-import { objectify } from 'radash'
 import type { Options } from 'sortablejs'
 import type { Folder, FolderItem } from '../../folders-sidebar/folder.model'
 import { FolderItemDirective } from '../../folders-sidebar/folder-item.directive'
 import { FoldersSidebarComponent } from '../../folders-sidebar/folders-sidebar.component'
-import { resolveIcon } from '../icon'
+import { iconOrDefault } from '../icon'
 import { CanvasStore } from '../store/canvas-store.service'
-import { DsSortableDirective, type DsSortableDropEvent } from '../sortable/sortable.directive'
+import { DsSortableDirective } from '../sortable/sortable.directive'
 
 @Component({
   selector: 'ds-canvas-palette',
@@ -19,26 +18,24 @@ import { DsSortableDirective, type DsSortableDropEvent } from '../sortable/sorta
     <ds-folders-sidebar [folders]="folders()">
       <ng-template dsFolderItem let-item>
         @let def = defOf(item);
-        @if (def) {
-          <div class="chip-slot" dsSortable [options]="sortOptions" (dsSortableDrop)="onDrop($event)">
-            <div class="chip ds-sortable-item" [attr.data-ds-palette-name]="def.name">
-              <span class="chip__icon">
-                <span class="material-icons" aria-hidden="true">{{ resolveIcon(def) }}</span>
-              </span>
-              <div class="chip__text">
-                <span class="chip__title">{{ def.label || item.name }}</span>
-                @if (def.description) {
-                  <span class="chip__sub">{{ def.description }}</span>
-                }
-              </div>
-              @if (store.isContainer(def)) {
-                <span class="chip__badge" title="Контейнер">
-                  <span class="material-icons" aria-hidden="true">account_tree</span>
-                </span>
+        <div class="chip-slot" dsSortable [options]="sortOptions" (dsSortableDrop)="store.applyDrop($event)">
+          <div class="chip ds-sortable-item" [attr.data-ds-palette-name]="def.name">
+            <span class="chip__icon">
+              <span class="material-icons" aria-hidden="true">{{ iconOrDefault(def.icon, def) }}</span>
+            </span>
+            <div class="chip__text">
+              <span class="chip__title">{{ def.label || item.name }}</span>
+              @if (def.description) {
+                <span class="chip__sub">{{ def.description }}</span>
               }
             </div>
+            @if (def.container) {
+              <span class="chip__badge" title="Контейнер">
+                <span class="material-icons" aria-hidden="true">account_tree</span>
+              </span>
+            }
           </div>
-        }
+        </div>
       </ng-template>
     </ds-folders-sidebar>
   `
@@ -48,11 +45,9 @@ export class CanvasPaletteComponent {
 
   readonly components = input.required<readonly ComponentDefinition[]>()
 
-  // objectify replaces `new Map(arr.map())` — plain object lookup is faster and terser
-  readonly #byName = computed(() => objectify(this.components(), c => c.name))
   readonly folders = computed<Folder[]>(() => componentsToFolders(this.components()))
 
-  readonly resolveIcon = resolveIcon
+  readonly iconOrDefault = iconOrDefault
 
   readonly sortOptions: Partial<Options> = {
     group: { name: 'ds-canvas', pull: 'clone', put: false },
@@ -60,12 +55,8 @@ export class CanvasPaletteComponent {
     draggable: '.ds-sortable-item'
   }
 
-  defOf(item: FolderItem): ComponentDefinition | undefined {
-    return this.#byName()[String(item.id)]
-  }
-
-  onDrop(event: DsSortableDropEvent): void {
-    this.store.applyDrop(event)
+  defOf(item: FolderItem): ComponentDefinition {
+    return this.store.component(String(item.id))!
   }
 }
 
@@ -93,8 +84,8 @@ function componentsToFolders(components: readonly ComponentDefinition[]): Folder
       return {
         id,
         name: seg,
-        children: Object.keys(child.children).length ? build(child, id) : undefined,
-        items: child.items.length ? child.items : undefined
+        children: build(child, id),
+        items: child.items
       }
     })
 

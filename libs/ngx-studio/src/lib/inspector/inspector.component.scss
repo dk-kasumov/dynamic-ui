@@ -1,6 +1,6 @@
-// The inspector sits in the workbench's third grid column on wide viewports
+// The inspector sits in the studio's third grid column on wide viewports
 // (the column is 0px wide by default and animates to 320px via a transition
-// on the workbench's grid-template-columns). On narrow viewports it becomes
+// on the studio's grid-template-columns). On narrow viewports it becomes
 // an absolutely positioned drawer that slides in from the right.
 
 :host {
@@ -22,7 +22,7 @@
   flex-direction: column;
   width: 320px;        // Fixed width so content layout stays stable while the
                        // grid column transitions open; overflow is clipped by
-                       // the workbench's `overflow: hidden`.
+                       // the studio's `overflow: hidden`.
   height: 100%;
   box-sizing: border-box;
   background: var(--ds-sidebar-bg);
@@ -163,10 +163,10 @@
   }
 }
 
-// Narrow workbench: inspector floats over canvas with a backdrop. The
-// workbench grid stays 2-col (the 3rd 0px track is unused) and the inspector
+// Narrow studio: inspector floats over canvas with a backdrop. The
+// studio grid stays 2-col (the 3rd 0px track is unused) and the inspector
 // positions itself absolutely with its own slide-in animation.
-@container ds-workbench (max-width: 1199px) {
+@container ds-studio (max-width: 1199px) {
   .scrim { display: block; }
   .inspector {
     position: absolute;
@@ -178,7 +178,7 @@
 }
 
 // Mobile bottom-sheet: only on very small screens (phones).
-@container ds-workbench (max-width: 479px) {
+@container ds-studio (max-width: 479px) {
   .inspector {
     inset-block-start: auto;
     left: 0;

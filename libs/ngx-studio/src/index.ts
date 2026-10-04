@@ -1,3 +1,4 @@
-export { StudioWorkbenchComponent } from './lib/studio-workbench.component'
-export * from './lib/kit/canvas'
-export * from './lib/kit/inspector'
+export { NgxStudioComponent } from './lib/ngx-studio.component'
+export * from './lib/canvas'
+export * from './lib/header'
+export * from './lib/inspector'

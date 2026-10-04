@@ -4,7 +4,7 @@ const STORY_URL = '/iframe.html?id=canvas--default&viewMode=story'
 
 async function loadStory(page: Page) {
   await page.goto(STORY_URL)
-  await page.waitForSelector('ds-studio-workbench', { state: 'attached' })
+  await page.waitForSelector('ds-ngx-studio', { state: 'attached' })
   await page.waitForSelector('.card', { state: 'visible' })
 }
 
@@ -60,7 +60,7 @@ test.describe('Inspector panel', () => {
 
   test('inspector appears with motion (grid transition or slide-in)', async ({ page }) => {
     // Click Configure and immediately check that motion is active somewhere
-    // (either grid-template-columns transition on the workbench, or an
+    // (either grid-template-columns transition on the studio, or an
     // animation on the inspector itself depending on viewport width).
     const card = await getLeafCard(page)
     await card.hover()
@@ -68,7 +68,7 @@ test.describe('Inspector panel', () => {
 
     await page.waitForSelector('.inspector', { state: 'attached' })
     const motion = await page.evaluate(() => {
-      const wb = document.querySelector('ds-studio-workbench')!
+      const wb = document.querySelector('ds-ngx-studio')!
       const insp = document.querySelector('.inspector')
       const wbAnims = wb.getAnimations({ subtree: false })
       const inspAnims = insp?.getAnimations() ?? []
@@ -77,15 +77,15 @@ test.describe('Inspector panel', () => {
     expect(motion.wbCount + motion.inspCount).toBeGreaterThan(0)
   })
 
-  test('inspector appears on the right side of the workbench (wide viewport)', async ({ page }) => {
+  test('inspector appears on the right side of the studio (wide viewport)', async ({ page }) => {
     // Playwright Desktop Chrome default: 1280×720 — triggers @media (min-width:1200px)
     await openInspector(page)
     const inspector = page.locator('.inspector')
-    const workbench = page.locator('ds-studio-workbench')
+    const studio = page.locator('ds-ngx-studio')
 
-    // Wait for BOTH the inspector animations AND the workbench's grid-template-
+    // Wait for BOTH the inspector animations AND the studio's grid-template-
     // columns transition to finish before measuring final positions.
-    await workbench.evaluate((el) =>
+    await studio.evaluate((el) =>
       Promise.all(el.getAnimations({ subtree: false }).map((a) => a.finished))
     )
     await inspector.evaluate((el) =>
@@ -93,20 +93,20 @@ test.describe('Inspector panel', () => {
     )
 
     const inspectorBox = await inspector.boundingBox()
-    const workbenchBox = await workbench.boundingBox()
+    const studioBox = await studio.boundingBox()
 
     expect(inspectorBox).not.toBeNull()
-    expect(workbenchBox).not.toBeNull()
+    expect(studioBox).not.toBeNull()
 
-    if (inspectorBox && workbenchBox) {
-      // Inspector right edge aligns with workbench right edge.
+    if (inspectorBox && studioBox) {
+      // Inspector right edge aligns with studio right edge.
       // 20px tolerance accounts for the Storybook shell border and sub-pixel rendering.
       const inspectorRight = inspectorBox.x + inspectorBox.width
-      const workbenchRight = workbenchBox.x + workbenchBox.width
-      expect(Math.abs(inspectorRight - workbenchRight)).toBeLessThan(20)
+      const studioRight = studioBox.x + studioBox.width
+      expect(Math.abs(inspectorRight - studioRight)).toBeLessThan(20)
 
-      // Inspector must NOT be at the bottom (top must be near workbench top)
-      expect(Math.abs(inspectorBox.y - workbenchBox.y)).toBeLessThan(4)
+      // Inspector must NOT be at the bottom (top must be near studio top)
+      expect(Math.abs(inspectorBox.y - studioBox.y)).toBeLessThan(4)
     }
   })
 

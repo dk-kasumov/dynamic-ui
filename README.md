@@ -78,7 +78,7 @@ For now, read the [core library documentation](libs/studio/README.md). The API i
 Near-term milestones:
 
 - Freeze the canonical DSL shape and introduce versioning (`schemaVersion`).
-- Implement the base set of `Studio.*` primitives and `Studio.relation()` with its AST.
+- Implement the base set of `Studio.*` primitives and `Studio.relation()` with its expression tree.
 - Pressure-test the DSL by writing adapters for two radically different runtimes (one declarative, one imperative).
 - Ship the first UI implementation.
 

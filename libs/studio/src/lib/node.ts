@@ -9,7 +9,7 @@ export interface Node {
   props: Record<string, unknown>
   relations: Record<string, RelationInstance>
   children?: Node[]
-  /** Per-instance override of the component definition's icon (Material Icons ligature). */
+  /** Per-instance override of the component definition's icon token. */
   icon?: string
   /** Optional human-readable identifier shown as the card subtitle on the canvas. */
   title?: string

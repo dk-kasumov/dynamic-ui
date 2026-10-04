@@ -7,48 +7,59 @@
 
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue }
 
-export type RelationReturns = 'boolean' | 'value' | 'nodeRef' | 'nodeRef[]'
+export type RelationReturns = 'boolean' | 'value' | 'nodeReference' | 'nodeReferences'
 
 // Operands -------------------------------------------------------------------
 
-export type Operand = { kind: 'ref'; nodeId: string } | { kind: 'self' } | { kind: 'value'; value: JsonValue }
+export type Operand =
+  | { kind: 'reference'; nodeId: string }
+  | { kind: 'self' }
+  | { kind: 'value'; value: JsonValue }
 
-// Operator groups ------------------------------------------------------------
+// Operators ------------------------------------------------------------------
 
-export type ComparisonOp = 'eq' | 'neq' | 'gt' | 'gte' | 'lt' | 'lte'
-export type ArithmeticOp = 'add' | 'sub' | 'mul' | 'div'
-export type LogicalOp = 'and' | 'or'
-export type PredicateOp = 'isEmpty' | 'isValid' | 'isTouched'
+export type ComparisonOperator = 'equals' | 'notEquals' | 'greaterThan' | 'greaterThanOrEqual' | 'lessThan' | 'lessThanOrEqual'
+export type ArithmeticOperator = 'add' | 'subtract' | 'multiply' | 'divide'
+export type LogicalOperator = 'and' | 'or'
+export type PredicateOperator = 'isEmpty' | 'isValid' | 'isTouched'
 
-export type BuiltinOp =
-  ComparisonOp | ArithmeticOp | LogicalOp | PredicateOp | 'in' | 'not' | 'matches' | 'formValid' | 'concat'
+export type BuiltinOperator =
+  | ComparisonOperator
+  | ArithmeticOperator
+  | LogicalOperator
+  | PredicateOperator
+  | 'isOneOf'
+  | 'not'
+  | 'matchesPattern'
+  | 'isFormValid'
+  | 'concatenate'
 
-// AST ------------------------------------------------------------------------
+// Expression tree ------------------------------------------------------------
 
-interface BinaryExpr<Op extends string> {
-  op: Op
-  lhs: Operand
-  rhs: Operand
+interface BinaryExpression<Operator extends string> {
+  operator: Operator
+  left: Operand
+  right: Operand
 }
 
-interface UnaryExpr<Op extends string, Arg = Operand> {
-  op: Op
-  arg: Arg
+interface UnaryExpression<Operator extends string, Argument = Operand> {
+  operator: Operator
+  operand: Argument
 }
 
-interface ListExpr<Op extends string, Arg> {
-  op: Op
-  args: Arg[]
+interface ListExpression<Operator extends string, Item> {
+  operator: Operator
+  operands: Item[]
 }
 
-export type RelationAst =
-  | BinaryExpr<ComparisonOp | 'in' | ArithmeticOp>
-  | UnaryExpr<PredicateOp>
-  | UnaryExpr<'not', RelationAst>
-  | ListExpr<LogicalOp, RelationAst>
-  | ListExpr<'concat', Operand>
-  | { op: 'matches'; lhs: Operand; pattern: string; flags?: string }
-  | { op: 'formValid' }
+export type RelationExpression =
+  | BinaryExpression<ComparisonOperator | 'isOneOf' | ArithmeticOperator>
+  | UnaryExpression<PredicateOperator>
+  | UnaryExpression<'not', RelationExpression>
+  | ListExpression<LogicalOperator, RelationExpression>
+  | ListExpression<'concatenate', Operand>
+  | { operator: 'matchesPattern'; left: Operand; pattern: string; flags?: string }
+  | { operator: 'isFormValid' }
 
 // Descriptors (schema) -------------------------------------------------------
 
@@ -59,18 +70,18 @@ export interface TargetFilter {
 
 export interface RelationPreset {
   label: string
-  /** Any `{ kind: 'ref', nodeId: '$pick' }` in the AST is a placeholder the manager fills in the UI. */
-  ast: RelationAst
+  /** Any `{ kind: 'reference', nodeId: '$pick' }` in the expression is a placeholder the manager fills in the UI. */
+  expression: RelationExpression
 }
 
-export interface RelationDescriptorBuiltin<R extends RelationReturns = RelationReturns> {
+export interface RelationDescriptorBuiltin<Returns extends RelationReturns = RelationReturns> {
   kind: 'relation'
   variant: 'builtin'
-  returns: R
+  returns: Returns
   label?: string
   description?: string
   targetFilter?: TargetFilter
-  operators?: readonly BuiltinOp[]
+  operators?: readonly BuiltinOperator[]
   mode?: 'simple' | 'advanced'
   presets?: readonly RelationPreset[]
   default?: unknown
@@ -90,22 +101,22 @@ export type RelationDescriptor = RelationDescriptorBuiltin | RelationDescriptorC
 // Instance (data on a node) --------------------------------------------------
 
 export type RelationInstance =
-  | { variant: 'builtin'; returns: RelationReturns; ast: RelationAst }
+  | { variant: 'builtin'; returns: RelationReturns; expression: RelationExpression }
   | { variant: 'custom'; customId: string; payload: JsonValue }
 
 // Factories ------------------------------------------------------------------
 
-function builtinRelation<R extends RelationReturns = 'boolean'>(
-  opts: Omit<RelationDescriptorBuiltin<R>, 'kind' | 'variant' | 'returns'> & { returns?: R } = {}
-): RelationDescriptorBuiltin<R> {
-  const { returns, ...rest } = opts
-  return { kind: 'relation', variant: 'builtin', returns: (returns ?? 'boolean') as R, ...rest }
+function builtinRelation<Returns extends RelationReturns = 'boolean'>(
+  options: Omit<RelationDescriptorBuiltin<Returns>, 'kind' | 'variant' | 'returns'> & { returns?: Returns } = {}
+): RelationDescriptorBuiltin<Returns> {
+  const { returns, ...rest } = options
+  return { kind: 'relation', variant: 'builtin', returns: (returns ?? 'boolean') as Returns, ...rest }
 }
 
 function customRelation<Payload = JsonValue>(
-  opts: Omit<RelationDescriptorCustom<Payload>, 'kind' | 'variant'>
+  options: Omit<RelationDescriptorCustom<Payload>, 'kind' | 'variant'>
 ): RelationDescriptorCustom<Payload> {
-  return { kind: 'relation', variant: 'custom', ...opts }
+  return { kind: 'relation', variant: 'custom', ...options }
 }
 
 /** `Studio.relation(...)` with `.custom(...)` attached. */

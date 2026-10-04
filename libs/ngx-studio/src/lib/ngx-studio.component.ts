@@ -1,28 +1,30 @@
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject, input } from '@angular/core'
 import type { ComponentDefinition, Studio } from '@dynamic-ui/studio'
-import { CanvasPaletteComponent } from './kit/canvas/palette/canvas-palette.component'
-import { CanvasStore } from './kit/canvas/store/canvas-store.service'
-import { CanvasComponent } from './kit/canvas/canvas.component'
-import { InspectorComponent } from './kit/inspector/inspector.component'
+import { CanvasPaletteComponent } from './canvas/palette/canvas-palette.component'
+import { CanvasStore } from './canvas/store/canvas-store.service'
+import { CanvasComponent } from './canvas/canvas.component'
+import { StudioHeaderComponent } from './header/studio-header.component'
+import { InspectorComponent } from './inspector/inspector.component'
 
 /**
  * Top-level organism. Provides CanvasStore, binds a Studio instance to it,
  * and lays out the palette sidebar next to the canvas viewport.
  *
  * All design tokens are defined as CSS custom properties on :host — override
- * any --ds-* variable on ds-studio-workbench to retheme the entire studio.
+ * any --ds-* variable on ds-ngx-studio to retheme the entire studio.
  */
 @Component({
-  selector: 'ds-studio-workbench',
+  selector: 'ds-ngx-studio',
   standalone: true,
   providers: [CanvasStore],
-  imports: [CanvasPaletteComponent, CanvasComponent, InspectorComponent],
+  imports: [StudioHeaderComponent, CanvasPaletteComponent, CanvasComponent, InspectorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  styleUrl: './studio-workbench.component.scss',
+  styleUrl: './ngx-studio.component.scss',
   host: {
-    '[class.ds-workbench--inspecting]': 'inspecting()'
+    '[class.ds-studio--inspecting]': 'inspecting()'
   },
   template: `
+    <ds-studio-header />
     <ds-canvas-palette [components]="paletteComponents()" />
     <ds-canvas />
     @if (inspecting()) {
@@ -30,7 +32,7 @@ import { InspectorComponent } from './kit/inspector/inspector.component'
     }
   `
 })
-export class StudioWorkbenchComponent implements OnInit, OnDestroy {
+export class NgxStudioComponent implements OnInit, OnDestroy {
   readonly #store = inject(CanvasStore)
 
   readonly studio = input.required<Studio>()

@@ -24,7 +24,7 @@ const Button = Studio.defineComponent({
 const Form = Studio.defineComponent({
   name: 'Containers/Form',
   props: { title: Studio.text() },
-  children: { cardinality: 'many' }
+  container: true
 })
 
 const rootId = 'root' as NodeId
@@ -72,7 +72,7 @@ describe('Studio — end-to-end usage', () => {
     studio.setRelation(submitId, 'disabled', {
       variant: 'builtin',
       returns: 'boolean',
-      ast: { op: 'isEmpty', arg: { kind: 'ref', nodeId: emailId } }
+      expression: { operator: 'isEmpty', operand: { kind: 'reference', nodeId: emailId } }
     })
 
     // UI can walk the tree to render it.

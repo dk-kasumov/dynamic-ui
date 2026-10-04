@@ -12,9 +12,9 @@ For the overall project vision, see the [root README](../../README.md).
 
 - **Component registration API** — primitives for declaring the shape of each component's props and relations.
 - **Node and tree model** — the single-shape node contract that the entire editor manipulates.
-- **Relation AST** — the structured expression tree used to describe conditional and computed links between nodes.
+- **Relation expressions** — the structured expression tree used to describe conditional and computed links between nodes.
 - **Canonical DSL** — serialization and deserialization of the node tree into pure JSON.
-- **Validation** — schema-level and instance-level checks (type correctness, broken references, cardinality violations).
+- **Validation** — schema-level and instance-level checks (type correctness, broken references, containers receiving children they cannot hold).
 
 ## What's NOT in this package
 
@@ -89,22 +89,17 @@ const textInput = Studio.defineComponent({
 })
 ```
 
-That's a complete component definition. The core has no built-in knowledge that this is a "text input"; from its point of view it's just a leaf component (no `children` key) with a declared prop shape and three available relations.
+That's a complete component definition. The core has no built-in knowledge that this is a "text input"; from its point of view it's just a leaf component (not a container) with a declared prop shape and three available relations.
 
 ### Containers
 
-Any component that should accept children declares a `children` configuration:
+Any component that should accept children sets `container: true`:
 
 ```ts
 const stepper = Studio.defineComponent({
   name: 'Containers/Stepper',
 
-  children: {
-    cardinality: 'many', // 'none' | 'one' | 'many'
-    kinds: ['Containers/Step'], // whitelist of allowed child component names
-    min: 1, // optional
-    max: 10 // optional
-  },
+  container: true,
 
   props: {
     orientation: Studio.enum(['horizontal', 'vertical'])
@@ -112,7 +107,7 @@ const stepper = Studio.defineComponent({
 })
 ```
 
-There is no concept of "slot" or "named region". If you need a container with structurally distinct child positions (e.g., an accordion with multiple panels), you register the composition explicitly: a parent container that accepts specific child kinds, which in turn accept their own children. See [Composition patterns](#composition-patterns) below.
+There is no concept of "slot" or "named region". If you need a container with structurally distinct child positions (e.g., an accordion with multiple panels), you register the composition explicitly: a parent container with its own dedicated child components, which in turn accept their own children. See [Composition patterns](#composition-patterns) below.
 
 ---
 
@@ -143,7 +138,11 @@ studio.setProp(fieldId, ['label'], 'Email')
 studio.setRelation(fieldId, 'required', {
   variant: 'builtin',
   returns: 'boolean',
-  ast: { op: 'eq', lhs: { kind: 'ref', nodeId: 'role-id' }, rhs: { kind: 'value', value: 'admin' } }
+  expression: {
+    operator: 'equals',
+    left: { kind: 'reference', nodeId: 'role-id' },
+    right: { kind: 'value', value: 'admin' }
+  }
 })
 
 // Selection and subscriptions — UI uses these to render the gear and re-render on changes.
@@ -189,7 +188,7 @@ Every component declares two separate bags: `props` and `relations`. They are di
 
 The rule of thumb: **does the component itself need to know this value to render?** If yes → `props`. If no (the surrounding runtime applies it) → `relations`.
 
-Separating these two is what keeps the adapter clean: props are a simple projection, relations require a reactive walker over an AST. Mixing them in one bag would force every adapter to re-discover the distinction at runtime.
+Separating these two is what keeps the adapter clean: props are a simple projection, relations require a reactive walker over an expression tree. Mixing them in one bag would force every adapter to re-discover the distinction at runtime.
 
 ### When a prop and a relation overlap
 
@@ -213,36 +212,36 @@ Every relation declares what it produces:
 | ------------- | ------------------------------- | --------------------------------------------- |
 | `'boolean'`   | Condition.                      | `visible`, `disabled`, `required`.            |
 | `'value'`     | Computed value of a given type. | `placeholder = "Hi, " + firstName.value`.     |
-| `'nodeRef'`   | A reference to one other node.  | "This field depends on that field."           |
-| `'nodeRef[]'` | A list of node references.      | "These fields together determine the result." |
+| `'nodeReference'`  | A reference to one other node.  | "This field depends on that field."           |
+| `'nodeReferences'` | A list of node references.      | "These fields together determine the result." |
 
-### Structured AST, not expression strings
+### Structured expression tree, not expression strings
 
-A relation's output in the DSL is a structured JSON AST, not a string expression. Operators are nodes, operands are nodes, composition uses `and` / `or` / `not`.
+A relation's output in the DSL is a structured JSON expression tree, not a string expression. Operators are nodes, operands are nodes, composition uses `and` / `or` / `not`.
 
 ```json
 {
-  "op": "and",
-  "args": [
-    { "op": "eq", "lhs": { "ref": "country-5" }, "rhs": { "value": "US" } },
-    { "op": "isValid", "arg": { "ref": "email-3" } }
+  "operator": "and",
+  "operands": [
+    { "operator": "equals", "left": { "reference": "country-5" }, "right": { "value": "US" } },
+    { "operator": "isValid", "operand": { "reference": "email-3" } }
   ]
 }
 ```
 
-Why an AST rather than a string:
+Why an expression tree rather than a string:
 
 - **No parser needed.** Every adapter is a straightforward tree walker (~a few hundred lines of code).
-- **Validation is easy.** Broken refs, type mismatches, unknown operators — all caught structurally.
-- **The gear panel renders directly from the AST.** Each node of the tree corresponds to a visual row.
-- **Translating to runtime-specific condition formats** (JSONForms rules, Formily reactions, FormIO conditions, SurveyJS expressions) is a case-by-case mapping over the AST, not a string rewrite.
+- **Validation is easy.** Broken references, type mismatches, unknown operators — all caught structurally.
+- **The gear panel renders directly from the expression tree.** Each node of the tree corresponds to a visual row.
+- **Translating to runtime-specific condition formats** (JSONForms rules, Formily reactions, FormIO conditions, SurveyJS expressions) is a case-by-case mapping over the expression tree, not a string rewrite.
 
 ### Built-in operators (initial set)
 
-Comparison: `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `matches`.
-Predicates: `isEmpty`, `isValid`, `isTouched`, `formValid`.
+Comparison: `equals`, `notEquals`, `greaterThan`, `greaterThanOrEqual`, `lessThan`, `lessThanOrEqual`, `isOneOf`, `matchesPattern`.
+Predicates: `isEmpty`, `isValid`, `isTouched`, `isFormValid`.
 Composition: `and`, `or`, `not`.
-Arithmetic (for `returns: 'value'`): `add`, `sub`, `mul`, `div`, `concat`.
+Arithmetic (for `returns: 'value'`): `add`, `subtract`, `multiply`, `divide`, `concatenate`.
 
 Operators are the only part of the DSL that is versioned by the core itself. Future additions bump `schemaVersion`; adapters document which operators they support.
 
@@ -261,16 +260,16 @@ Studio.relation({
 
   // Whitelist of operators shown in the UI.
   // Omit to allow all built-ins.
-  operators: ['eq', 'neq', 'isEmpty', 'isValid'],
+  operators: ['equals', 'notEquals', 'isEmpty', 'isValid'],
 
   // 'simple' = flat list of rules; 'advanced' = grouped composition (AND/OR groups).
   mode: 'simple',
 
-  // Named presets that pre-fill the AST.
+  // Named presets that pre-fill the expression.
   presets: [
     {
       label: 'Shown when target is valid',
-      ast: { op: 'isValid', arg: { ref: '$pick' } }
+      expression: { operator: 'isValid', operand: { reference: '$pick' } }
       // $pick is a placeholder — the manager fills it by picking a node in the UI.
     }
   ],
@@ -307,7 +306,7 @@ Any structural pattern reduces to composition:
 
 **Accordion:** an `Accordion` container that accepts `AccordionPanel` children. `AccordionPanel` is a container that accepts arbitrary content.
 
-**Card with header / body / footer:** a `Card` container that accepts a `CardHeader`, a `CardBody`, and a `CardFooter` (constrained via `kinds` and `max: 1` per kind on each).
+**Card with header / body / footer:** a `Card` container that accepts a `CardHeader`, a `CardBody`, and a `CardFooter` (each registered as its own component).
 
 **If/Else:** an `IfCondition` component with a boolean relation, whose children are rendered only when the condition holds. A sibling `ElseBranch` component captures the fallback.
 
@@ -351,10 +350,10 @@ The studio serializes the tree to pure JSON:
           "required": {
             "variant": "builtin",
             "returns": "boolean",
-            "ast": {
-              "op": "eq",
-              "lhs": { "ref": "role-3" },
-              "rhs": { "value": "admin" }
+            "expression": {
+              "operator": "equals",
+              "left": { "reference": "role-3" },
+              "right": { "value": "admin" }
             }
           }
         }
@@ -399,7 +398,7 @@ What an adapter does:
 - Walks the node tree.
 - Maps each `name` to a concrete component in the host framework.
 - Projects `props` directly onto the component.
-- Walks each relation's AST and wires it up using the host runtime's reactivity (RxJS, signals, hooks, computed, whatever).
+- Walks each relation's expression tree and wires it up using the host runtime's reactivity (RxJS, signals, hooks, computed, whatever).
 - Returns a handle the host application can mount, read values from, and submit.
 
 What an adapter does **not** do:
@@ -431,13 +430,13 @@ The DSL may describe behaviors that a particular runtime cannot express declarat
 
 ### 4. "Everything is a component"
 
-No special categories: no inputs, no containers-as-a-separate-concept, no slots, no validator primitives, no form-level magic. Any such concept is expressed by a developer-registered component (plus its props, relations, and children configuration).
+No special categories: no inputs, no containers-as-a-separate-concept, no slots, no validator primitives, no form-level magic. Any such concept is expressed by a developer-registered component (plus its props, relations, and the `container` flag).
 
 ---
 
 ## Status
 
-Early. The public API will change as the primitives, relation AST, and DSL stabilize. Do not depend on this package in production yet.
+Early. The public API will change as the primitives, relation expressions, and DSL stabilize. Do not depend on this package in production yet.
 
 ## License
 

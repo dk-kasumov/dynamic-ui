@@ -20,17 +20,8 @@ export interface NewNode {
   title?: string
 }
 
-export function createNode(input: NewNode): Node {
-  const node: Node = {
-    id: input.id ?? (crypto.randomUUID() as NodeId),
-    name: input.name,
-    props: input.props ?? {},
-    relations: input.relations ?? {}
-  }
-  if (input.children) node.children = input.children
-  if (input.icon !== undefined) node.icon = input.icon
-  if (input.title !== undefined) node.title = input.title
-  return node
+export function createNode({ id, name, props, relations, ...rest }: NewNode): Node {
+  return { id: id ?? (crypto.randomUUID() as NodeId), name, props: props ?? {}, relations: relations ?? {}, ...rest }
 }
 
 export interface NodeMetaPatch {
@@ -51,16 +42,14 @@ export class Tree {
   }
 
   add(parentId: NodeId, input: NewNode, index?: number): NodeId {
-    const parent = this.require(parentId)
     const node = createNode(input)
-    parent.children ??= []
-    parent.children.splice(clamp(index, parent.children.length), 0, node)
+    insert(this.require(parentId), node, index)
     return node.id
   }
 
   remove(id: NodeId): void {
     if (id === this.root.id) throw new StudioError('Cannot remove the root node')
-    const parent = findParent(this.root, id)
+    const parent = this.parentOf(id)
     if (!parent) throw new StudioError(`Node "${id}" not found`)
     parent.children = parent.children!.filter(c => c.id !== id)
   }
@@ -73,8 +62,7 @@ export class Tree {
     if (contains(node, newParentId)) throw new StudioError('Cannot move a node into one of its descendants')
 
     this.remove(id)
-    newParent.children ??= []
-    newParent.children.splice(clamp(index, newParent.children.length), 0, node)
+    insert(newParent, node, index)
   }
 
   setProp(id: NodeId, path: readonly string[], value: unknown): void {
@@ -92,13 +80,10 @@ export class Tree {
 
   setMeta(id: NodeId, patch: NodeMetaPatch): void {
     const node = this.require(id)
-    if ('icon' in patch) {
-      if (patch.icon == null || patch.icon === '') delete node.icon
-      else node.icon = patch.icon
-    }
-    if ('title' in patch) {
-      if (patch.title == null || patch.title === '') delete node.title
-      else node.title = patch.title
+    for (const key of ['icon', 'title'] as const) {
+      if (!(key in patch)) continue
+      if (patch[key]) node[key] = patch[key]
+      else delete node[key]
     }
   }
 
@@ -144,7 +129,7 @@ function contains(node: Node, id: NodeId): boolean {
   return node.children.some(c => c.id === id || contains(c, id))
 }
 
-function clamp(index: number | undefined, length: number): number {
-  if (index === undefined || index > length) return length
-  return index < 0 ? 0 : index
+function insert(parent: Node, node: Node, index = Infinity): void {
+  const children = (parent.children ??= [])
+  children.splice(Math.min(Math.max(index, 0), children.length), 0, node)
 }

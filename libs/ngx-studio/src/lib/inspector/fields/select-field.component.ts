@@ -56,15 +56,11 @@ export class SelectFieldComponent {
   readonly multiple = computed(() => this.primitive().multiple === true)
 
   readonly values = computed<readonly string[]>(() => {
-    const v = this.value()
-    if (Array.isArray(v)) return v
-    if (typeof v === 'string' && v) return [v]
-    return []
+    return [this.value() || []].flat()
   })
 
   readonly singleValue = computed(() => {
-    const v = this.value()
-    return typeof v === 'string' ? v : ''
+    return [this.value()].flat()[0] ?? ''
   })
 
   defaultText(): string {
@@ -79,13 +75,11 @@ export class SelectFieldComponent {
   addToken(event: MatChipInputEvent): void {
     const raw = event.value.trim()
     if (!raw) return
-    const next = [...this.values(), raw]
-    this.valueChange.emit(next)
+    this.valueChange.emit([...this.values(), raw])
     event.chipInput.clear()
   }
 
   removeAt(index: number): void {
-    const next = this.values().filter((_, i) => i !== index)
-    this.valueChange.emit(next)
+    this.valueChange.emit(this.values().filter((_, i) => i !== index))
   }
 }

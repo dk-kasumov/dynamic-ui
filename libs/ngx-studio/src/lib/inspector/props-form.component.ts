@@ -24,7 +24,7 @@ import type { InspectorFieldChange } from './field-change'
         }
       </div>
     } @else {
-      <p class="form__empty">У компонента нет настраиваемых пропсов.</p>
+      <p class="form__empty">This component has no configurable props.</p>
     }
   `,
   styleUrl: './props-form.component.scss'
