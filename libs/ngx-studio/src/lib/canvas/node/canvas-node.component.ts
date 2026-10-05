@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core'
-import type { NodeId } from '@dynamic-ui/studio'
-import { CanvasStore } from '../store/canvas-store.service'
+import { Studio, describeExpression, type NodeId } from '@dynamic-ui/studio'
+import { StudioFacade } from '../../studio-facade.service'
 import { DsSortableDirective, type DsSortableDropEvent } from '../sortable/sortable.directive'
-import { shortName } from '../icon'
 
 @Component({
   selector: 'ds-canvas-node',
@@ -15,8 +14,10 @@ import { shortName } from '../icon'
     @let def = component();
     <article
       class="card"
-      [class.card--selected]="isSelected() || isInspected()"
+      [class.card--selected]="isSelected()"
       [class.card--container]="container()"
+      [class.card--pickable]="facade.picking() && pickable()"
+      [class.card--dimmed]="facade.picking() && !pickable()"
       (click)="onSelect($event)"
     >
       <header class="card__head ds-sortable-handle">
@@ -32,7 +33,7 @@ import { shortName } from '../icon'
           <span class="material-icons" aria-hidden="true">{{ icon() }}</span>
         </span>
         <div class="card__titles">
-          <span class="card__title">{{ def.label || shortName(def.name) }}</span>
+          <span class="card__title">{{ def.label }}</span>
           @if (subtitle(); as sub) {
             <span class="card__subtitle">{{ sub }}</span>
           }
@@ -64,9 +65,9 @@ import { shortName } from '../icon'
           <div
             class="dropzone"
             dsSortable
-            [options]="store.treeSortOptions"
+            [options]="facade.treeSortOptions"
             [attr.data-ds-container-id]="n.id"
-            (dsSortableDrop)="store.applyDrop($event)"
+            (dsSortableDrop)="facade.applyDrop($event)"
           >
             @for (child of n.children; track child.id) {
               <div class="dropzone__item ds-sortable-item" [attr.data-ds-node-id]="child.id">
@@ -85,39 +86,52 @@ import { shortName } from '../icon'
   `
 })
 export class CanvasNodeComponent {
-  readonly store = inject(CanvasStore)
+  readonly facade = inject(StudioFacade)
 
   readonly nodeId = input.required<NodeId>()
-  readonly node = this.store.nodeSignal(() => this.nodeId())
-  readonly component = computed(() => this.store.component(this.node().name)!)
+  readonly node = this.facade.nodeSignal(() => this.nodeId())
+  readonly component = computed(() => this.facade.component(this.node().name)!)
 
   readonly container = computed(() => !!this.component().container)
-  readonly isSelected = computed(() => this.store.selectedId() === this.nodeId())
-  readonly isInspected = computed(() => this.store.inspectedId() === this.nodeId())
+  readonly isSelected = computed(() => this.facade.selectedId() === this.nodeId())
+  readonly isInspected = computed(() => this.facade.inspectedId() === this.nodeId())
+  readonly pickable = computed(() => this.facade.pickable(this.nodeId()))
 
-  readonly icon = computed(() => this.store.iconOf(this.node()))
+  readonly icon = computed(() => this.facade.iconOf(this.node()))
 
   // Instance-level `title` wins; fall back to the component definition's static
   // description. Props are never read here — the subtitle is an explicit label.
   readonly subtitle = computed(() => this.node().title ?? this.component().description)
 
-  readonly relationsSummary = computed(() => Object.keys(this.node().relations).join(' · '))
+  // Human-readable summary of active relations, e.g. "Visible: Email is empty".
+  readonly relationsSummary = computed(() => {
+    const relations = this.node().relations
+    const label = (id: NodeId) => this.facade.nodeLabel(id)
+    return Object.entries(relations)
+      .map(([name, instance]) => {
+        const condition = instance.variant === 'builtin' ? describeExpression(instance.expression, label) : ''
+        return condition ? `${Studio.humanize(name)}: ${condition}` : Studio.humanize(name)
+      })
+      .join(' · ')
+  })
 
-  readonly shortName = shortName
 
   onSelect(event: MouseEvent): void {
     event.stopPropagation()
-    this.store.select(this.nodeId())
+    if (this.facade.picking()) {
+      this.facade.resolvePick(this.nodeId())
+      return
+    }
+    this.facade.select(this.nodeId())
   }
 
   onEdit(event: MouseEvent): void {
     event.stopPropagation()
-    this.store.select(this.nodeId())
-    this.store.inspect(this.nodeId())
+    this.facade.inspect(this.nodeId())
   }
 
   onRemove(event: MouseEvent): void {
     event.stopPropagation()
-    this.store.removeNode(this.nodeId())
+    this.facade.removeNode(this.nodeId())
   }
 }

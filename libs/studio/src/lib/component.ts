@@ -12,7 +12,8 @@ export interface ComponentDefinition<
   Relations extends Record<string, RelationDescriptor> = Record<string, RelationDescriptor>
 > {
   name: Name
-  label?: string
+  /** Display label, derived from the last segment of `name` — not set by the developer. */
+  label: string
   description?: string
   /** Opaque icon token; the UI library decides how to render it and what to fall back to. */
   icon?: string
@@ -24,14 +25,17 @@ export interface ComponentDefinition<
 
 const EMPTY_RELATIONS = Object.freeze({})
 
+/** A component's display label: the last `/`-separated segment of its name. */
+export const labelFor = (name: string): string => name.slice(name.lastIndexOf('/') + 1)
+
 export function defineComponent<
   const Name extends string,
   const Props extends Record<string, Primitive>,
   const Relations extends Record<string, RelationDescriptor> = Record<string, never>
 >(
-  def: Omit<ComponentDefinition<Name, Props, Relations>, 'relations'> & { relations?: Relations }
+  def: Omit<ComponentDefinition<Name, Props, Relations>, 'label' | 'relations'> & { relations?: Relations }
 ): ComponentDefinition<Name, Props, Relations> {
-  return { ...def, relations: (def.relations ?? EMPTY_RELATIONS) as Relations }
+  return { ...def, label: labelFor(def.name), relations: (def.relations ?? EMPTY_RELATIONS) as Relations }
 }
 
 /** Materialized prop values for an instance of this component. */

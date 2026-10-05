@@ -1,13 +1,13 @@
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, computed, inject, input } from '@angular/core'
+import { ChangeDetectionStrategy, Component, OnInit, computed, inject, input } from '@angular/core'
 import type { ComponentDefinition, Studio } from '@dynamic-ui/studio'
 import { CanvasPaletteComponent } from './canvas/palette/canvas-palette.component'
-import { CanvasStore } from './canvas/store/canvas-store.service'
+import { StudioFacade } from './studio-facade.service'
 import { CanvasComponent } from './canvas/canvas.component'
 import { StudioHeaderComponent } from './header/studio-header.component'
 import { InspectorComponent } from './inspector/inspector.component'
 
 /**
- * Top-level organism. Provides CanvasStore, binds a Studio instance to it,
+ * Top-level organism. Provides a StudioFacade, binds a Studio instance to it,
  * and lays out the palette sidebar next to the canvas viewport.
  *
  * All design tokens are defined as CSS custom properties on :host — override
@@ -16,12 +16,13 @@ import { InspectorComponent } from './inspector/inspector.component'
 @Component({
   selector: 'ds-ngx-studio',
   standalone: true,
-  providers: [CanvasStore],
+  providers: [StudioFacade],
   imports: [StudioHeaderComponent, CanvasPaletteComponent, CanvasComponent, InspectorComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './ngx-studio.component.scss',
   host: {
-    '[class.ds-studio--inspecting]': 'inspecting()'
+    '[class.ds-studio--inspecting]': 'inspecting()',
+    '[class.ds-studio--picking]': 'picking()'
   },
   template: `
     <ds-studio-header />
@@ -30,23 +31,23 @@ import { InspectorComponent } from './inspector/inspector.component'
     @if (inspecting()) {
       <ds-inspector />
     }
+    @if (picking()) {
+      <div class="ds-pick-hint" role="status">
+        <span class="material-icons" aria-hidden="true">ads_click</span>
+        Click a component on the canvas to link it · <kbd>Esc</kbd> to cancel
+      </div>
+    }
   `
 })
-export class NgxStudioComponent implements OnInit, OnDestroy {
-  readonly #store = inject(CanvasStore)
+export class NgxStudioComponent implements OnInit {
+  readonly #facade = inject(StudioFacade)
 
   readonly studio = input.required<Studio>()
   readonly paletteComponents = computed<readonly ComponentDefinition[]>(() => this.studio().getComponents())
-  readonly inspecting = computed(() => this.#store.inspectedId() !== null)
-
-  #unsubscribe: (() => void) | null = null
+  readonly inspecting = computed(() => this.#facade.inspectedId() !== null)
+  readonly picking = this.#facade.picking
 
   ngOnInit(): void {
-    this.#unsubscribe = this.#store.bind(this.studio())
-  }
-
-  ngOnDestroy(): void {
-    this.#unsubscribe?.()
-    this.#unsubscribe = null
+    this.#facade.bind(this.studio())
   }
 }

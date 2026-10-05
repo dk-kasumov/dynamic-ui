@@ -21,7 +21,13 @@ export type Operand =
 export type ComparisonOperator = 'equals' | 'notEquals' | 'greaterThan' | 'greaterThanOrEqual' | 'lessThan' | 'lessThanOrEqual'
 export type ArithmeticOperator = 'add' | 'subtract' | 'multiply' | 'divide'
 export type LogicalOperator = 'and' | 'or'
-export type PredicateOperator = 'isEmpty' | 'isValid' | 'isTouched'
+export type PredicateOperator =
+  | 'isEmpty'
+  | 'isNotEmpty'
+  | 'isValid'
+  | 'isInvalid'
+  | 'isTouched'
+  | 'isUntouched'
 
 export type BuiltinOperator =
   | ComparisonOperator

@@ -1,5 +1,5 @@
-import { Studio } from './studio'
-import type { NodeId } from './studio'
+import { Studio, describeExpression, fromExpression, toExpression } from './studio'
+import type { NodeId, RelationRuleSet } from './studio'
 
 // A realistic set of registered components the UI would receive at app boot.
 const TextInput = Studio.defineComponent({
@@ -27,13 +27,7 @@ const Form = Studio.defineComponent({
   container: true
 })
 
-const rootId = 'root' as NodeId
-
-const makeStudio = () =>
-  new Studio({
-    components: [TextInput, Button, Form],
-    root: Studio.createNode({ id: rootId, name: 'Containers/Form' })
-  })
+const makeStudio = () => new Studio({ components: [TextInput, Button, Form] })
 
 describe('Studio DSL', () => {
   it('exposes schema factories as statics', () => {
@@ -60,8 +54,8 @@ describe('Studio — end-to-end usage', () => {
     const studio = makeStudio()
 
     // Drop two controls into the form.
-    const emailId = studio.addNode(rootId, { name: 'Controls/TextInput' })
-    const submitId = studio.addNode(rootId, { name: 'Controls/Button' })
+    const emailId = studio.addNode(studio.root.id, { name: 'Controls/TextInput' })
+    const submitId = studio.addNode(studio.root.id, { name: 'Controls/Button' })
 
     // Configure them (gear panel edits).
     studio.setProp(emailId, ['label'], 'Email')
@@ -83,32 +77,86 @@ describe('Studio — end-to-end usage', () => {
 
   it('tracks selection and clears it when the selected node is removed', () => {
     const studio = makeStudio()
-    const id = studio.addNode(rootId, { name: 'Controls/TextInput' })
+    const id = studio.addNode(studio.root.id, { name: 'Controls/TextInput' })
     studio.select(id)
     expect(studio.selectedId).toBe(id)
     studio.removeNode(id)
     expect(studio.selectedId).toBeNull()
   })
 
-  it('notifies subscribers on every state change', () => {
+  it('emits a fresh snapshot through state$ on every change', () => {
     const studio = makeStudio()
     const spy = jest.fn()
-    const unsubscribe = studio.subscribe(spy)
+    const sub = studio.state$.subscribe(spy)
+    expect(spy).toHaveBeenCalledTimes(1) // BehaviorSubject replays the current snapshot
 
-    const id = studio.addNode(rootId, { name: 'Controls/TextInput' })
+    const id = studio.addNode(studio.root.id, { name: 'Controls/TextInput' })
     studio.setProp(id, ['label'], 'X')
     studio.select(id)
-    expect(spy).toHaveBeenCalledTimes(3)
+    expect(spy).toHaveBeenCalledTimes(4)
 
-    unsubscribe()
+    sub.unsubscribe()
     studio.setProp(id, ['label'], 'Y')
-    expect(spy).toHaveBeenCalledTimes(3)
+    expect(spy).toHaveBeenCalledTimes(4)
+  })
+
+  it('replaces the root but shares untouched subtrees on mutation', () => {
+    const studio = makeStudio()
+    const sectionId = studio.addNode(studio.root.id, { name: 'Containers/Form' })
+    const fieldId = studio.addNode(sectionId, { name: 'Controls/TextInput' })
+    const other = studio.addNode(studio.root.id, { name: 'Controls/Button' })
+
+    const before = studio.root
+    const otherBefore = studio.findNode(other)
+    studio.setProp(fieldId, ['label'], 'Email')
+
+    expect(studio.root).not.toBe(before) // root is a new reference
+    expect(studio.findNode(other)).toBe(otherBefore) // untouched sibling kept its reference
+  })
+
+  it('derives a component label from the last segment of its name', () => {
+    const studio = makeStudio()
+    expect(studio.getComponent('Controls/TextInput')?.label).toBe('TextInput')
   })
 
   it('rejects moves that would create a cycle', () => {
     const studio = makeStudio()
-    const outer = studio.addNode(rootId, { name: 'Containers/Form' })
+    const outer = studio.addNode(studio.root.id, { name: 'Containers/Form' })
     const inner = studio.addNode(outer, { name: 'Controls/TextInput' })
     expect(() => studio.moveNode(outer, inner)).toThrow(/descendant/)
+  })
+
+  it('offers relation targets excluding self and descendants', () => {
+    const studio = makeStudio()
+    const section = studio.addNode(studio.root.id, { name: 'Containers/Form' })
+    const inner = studio.addNode(section, { name: 'Controls/TextInput' })
+    const sibling = studio.addNode(studio.root.id, { name: 'Controls/Button' })
+
+    const ids = studio.relationTargets(section).map(n => n.id)
+    expect(ids).toContain(sibling)
+    expect(ids).not.toContain(section) // not itself
+    expect(ids).not.toContain(inner) // not a descendant
+  })
+})
+
+describe('relation rules codec', () => {
+  const a = 'a' as NodeId
+  const b = 'b' as NodeId
+
+  it('round-trips a multi-rule set through the expression tree', () => {
+    const set: RelationRuleSet = {
+      combine: 'or',
+      rules: [
+        { target: a, operator: 'isValid' },
+        { target: b, operator: 'equals', value: 'admin' }
+      ]
+    }
+    expect(fromExpression(toExpression(set)!)).toEqual(set)
+  })
+
+  it('returns null for an empty rule set and describes a built expression', () => {
+    expect(toExpression({ combine: 'and', rules: [] })).toBeNull()
+    const expr = toExpression({ combine: 'and', rules: [{ target: a, operator: 'isEmpty' }] })!
+    expect(describeExpression(expr, id => (id === a ? 'Email' : id))).toBe('Email is empty')
   })
 })

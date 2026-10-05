@@ -91,7 +91,7 @@ ds-studio-header {
 // they query the studio as an ancestor container.
 @media (min-width: 1200px) {
   :host(.ds-studio--inspecting) {
-    grid-template-columns: 260px minmax(0, 1fr) 320px;
+    grid-template-columns: 260px minmax(0, 1fr) 360px;
   }
 }
 
@@ -190,5 +190,32 @@ ds-studio-header {
 
     --mat-sys-shadow: #000000;
     --mat-sys-scrim: #000000;
+  }
+}
+
+// Pick-on-canvas hint banner — floats at the bottom while linking a relation target.
+.ds-pick-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: var(--ds-accent);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: 0 10px 30px rgba(16, 24, 40, 0.25);
+
+  .material-icons { font-size: 18px; }
+  kbd {
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.25);
+    font: inherit;
   }
 }

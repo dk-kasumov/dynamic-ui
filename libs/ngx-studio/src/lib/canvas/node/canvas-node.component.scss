@@ -18,6 +18,17 @@
     box-shadow: 0 0 0 3px var(--ds-accent-ring), var(--ds-card-shadow-hover);
   }
 
+  // Pick-on-canvas: eligible targets invite a click, the rest recede.
+  &--pickable {
+    cursor: pointer;
+    border-color: var(--ds-accent);
+    box-shadow: 0 0 0 2px var(--ds-accent-ring);
+    > .card__head { cursor: pointer; }
+  }
+  &--pickable:hover { box-shadow: 0 0 0 3px var(--ds-accent), var(--ds-card-shadow-hover); }
+  // Dim only the ineligible card's own header, so eligible nested cards stay bright.
+  &--dimmed > .card__head { opacity: 0.4; filter: grayscale(0.3); }
+
   &__head {
     display: flex;
     align-items: center;

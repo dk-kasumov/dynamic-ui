@@ -28,7 +28,7 @@ For the overall project vision, see the [root README](../../README.md).
 Only **one** class is exported — `Studio`. It is both:
 
 - A **facade** — a `Studio` instance owns the registry, the node tree, selection, and subscriptions.
-- A **DSL namespace** — all schema factories (`Studio.text()`, `Studio.relation()`, …) are static methods on it, along with `Studio.defineComponent()` and `Studio.createNode()`.
+- A **DSL namespace** — all schema factories (`Studio.text()`, `Studio.relation()`, …) are static methods on it, along with `Studio.defineComponent()`.
 
 Internal classes (`Registry`, `Store`, `Tree`) are **not** exported. The only other export is `StudioError` for `instanceof` discrimination plus the TypeScript types consumers need.
 
@@ -91,6 +91,8 @@ const textInput = Studio.defineComponent({
 
 That's a complete component definition. The core has no built-in knowledge that this is a "text input"; from its point of view it's just a leaf component (not a container) with a declared prop shape and three available relations.
 
+There is no `label` field: the display label is derived from the last `/`-separated segment of `name` (`Controls/TextInput` → `TextInput`), so the name is the single source for both identity and the palette hierarchy.
+
 ### Containers
 
 Any component that should accept children sets `container: true`:
@@ -113,15 +115,16 @@ There is no concept of "slot" or "named region". If you need a container with st
 
 ## Instantiating the studio
 
-Once components are defined, create a `Studio` with them and a root node. From this point on, the UI package (or any consumer) talks to the studio instance directly — mutations, inspection, subscriptions:
+Once components are defined, create a `Studio` with them. The studio owns the root container, so `root` is optional — omit it for an empty canvas, or pass a plain description (the studio builds the nodes and ids) to seed content. From this point on, the UI package (or any consumer) talks to the studio instance directly — mutations, inspection, subscriptions:
 
 ```ts
 import { Studio } from '@dynamic-ui/studio'
 
-const studio = new Studio({
-  components: [form, textInput, button],
-  root: Studio.createNode({ name: 'Containers/Form' })
-})
+// Empty canvas — the studio creates the root for you.
+const studio = new Studio({ components: [form, textInput, button] })
+
+// …or seed it with a starting tree:
+// new Studio({ components, root: { name: 'Containers/Form', children: [...] } })
 
 // Palette: list every registered component, look one up by name.
 studio.getComponents()
@@ -132,7 +135,7 @@ studio.root
 studio.findNode(someId)
 studio.parentOf(someId)
 
-// Mutations — forward to the internal store, which emits after each change.
+// Mutations — applied to the immutable tree; `state$` emits a fresh snapshot after each.
 const fieldId = studio.addNode(studio.root.id, { name: 'Controls/TextInput' })
 studio.setProp(fieldId, ['label'], 'Email')
 studio.setRelation(fieldId, 'required', {
@@ -145,12 +148,12 @@ studio.setRelation(fieldId, 'required', {
   }
 })
 
-// Selection and subscriptions — UI uses these to render the gear and re-render on changes.
+// Selection and reactivity — UI binds to `state$` (RxJS) to re-render on changes.
 studio.select(fieldId)
-const unsubscribe = studio.subscribe(() => renderCanvas(studio))
+const sub = studio.state$.subscribe(snapshot => renderCanvas(snapshot))
 ```
 
-That is the entire public API. `Registry`, `Store`, and `Tree` live inside the facade and are not exported — swapping their implementations is a non-breaking change.
+That is the entire public API. `Registry` and `Tree` live inside the facade and are not exported — swapping their implementations is a non-breaking change.
 
 ---
 

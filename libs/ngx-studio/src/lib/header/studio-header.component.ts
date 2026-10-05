@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core'
-import { CanvasStore } from '../canvas/store/canvas-store.service'
+import { StudioFacade } from '../studio-facade.service'
 
 /**
  * Studio toolbar. Hosts global canvas actions — currently a single export
  * button; undo/redo and friends will dock here next. Reads the live tree from
- * CanvasStore and downloads it as a JSON snapshot.
+ * the facade and downloads it as a JSON snapshot.
  */
 @Component({
   selector: 'ds-studio-header',
@@ -31,12 +31,12 @@ import { CanvasStore } from '../canvas/store/canvas-store.service'
   `
 })
 export class StudioHeaderComponent {
-  readonly #store = inject(CanvasStore)
+  readonly #facade = inject(StudioFacade)
 
-  readonly empty = computed(() => !this.#store.root()?.children?.length)
+  readonly empty = computed(() => !this.#facade.root()?.children?.length)
 
   export(): void {
-    const root = this.#store.root()
+    const root = this.#facade.root()
     if (!root) return
     const json = JSON.stringify(root, null, 2)
     const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }))

@@ -1,11 +1,10 @@
-import { Studio } from '@dynamic-ui/studio'
+import { Studio, type NewNode } from '@dynamic-ui/studio'
 import { componentWrapperDecorator, type Meta, type StoryObj } from '@storybook/angular'
 import { NgxStudioComponent } from './ngx-studio.component'
 
 const components = [
   Studio.defineComponent({
     name: 'Containers/Form',
-    label: 'Form',
     icon: 'article',
     description: 'Root form container',
     props: {},
@@ -13,7 +12,6 @@ const components = [
   }),
   Studio.defineComponent({
     name: 'Containers/Section',
-    label: 'Section',
     icon: 'view_agenda',
     description: 'Groups related fields',
     props: { title: Studio.text() },
@@ -21,7 +19,6 @@ const components = [
   }),
   Studio.defineComponent({
     name: 'Containers/Row',
-    label: 'Row',
     icon: 'table_rows',
     description: 'Lays fields in a single row',
     props: {},
@@ -29,7 +26,6 @@ const components = [
   }),
   Studio.defineComponent({
     name: 'Controls/TextInput',
-    label: 'Text input',
     icon: 'text_fields',
     description: 'Single-line text field',
     props: {
@@ -54,14 +50,12 @@ const components = [
   }),
   Studio.defineComponent({
     name: 'Controls/Checkbox',
-    label: 'Checkbox',
     icon: 'check_box',
     description: 'Boolean toggle',
     props: { label: Studio.text(), default: Studio.checkbox() }
   }),
   Studio.defineComponent({
     name: 'Controls/Select',
-    label: 'Select',
     icon: 'arrow_drop_down_circle',
     description: 'Dropdown list',
     props: {
@@ -78,58 +72,58 @@ const components = [
 ]
 
 function populatedStudio(): Studio {
-  const root = Studio.createNode({
+  const root: NewNode = {
     name: 'Containers/Form',
     props: {},
     children: [
-      Studio.createNode({
+      {
         name: 'Containers/Section',
         title: 'Personal details',
         props: { title: 'Personal details' },
         children: [
-          Studio.createNode({
+          {
             name: 'Containers/Row',
             props: {},
             children: [
-              Studio.createNode({
+              {
                 name: 'Controls/TextInput',
                 title: 'First name',
                 props: { label: 'First name', placeholder: 'Enter first name' }
-              }),
-              Studio.createNode({
+              },
+              {
                 name: 'Controls/TextInput',
                 title: 'Last name',
                 props: { label: 'Last name', placeholder: 'Enter last name' }
-              })
+              }
             ]
-          }),
-          Studio.createNode({
+          },
+          {
             name: 'Controls/TextInput',
             title: 'Email',
             props: { label: 'Email', placeholder: 'you@example.com' }
-          })
+          }
         ]
-      }),
-      Studio.createNode({
+      },
+      {
         name: 'Containers/Section',
         title: 'Access',
         props: { title: 'Access' },
         children: [
-          Studio.createNode({ name: 'Controls/Select', title: 'Role', props: { label: 'Role' } }),
-          Studio.createNode({
+          { name: 'Controls/Select', title: 'Role', props: { label: 'Role' } },
+          {
             name: 'Controls/Checkbox',
             title: 'Send invitation',
             props: { label: 'Send invitation' }
-          })
+          }
         ]
-      })
+      }
     ]
-  })
+  }
   return new Studio({ components, root })
 }
 
 function emptyStudio(): Studio {
-  return new Studio({ components, root: Studio.createNode({ name: 'Containers/Form', props: {} }) })
+  return new Studio({ components })
 }
 
 const meta: Meta<NgxStudioComponent> = {

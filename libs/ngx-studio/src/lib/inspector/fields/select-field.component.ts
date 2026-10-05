@@ -10,6 +10,10 @@ import type { SelectPrimitive } from '@dynamic-ui/studio'
   standalone: true,
   imports: [MatFormFieldModule, MatInputModule, MatChipsModule, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styles: `
+    :host { display: block; width: 100%; }
+    .ds-field { width: 100%; }
+  `,
   template: `
     @if (multiple()) {
       <mat-form-field appearance="outline" class="ds-field" subscriptSizing="dynamic">
