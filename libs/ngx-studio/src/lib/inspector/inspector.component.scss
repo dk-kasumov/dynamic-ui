@@ -29,66 +29,6 @@
   border-left: 1px solid var(--ds-border);
   z-index: 11;
 
-  &__head {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 16px;
-    border-bottom: 1px solid var(--ds-border);
-  }
-
-  &__title-wrap {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex: 1;
-    min-width: 0;
-  }
-
-  &__icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    color: var(--ds-accent);
-    background: var(--ds-accent-soft);
-    border-radius: 8px;
-    flex: 0 0 auto;
-
-    mat-icon { font-size: 18px; width: 18px; height: 18px; }
-  }
-
-  &__titles {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-  }
-
-  &__eyebrow {
-    font-size: 10px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--ds-text-muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--ds-text);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__close {
-    color: var(--ds-text-muted);
-    flex: 0 0 auto;
-  }
-
   &__body {
     display: flex;
     flex-direction: column;

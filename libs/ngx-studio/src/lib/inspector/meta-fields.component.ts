@@ -1,9 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core'
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core'
 import { MatFormFieldModule } from '@angular/material/form-field'
 import { MatIconModule } from '@angular/material/icon'
 import { MatInputModule } from '@angular/material/input'
 import type { ComponentDefinition, Node, NodeMetaPatch } from '@dynamic-ui/studio'
-import { CanvasStore } from '../canvas/store/canvas-store.service'
 import { iconOrDefault } from '../canvas/icon'
 
 export type InspectorMetaChange = NodeMetaPatch
@@ -53,17 +52,15 @@ export type InspectorMetaChange = NodeMetaPatch
   styleUrl: './meta-fields.component.scss'
 })
 export class MetaFieldsComponent {
-  readonly #store = inject(CanvasStore)
-
   readonly node = input.required<Node>()
   readonly definition = input.required<ComponentDefinition>()
+  readonly effectiveIcon = input.required<string>()
 
   readonly change = output<InspectorMetaChange>()
 
   readonly iconValue = computed(() => this.node().icon ?? '')
   readonly titleValue = computed(() => this.node().title ?? '')
   readonly defaultIcon = computed(() => iconOrDefault(this.definition().icon, this.definition()))
-  readonly effectiveIcon = computed(() => this.#store.iconOf(this.node()))
 
   onIconInput(event: Event): void {
     this.change.emit({ icon: (event.target as HTMLInputElement).value.trim() })

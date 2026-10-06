@@ -1,4 +1,6 @@
 export { InspectorComponent } from './inspector.component'
+export { InspectorStore } from './inspector-store'
+export { InspectorHeaderComponent } from './inspector-header.component'
 export { PropsFormComponent } from './props-form.component'
 export { MetaFieldsComponent, type InspectorMetaChange } from './meta-fields.component'
 export { FieldHostComponent } from './fields/field-host.component'
