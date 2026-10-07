@@ -81,7 +81,8 @@ export default {
   rules: {
     'type-enum': [2, 'always', Object.keys(types)],
     'scope-enum': [2, 'always', Object.keys(scopes)],
-    'scope-case': [2, 'always', 'kebab-case'],
+    // not 'kebab-case': it splits digits and rejects `e2e`; scope-enum already pins the exact spelling
+    'scope-case': [2, 'always', 'lower-case'],
     'scope-single': [2, 'always'],
     'scope-empty': [1, 'never'],
     'header-max-length': [2, 'always', 72],
