@@ -78,13 +78,13 @@ export class FoldersNodeComponent {
 
   selected = output<Folder>()
 
-  private isOpen = signal(false)
+  #isOpen = signal(false)
 
   hasContent = computed(() => !!this.folder().children?.length || !!this.folder().items?.length)
-  expanded = computed(() => this.forceExpanded() || this.isOpen())
+  expanded = computed(() => this.forceExpanded() || this.#isOpen())
 
   toggle() {
-    this.isOpen.update(open => !open)
+    this.#isOpen.update(open => !open)
   }
 
   select() {

@@ -76,22 +76,22 @@ export class CodeFieldComponent {
   readonly valueChange = output<string>()
 
   private readonly host = viewChild.required<ElementRef<HTMLElement>>('host')
-  private view: EditorView | undefined
-  private syncing = false
+  #view: EditorView | undefined
+  #syncing = false
 
   readonly focused = signal(false)
-  private readonly source = signal('')
+  readonly #source = signal('')
 
-  readonly error = computed(() => validateJson(this.source()))
-  readonly canFormat = computed(() => this.source().trim() !== '' && !this.error())
+  readonly error = computed(() => validateJson(this.#source()))
+  readonly canFormat = computed(() => this.#source().trim() !== '' && !this.error())
 
   constructor() {
     const destroyRef = inject(DestroyRef)
 
     afterNextRender(() => {
-      const initial = this.currentValue()
-      this.source.set(initial)
-      this.view = new EditorView({
+      const initial = this.#currentValue()
+      this.#source.set(initial)
+      this.#view = new EditorView({
         parent: this.host().nativeElement,
         state: EditorState.create({
           doc: initial,
@@ -114,9 +114,9 @@ export class CodeFieldComponent {
             fieldSizing,
             EditorView.updateListener.of(update => {
               if (update.focusChanged) this.focused.set(update.view.hasFocus)
-              if (!update.docChanged || this.syncing) return
+              if (!update.docChanged || this.#syncing) return
               const doc = update.state.doc.toString()
-              this.source.set(doc)
+              this.#source.set(doc)
               this.valueChange.emit(doc)
             })
           ]
@@ -126,29 +126,29 @@ export class CodeFieldComponent {
 
     // Push external value changes into the editor; skipped for our own echoes so the caret never jumps.
     effect(() => {
-      const next = this.currentValue()
-      const view = this.view
+      const next = this.#currentValue()
+      const view = this.#view
       if (!view || next === view.state.doc.toString()) return
-      this.syncing = true
+      this.#syncing = true
       try {
         view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: next } })
       } finally {
-        this.syncing = false
+        this.#syncing = false
       }
-      this.source.set(next)
+      this.#source.set(next)
     })
 
-    destroyRef.onDestroy(() => this.view?.destroy())
+    destroyRef.onDestroy(() => this.#view?.destroy())
   }
 
   format(): void {
-    const view = this.view
+    const view = this.#view
     if (!view || !this.canFormat()) return
     const formatted = JSON.stringify(JSON.parse(view.state.doc.toString()), null, INDENT)
     view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: formatted } })
   }
 
-  private currentValue(): string {
+  #currentValue(): string {
     return this.value() ?? ''
   }
 }
