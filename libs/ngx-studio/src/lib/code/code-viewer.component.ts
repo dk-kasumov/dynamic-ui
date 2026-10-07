@@ -42,11 +42,11 @@ export class CodeViewerComponent {
   readonly value = input.required<string>()
 
   private readonly host = viewChild.required<ElementRef<HTMLElement>>('host')
-  private view: EditorView | undefined
+  #view: EditorView | undefined
 
   constructor() {
     afterNextRender(() => {
-      this.view = new EditorView({
+      this.#view = new EditorView({
         parent: this.host().nativeElement,
         state: EditorState.create({ doc: this.value(), extensions: this.#extensions() })
       })
@@ -55,12 +55,12 @@ export class CodeViewerComponent {
     // Output is replaced wholesale, so swap the document rather than patching it.
     effect(() => {
       const value = this.value()
-      const view = this.view
+      const view = this.#view
       if (!view) return
       view.setState(EditorState.create({ doc: value, extensions: this.#extensions() }))
     })
 
-    inject(DestroyRef).onDestroy(() => this.view?.destroy())
+    inject(DestroyRef).onDestroy(() => this.#view?.destroy())
   }
 
   #extensions(): Extension[] {

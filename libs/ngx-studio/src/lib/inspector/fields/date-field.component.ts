@@ -70,10 +70,10 @@ export class DateFieldComponent {
 
   readonly valueChange = output<DateValue>()
 
-  private readonly locale = inject(LOCALE_ID)
+  readonly #locale = inject(LOCALE_ID)
 
   readonly range = computed(() => this.primitive().range ?? false)
-  readonly pattern = computed(() => toDatePattern(this.primitive().format, this.locale))
+  readonly pattern = computed(() => toDatePattern(this.primitive().format, this.#locale))
   readonly startPlaceholder = computed(() => `Start ${this.pattern().toLowerCase()}`)
   readonly endPlaceholder = computed(() => `End ${this.pattern().toLowerCase()}`)
 
