@@ -9,7 +9,10 @@ out-tsc
 node_modules
 
 # IDEs and editors
-/.idea
+# JetBrains: share code style and prettier config, keep personal state (workspace.xml etc.) local
+/.idea/*
+!/.idea/codeStyles/
+!/.idea/prettier.xml
 .project
 .classpath
 .c9/
