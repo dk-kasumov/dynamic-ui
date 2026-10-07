@@ -38,7 +38,7 @@ export class PropsFormComponent {
   readonly entries = computed(() =>
     listify(
       this.definition().props as Record<string, Primitive>,
-      (key, primitive) => ({ key, primitive, label: primitive.label ?? Studio.humanize(key) })
+      (key, primitive) => ({ key, primitive, label: Studio.humanize(key) })
     )
   )
 

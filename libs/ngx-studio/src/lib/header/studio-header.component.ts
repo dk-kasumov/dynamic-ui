@@ -1,14 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core'
-import { StudioFacade } from '../studio-facade.service'
+import { ChangeDetectionStrategy, Component } from '@angular/core'
+import { ThemeToggleComponent } from '../theme/theme-toggle.component'
+import { ViewSwitcherComponent } from '../views/view-switcher.component'
 
 /**
- * Studio toolbar. Hosts global canvas actions — currently a single export
- * button; undo/redo and friends will dock here next. Reads the live tree from
- * the facade and downloads it as a JSON snapshot.
+ * Studio toolbar: brand on the left, the view switcher in the middle and global
+ * settings (color theme) on the right. The switcher only appears when the studio
+ * has more than one view to offer.
  */
 @Component({
   selector: 'ds-studio-header',
   standalone: true,
+  imports: [ThemeToggleComponent, ViewSwitcherComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './studio-header.component.scss',
   template: `
@@ -16,32 +18,12 @@ import { StudioFacade } from '../studio-facade.service'
       <span class="header__dot"></span>
       <span class="header__title">Studio</span>
     </div>
+    <div class="header__center">
+      <ds-view-switcher />
+    </div>
     <div class="header__actions">
-      <button
-        type="button"
-        class="header__btn"
-        (click)="export()"
-        [disabled]="empty()"
-        title="Export canvas as JSON"
-      >
-        <span class="material-icons" aria-hidden="true">download</span>
-        <span>Export</span>
-      </button>
+      <ds-theme-toggle />
     </div>
   `
 })
-export class StudioHeaderComponent {
-  readonly #facade = inject(StudioFacade)
-
-  readonly empty = computed(() => !this.#facade.root()?.children?.length)
-
-  export(): void {
-    const root = this.#facade.root()
-    if (!root) return
-    const json = JSON.stringify(root, null, 2)
-    const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }))
-    const a = Object.assign(document.createElement('a'), { href: url, download: 'canvas.json' })
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-}
+export class StudioHeaderComponent {}

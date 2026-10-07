@@ -22,12 +22,68 @@ The package expects the consumer to install:
 ```json
 "@angular/common": "^22.1.0",
 "@angular/core": "^22.1.0",
+"@angular/forms": "^22.1.0",
 "@angular/cdk": "^22.0.0",
-"@angular/material": "^22.0.0"
+"@angular/material": "^22.0.0",
+"@angular/material-date-fns-adapter": "^22.0.0",
+"date-fns": "^4.0.0",
+"@codemirror/autocomplete": "^6.0.0",
+"@codemirror/commands": "^6.0.0",
+"@codemirror/lang-json": "^6.0.0",
+"@codemirror/language": "^6.0.0",
+"@codemirror/lint": "^6.0.0",
+"@codemirror/state": "^6.0.0",
+"@codemirror/view": "^6.0.0",
+"@lezer/highlight": "^1.0.0"
 ```
+
+The date, time and code fields bring their own date adapter and editor, so no global `provideDateFnsAdapter()` is needed. The Material datepicker, timepicker and tooltip do need animations/overlays, so provide `provideAnimationsAsync()` in the host app.
 
 The consumer sets up Material theming (either prebuilt theme or custom `mat.theme(...)`) in their own styles. This package does not bundle a theme.
 
+
+## Views
+
+The studio edits on a **Canvas** and can show the same document through other views, switched from the header:
+
+| View        | Shows                                                        | Available                         |
+| ----------- | ------------------------------------------------------------ | --------------------------------- |
+| **Canvas**  | The editor: palette, canvas, inspector                       | Always                            |
+| **AST**     | The canonical AST as JSON, with Copy / Download              | Always                            |
+| **Preview** | Your own UI, rendered from the AST and/or adapter outputs    | When a preview template is given  |
+| **Output**  | What your adapters make of the AST, as one JSON document     | When at least one adapter is given |
+
+The switcher only offers the views that exist, and the last choice is remembered (`localStorage`, `ds-studio:view`).
+
+```ts
+const reactProps = Studio.defineAdapter({ map: root => toReactTree(root) })
+```
+
+```html
+<ds-ngx-studio [studio]="studio" [adapters]="{ reactProps }">
+  <ng-template dsStudioPreview let-ast let-outputs="outputs">
+    <my-form [schema]="outputs['reactProps']" />
+  </ng-template>
+</ds-ngx-studio>
+```
+
+An adapter is just `{ map(root) }` returning anything JSON-serialisable. The Output view shows one JSON document keyed by the name each adapter was registered under (`{ "reactProps": … }`) — the same `outputs` the preview receives. An adapter that throws is reported above the document and is left out of `outputs`, without affecting the others. The preview template receives the AST as `$implicit` and the outputs of all healthy adapters as `outputs`; errors thrown while rendering your own template are yours to handle.
+
+---
+
+## Color theme
+
+The studio ships a light and a dark theme and follows the OS setting by default. The header has a switch for `system` (default), `light` and `dark`; the choice is saved in `localStorage` under `ds-studio:theme`.
+
+The theme is available as the `StudioTheme` service, so a host app can read or drive it:
+
+```ts
+const theme = inject(StudioTheme)
+theme.set('dark') // 'system' | 'light' | 'dark'
+theme.resolved() // 'light' | 'dark' — what is actually rendered
+```
+
+The resolved theme is exposed as `data-theme` on `ds-ngx-studio`, and as `data-ds-theme` on the CDK overlay container so that datepicker, select and tooltip panels match. Override any `--ds-*` variable per theme, e.g. `ds-ngx-studio[data-theme='dark'] { --ds-accent: #818cf8 }`.
 ---
 
 ## Development

@@ -1,10 +1,12 @@
 import { Injectable, computed, signal } from '@angular/core'
 import { toSignal } from '@angular/core/rxjs-interop'
+import { buildLinkIndex } from '@dynamic-ui/studio'
 import type {
   ComponentDefinition,
   NewNode,
   Node,
   NodeId,
+  NodeLinks,
   NodeMetaPatch,
   RelationInstance,
   Studio,
@@ -15,6 +17,9 @@ import { BehaviorSubject, EMPTY, type Observable, switchMap } from 'rxjs'
 import type { Options } from 'sortablejs'
 import { iconOrDefault } from './canvas/icon'
 import type { DsSortableDropEvent } from './canvas/sortable/sortable.directive'
+
+const NO_NODES: ReadonlySet<NodeId> = new Set()
+const NO_LINKS: NodeLinks = { to: [], from: [] }
 
 /**
  * Thin Angular adapter over the framework-agnostic `Studio`. It holds no editor
@@ -32,9 +37,16 @@ export class StudioFacade {
   )
   readonly #inspectorOpen = signal(false)
   readonly #pick = signal<{ eligible: ReadonlySet<NodeId>; resolve: (id: NodeId) => void } | null>(null)
+  readonly #highlighted = signal<ReadonlySet<NodeId>>(NO_NODES)
 
   readonly root = computed(() => this.#state()?.root ?? null)
   readonly selectedId = computed(() => this.#state()?.selectedId ?? null)
+
+  /** Relation links of every node, in both directions; rebuilt once per tree change. */
+  readonly links = computed(() => {
+    const root = this.root()
+    return root ? buildLinkIndex(root) : new Map<NodeId, NodeLinks>()
+  })
 
   /** True while the user is picking a relation target on the canvas. */
   readonly picking = computed(() => this.#pick() !== null)
@@ -136,11 +148,44 @@ export class StudioFacade {
     return this.#studio().relationTargets(nodeId, filter)
   }
 
-  /** Display name for a node: its own title, else its component's label. */
+  /** Display name for a node: its field name, else its own title, else its component's label. */
   nodeLabel(id: NodeId): string {
     const node = this.#studio().findNode(id)
     if (!node) return id
-    return node.title ?? this.component(node.name)?.label ?? node.name
+    return node.fieldName ?? node.title ?? this.component(node.name)?.label ?? node.name
+  }
+
+  /** Who `id` is linked with; empty for an unlinked node. */
+  linksOf(id: NodeId): NodeLinks {
+    return this.links().get(id) ?? NO_LINKS
+  }
+
+  /**
+   * How to present a node in a reference (e.g. a relation target): its field name,
+   * else its own title, else its component's label — the first one is the name and
+   * the component label is kept as the `type` whenever a more specific name won.
+   */
+  describeNode(id: NodeId): { name: string; type: string | null } {
+    const node = this.#studio().findNode(id)
+    if (!node) return { name: id, type: null }
+    const type = this.component(node.name)?.label ?? node.name
+    const name = node.fieldName ?? node.title
+    return name ? { name, type } : { name: type, type: null }
+  }
+
+  // Highlight ----------------------------------------------------------------
+
+  /** Emphasises nodes on the canvas, e.g. while hovering a link that points at them. */
+  highlight(ids: Iterable<NodeId>): void {
+    this.#highlighted.set(new Set(ids))
+  }
+
+  clearHighlight(): void {
+    if (this.#highlighted().size) this.#highlighted.set(NO_NODES)
+  }
+
+  isHighlighted(id: NodeId): boolean {
+    return this.#highlighted().has(id)
   }
 
   // Pick-on-canvas -----------------------------------------------------------
@@ -152,6 +197,7 @@ export class StudioFacade {
 
   /** Enter pick mode; `resolve` fires with the chosen node, then pick mode ends. */
   startPick(eligible: Iterable<NodeId>, resolve: (id: NodeId) => void): void {
+    this.clearHighlight()
     this.#pick.set({ eligible: new Set(eligible), resolve })
   }
 

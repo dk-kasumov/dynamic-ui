@@ -1,7 +1,14 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core'
-import { Studio, describeExpression, type NodeId } from '@dynamic-ui/studio'
+import type { NodeId } from '@dynamic-ui/studio'
 import { StudioFacade } from '../../studio-facade.service'
 import { DsSortableDirective, type DsSortableDropEvent } from '../sortable/sortable.directive'
+
+interface LinkBadge {
+  direction: 'out' | 'in'
+  icon: string
+  ids: NodeId[]
+  hint: string
+}
 
 @Component({
   selector: 'ds-canvas-node',
@@ -18,6 +25,7 @@ import { DsSortableDirective, type DsSortableDropEvent } from '../sortable/sorta
       [class.card--container]="container()"
       [class.card--pickable]="facade.picking() && pickable()"
       [class.card--dimmed]="facade.picking() && !pickable()"
+      [class.card--linked]="facade.isHighlighted(nodeId())"
       (click)="onSelect($event)"
     >
       <header class="card__head ds-sortable-handle">
@@ -33,15 +41,31 @@ import { DsSortableDirective, type DsSortableDropEvent } from '../sortable/sorta
           <span class="material-icons" aria-hidden="true">{{ icon() }}</span>
         </span>
         <div class="card__titles">
-          <span class="card__title">{{ def.label }}</span>
+          <div class="card__title-row">
+            <span class="card__title">{{ def.label }}</span>
+            @if (n.fieldName; as fieldName) {
+              <code class="card__field-name" [attr.title]="'Field name: ' + fieldName">{{ fieldName }}</code>
+            }
+          </div>
           @if (subtitle(); as sub) {
             <span class="card__subtitle">{{ sub }}</span>
           }
         </div>
-        @if (relationsSummary(); as rels) {
-          <span class="card__relations" [attr.title]="rels">
-            <span class="card__relations-dot"></span>
-            {{ rels }}
+        @for (badge of linkBadges(); track badge.direction) {
+          <span
+            class="card__link"
+            [class.card__link--out]="badge.direction === 'out'"
+            [class.card__link--in]="badge.direction === 'in'"
+            tabindex="0"
+            [attr.title]="badge.hint"
+            [attr.aria-label]="badge.hint"
+            (mouseenter)="facade.highlight(badge.ids)"
+            (mouseleave)="facade.clearHighlight()"
+            (focus)="facade.highlight(badge.ids)"
+            (blur)="facade.clearHighlight()"
+          >
+            <span class="material-icons" aria-hidden="true">{{ badge.icon }}</span>
+            {{ badge.ids.length }}
           </span>
         }
         <button
@@ -103,18 +127,15 @@ export class CanvasNodeComponent {
   // description. Props are never read here — the subtitle is an explicit label.
   readonly subtitle = computed(() => this.node().title ?? this.component().description)
 
-  // Human-readable summary of active relations, e.g. "Visible: Email is empty".
-  readonly relationsSummary = computed(() => {
-    const relations = this.node().relations
-    const label = (id: NodeId) => this.facade.nodeLabel(id)
-    return Object.entries(relations)
-      .map(([name, instance]) => {
-        const condition = instance.variant === 'builtin' ? describeExpression(instance.expression, label) : ''
-        return condition ? `${Studio.humanize(name)}: ${condition}` : Studio.humanize(name)
-      })
-      .join(' · ')
+  /** Relation links as compact badges: what this node depends on, and what depends on it. */
+  readonly linkBadges = computed<LinkBadge[]>(() => {
+    const { to, from } = this.facade.linksOf(this.nodeId())
+    const names = (ids: NodeId[]) => ids.map(id => this.facade.nodeLabel(id)).join(', ')
+    const badges: LinkBadge[] = []
+    if (to.length) badges.push({ direction: 'out', icon: 'call_made', ids: to, hint: `Depends on ${names(to)}` })
+    if (from.length) badges.push({ direction: 'in', icon: 'call_received', ids: from, hint: `Used by ${names(from)}` })
+    return badges
   })
-
 
   onSelect(event: MouseEvent): void {
     event.stopPropagation()

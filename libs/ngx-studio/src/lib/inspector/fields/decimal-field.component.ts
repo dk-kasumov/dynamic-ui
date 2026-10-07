@@ -20,6 +20,9 @@ import type { DecimalPrimitive } from '@dynamic-ui/studio'
         [placeholder]="primitive().default?.toString() ?? ''"
         (input)="onInput($event)"
       />
+      @if (primitive().hint ?? primitive().description; as hint) {
+        <mat-hint>{{ hint }}</mat-hint>
+      }
     </mat-form-field>
   `
 })

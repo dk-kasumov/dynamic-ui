@@ -1,0 +1,127 @@
+:host {
+  display: block;
+  width: 100%;
+
+  --ds-code-font: 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+}
+
+.ds-code {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--mat-sys-outline, var(--ds-border));
+  border-radius: var(--ds-radius-sm);
+  background: var(--ds-card-bg);
+  overflow: hidden;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+
+  &:hover:not(.ds-code--focused) {
+    border-color: var(--ds-text-muted);
+  }
+
+  &--focused {
+    border-color: var(--ds-accent);
+    box-shadow: 0 0 0 3px var(--ds-accent-ring);
+  }
+
+  &--invalid {
+    border-color: var(--ds-code-error);
+
+    &.ds-code--focused {
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--ds-code-error) 28%, transparent);
+    }
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 40px;
+    padding: 0 8px 0 12px;
+    background: var(--ds-card-bg-container);
+    border-bottom: 1px solid var(--ds-border);
+  }
+
+  &__label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--ds-text-muted);
+  }
+
+  &__badge {
+    padding: 1px 6px;
+    font: 600 10px/16px var(--ds-code-font);
+    letter-spacing: 0.04em;
+    color: var(--ds-accent);
+    background: var(--ds-accent-soft);
+    border-radius: 6px;
+  }
+
+  // Compact icon button so the header stays slim.
+  &__format {
+    --mat-icon-button-state-layer-size: 28px;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ds-text-muted);
+
+    mat-icon {
+      width: 18px;
+      height: 18px;
+      font-size: 18px;
+      line-height: 18px;
+    }
+  }
+
+  &__editor {
+    display: flex;
+    flex-direction: column;
+
+    // CodeMirror sizes itself to its content; stretching it keeps the gutter full height.
+    ::ng-deep .cm-editor {
+      flex: 1;
+    }
+  }
+
+  &__footer {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 0 12px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--ds-text-muted);
+
+    &:not(:empty) {
+      padding-top: 6px;
+      padding-bottom: 8px;
+      border-top: 1px solid var(--ds-border);
+      background: var(--ds-card-bg-container);
+    }
+  }
+
+  &__footer-icon {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    font-size: 14px;
+    color: var(--ds-code-error);
+  }
+
+  &__error {
+    min-width: 0;
+    color: var(--ds-code-error);
+    overflow-wrap: anywhere;
+  }
+}
