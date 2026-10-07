@@ -9,22 +9,21 @@
   border: 1px solid var(--ds-card-border);
   border-radius: var(--ds-radius);
   box-shadow: var(--ds-card-shadow);
-  transition:
-    box-shadow 160ms ease,
-    border-color 160ms ease,
-    transform 160ms ease;
+  transition: box-shadow 160ms ease, border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
 
-  &:hover {
-    box-shadow: var(--ds-card-shadow-hover);
-  }
-  &--container {
-    background: var(--ds-card-bg-container);
-  }
+  &:hover { box-shadow: var(--ds-card-shadow-hover); }
+  &--container { background: var(--ds-card-bg-container); }
   &--selected {
     border-color: var(--ds-accent);
-    box-shadow:
-      0 0 0 3px var(--ds-accent-ring),
-      var(--ds-card-shadow-hover);
+    box-shadow: 0 0 0 3px var(--ds-accent-ring), var(--ds-card-shadow-hover);
+  }
+
+  // Emphasised while hovering a relation link that points at this card: a light accent tint and
+  // the usual hover lift — clearly softer than the selected state's outline and ring.
+  &--linked {
+    background-color: color-mix(in srgb, var(--ds-accent) 7%, var(--ds-card-bg));
+    border-color: var(--ds-accent-ring);
+    box-shadow: var(--ds-card-shadow-hover);
   }
 
   // Pick-on-canvas: eligible targets invite a click, the rest recede.
@@ -32,20 +31,11 @@
     cursor: pointer;
     border-color: var(--ds-accent);
     box-shadow: 0 0 0 2px var(--ds-accent-ring);
-    > .card__head {
-      cursor: pointer;
-    }
+    > .card__head { cursor: pointer; }
   }
-  &--pickable:hover {
-    box-shadow:
-      0 0 0 3px var(--ds-accent),
-      var(--ds-card-shadow-hover);
-  }
+  &--pickable:hover { box-shadow: 0 0 0 3px var(--ds-accent), var(--ds-card-shadow-hover); }
   // Dim only the ineligible card's own header, so eligible nested cards stay bright.
-  &--dimmed > .card__head {
-    opacity: 0.4;
-    filter: grayscale(0.3);
-  }
+  &--dimmed > .card__head { opacity: 0.4; filter: grayscale(0.3); }
 
   &__head {
     display: flex;
@@ -56,9 +46,7 @@
     box-sizing: border-box;
     cursor: grab;
     user-select: none;
-    &:active {
-      cursor: grabbing;
-    }
+    &:active { cursor: grabbing; }
   }
 
   &__grip {
@@ -70,14 +58,10 @@
     transition: opacity 120ms ease;
     flex: 0 0 auto;
     margin-right: -4px;
-    svg {
-      fill: currentColor;
-    }
+    svg { fill: currentColor; }
   }
 
-  &:hover:not(:has(.card:hover)) &__grip {
-    opacity: 1;
-  }
+  &:hover:not(:has(.card:hover)) &__grip { opacity: 1; }
 
   &__icon {
     display: inline-flex;
@@ -90,31 +74,37 @@
     border-radius: 8px;
     flex: 0 0 auto;
 
-    .material-icons {
-      font-size: 18px;
-    }
+    .material-icons { font-size: 18px; }
   }
 
-  &__titles {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    flex: 1 1 auto;
-  }
+  &__titles { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; }
+
+  &__title-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
 
   &__title,
   &__subtitle,
-  &__relations {
+  &__field-name {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   &__title {
+    flex: 0 1 auto;
     font-size: 13px;
     font-weight: 600;
     line-height: 1.2;
     color: var(--ds-text);
+  }
+
+  &__field-name {
+    flex: 0 100 auto;
+    min-width: 0;
+    padding: 1px 6px;
+    font: 500 11px/16px 'JetBrains Mono', 'SF Mono', ui-monospace, Menlo, Consolas, monospace;
+    color: var(--ds-accent);
+    background: var(--ds-accent-soft);
+    border-radius: 6px;
   }
 
   &__subtitle {
@@ -124,25 +114,31 @@
     color: var(--ds-text-muted);
   }
 
-  &__relations {
+  // Relation links: "depends on N" (out) and "used by N" (in).
+  &__link {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 8px;
+    gap: 3px;
+    height: 22px;
+    padding: 0 8px 0 6px;
     font-size: 11px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
     color: var(--ds-text-muted);
     background: var(--ds-chip-bg);
     border-radius: 999px;
-    max-width: 180px;
+    cursor: default;
     flex: 0 0 auto;
-  }
+    transition: color 120ms ease, background 120ms ease;
 
-  &__relations-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--ds-accent);
-    flex: 0 0 auto;
+    .material-icons { font-size: 14px; }
+
+    &:hover,
+    &:focus-visible {
+      color: var(--ds-accent);
+      background: var(--ds-accent-soft);
+      outline: none;
+    }
   }
 
   &__action {
@@ -158,42 +154,25 @@
     border-radius: 6px;
     cursor: pointer;
     opacity: 0;
-    transition:
-      opacity 120ms ease,
-      background 120ms ease,
-      color 120ms ease;
+    transition: opacity 120ms ease, background 120ms ease, color 120ms ease;
     flex: 0 0 auto;
 
-    .material-icons {
-      font-size: 16px;
-    }
+    .material-icons { font-size: 16px; }
 
     &--edit {
       &:hover,
-      &--active {
-        color: var(--ds-accent);
-        background: var(--ds-accent-soft);
-      }
+      &--active { color: var(--ds-accent); background: var(--ds-accent-soft); }
     }
 
-    &--delete:hover {
-      color: #ef4444;
-      background: rgba(239, 68, 68, 0.1);
-    }
+    &--delete:hover { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
 
-    &--active {
-      opacity: 1;
-    }
+    &--active { opacity: 1; }
   }
 
   &:hover:not(:has(.card:hover)) &__action,
-  &--selected &__action {
-    opacity: 1;
-  }
+  &--selected &__action { opacity: 1; }
 
-  &__body {
-    padding: 0 10px 10px;
-  }
+  &__body { padding: 0 10px 10px; }
 }
 
 // A roomier drop target so beginners don't need surgical precision; SortableJS's
@@ -207,10 +186,7 @@
   border-radius: var(--ds-radius-sm);
   background: var(--ds-dropzone-bg);
   border: 1px dashed transparent;
-  transition:
-    background 160ms ease,
-    border-color 160ms ease,
-    min-height 180ms ease;
+  transition: background 160ms ease, border-color 160ms ease, min-height 180ms ease;
 
   &__empty {
     display: flex;
@@ -237,9 +213,7 @@
     background: var(--ds-accent-soft);
     border-radius: 50%;
 
-    &.material-icons {
-      font-size: 14px;
-    }
+    &.material-icons { font-size: 14px; }
   }
 }
 
@@ -259,12 +233,6 @@
 }
 
 @keyframes ds-card-in {
-  from {
-    opacity: 0;
-    transform: translateY(-4px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }

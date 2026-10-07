@@ -13,4 +13,12 @@ export interface Node {
   icon?: string
   /** Optional human-readable identifier shown as the card subtitle on the canvas. */
   title?: string
+  /** Key the field's value is stored under in the final output; whitespace is stored as `_`. */
+  fieldName?: string
+}
+
+/** Every node of the subtree rooted at `node`, depth-first, parents before their children. */
+export function* walk(node: Node): Generator<Node> {
+  yield node
+  for (const child of node.children ?? []) yield* walk(child)
 }

@@ -19,7 +19,7 @@ import { DsSortableDirective } from '../sortable/sortable.directive'
       <ng-template dsFolderItem let-item>
         @let def = defOf(item);
         <div class="chip-slot" dsSortable [options]="sortOptions" (dsSortableDrop)="facade.applyDrop($event)">
-          <div class="chip ds-sortable-item" [attr.data-ds-palette-name]="def.name">
+          <div class="chip ds-sortable-item" [attr.data-ds-palette-name]="def.title">
             <span class="chip__icon">
               <span class="material-icons" aria-hidden="true">{{ iconOrDefault(def.icon, def) }}</span>
             </span>
@@ -60,7 +60,7 @@ export class CanvasPaletteComponent {
   }
 }
 
-// Builds a nested Folder tree from flat component names like 'Controls/TextInput'.
+// Builds a nested Folder tree from flat component titles like 'Controls/TextInput'.
 // Supports arbitrary nesting depth.
 function componentsToFolders(components: readonly ComponentDefinition[]): Folder[] {
   type FolderNode = { children: Record<string, FolderNode>; items: FolderItem[] }
@@ -68,14 +68,14 @@ function componentsToFolders(components: readonly ComponentDefinition[]): Folder
   const root: FolderNode = { children: {}, items: [] }
 
   for (const c of components) {
-    const parts = c.name.split('/')
+    const parts = c.title.split('/')
     const leaf = parts.pop()!
     let node = root
     for (const part of parts) {
       node.children[part] ??= { children: {}, items: [] }
       node = node.children[part]!
     }
-    node.items.push({ id: c.name, name: leaf })
+    node.items.push({ id: c.title, name: leaf })
   }
 
   const build = (node: FolderNode, prefix: string): Folder[] =>

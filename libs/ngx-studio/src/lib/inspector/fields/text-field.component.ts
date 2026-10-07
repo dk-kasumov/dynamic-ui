@@ -18,7 +18,7 @@ import type { TextPrimitive } from '@dynamic-ui/studio'
         [placeholder]="primitive().default ?? ''"
         (input)="onInput($event)"
       />
-      @if (primitive().description; as hint) {
+      @if (primitive().hint ?? primitive().description; as hint) {
         <mat-hint>{{ hint }}</mat-hint>
       }
     </mat-form-field>

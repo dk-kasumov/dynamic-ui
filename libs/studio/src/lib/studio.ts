@@ -1,9 +1,11 @@
 import { BehaviorSubject, type Observable } from 'rxjs'
+import { defineAdapter } from './adapter'
 import { defineComponent, type ComponentDefinition } from './component'
 import type { Node, NodeId } from './node'
 import type { RelationInstance, TargetFilter } from './relations'
-import { checkbox, decimal, enumeration, group, select, text } from './primitives'
+import { checkbox, code, date, decimal, enumeration, group, select, text, time } from './primitives'
 import { relation } from './relations'
+import { relationTargets } from './relation-graph'
 import { StudioError } from './error'
 import { Tree, createNode, type NewNode, type NodeMetaPatch } from './tree'
 import { humanize } from './humanize'
@@ -29,8 +31,8 @@ export class Studio {
     this.#tree = new Tree(createNode(root))
 
     for (const def of components) {
-      if (this.#components.has(def.name)) throw new StudioError(`Component "${def.name}" is already registered`)
-      this.#components.set(def.name, def)
+      if (this.#components.has(def.title)) throw new StudioError(`Component "${def.title}" is already registered`)
+      this.#components.set(def.title, def)
     }
 
     this.#state$ = new BehaviorSubject<StudioSnapshot>(this.#snapshot())
@@ -54,8 +56,8 @@ export class Studio {
     return [...this.#components.values()]
   }
 
-  getComponent(name: string): ComponentDefinition | undefined {
-    return this.#components.get(name)
+  getComponent(title: string): ComponentDefinition | undefined {
+    return this.#components.get(title)
   }
 
   findNode(id: NodeId): Node | undefined {
@@ -76,63 +78,40 @@ export class Studio {
     return node.icon || this.#components.get(node.name)?.icon
   }
 
-  /**
-   * Nodes a relation on `nodeId` may point at: never itself or its own
-   * descendants (that would be a cycle), narrowed by an optional target filter.
-   */
+  /** Nodes a relation on `nodeId` may point at, narrowed by an optional filter. */
   relationTargets(nodeId: NodeId, filter?: TargetFilter): Node[] {
-    const pool: Node[] = []
-    if ((filter?.scope ?? 'any') === 'siblings') {
-      pool.push(...(this.parentOf(nodeId)?.children ?? []))
-    } else {
-      const walk = (node: Node): void => {
-        for (const child of node.children ?? []) {
-          pool.push(child)
-          walk(child)
-        }
-      }
-      walk(this.#tree.root)
-    }
-    return pool.filter(
-      node => !this.isDescendant(nodeId, node.id) && (!filter?.kinds || filter.kinds.includes(node.name))
-    )
+    return relationTargets(this.#tree, nodeId, filter)
   }
 
   addNode(parentId: NodeId, input: NewNode, index?: number): NodeId {
-    const id = this.#tree.add(parentId, input, index)
-    this.#state$.next(this.#snapshot())
-    return id
+    return this.#commit(tree => tree.add(parentId, input, index))
   }
 
   removeNode(id: NodeId): void {
-    this.#tree.remove(id)
-    if (this.#selectedId && !this.#tree.find(this.#selectedId)) this.#selectedId = null
-    this.#state$.next(this.#snapshot())
+    this.#commit(tree => {
+      tree.remove(id)
+      if (this.#selectedId && !tree.find(this.#selectedId)) this.#selectedId = null
+    })
   }
 
   moveNode(id: NodeId, newParentId: NodeId, index?: number): void {
-    this.#tree.move(id, newParentId, index)
-    this.#state$.next(this.#snapshot())
+    this.#commit(tree => tree.move(id, newParentId, index))
   }
 
   setProp(id: NodeId, path: readonly string[], value: unknown): void {
-    this.#tree.setProp(id, path, value)
-    this.#state$.next(this.#snapshot())
+    this.#commit(tree => tree.setProp(id, path, value))
   }
 
   setMeta(id: NodeId, patch: NodeMetaPatch): void {
-    this.#tree.setMeta(id, patch)
-    this.#state$.next(this.#snapshot())
+    this.#commit(tree => tree.setMeta(id, patch))
   }
 
   setRelation(id: NodeId, name: string, value: RelationInstance): void {
-    this.#tree.setRelation(id, name, value)
-    this.#state$.next(this.#snapshot())
+    this.#commit(tree => tree.setRelation(id, name, value))
   }
 
   removeRelation(id: NodeId, name: string): void {
-    this.#tree.removeRelation(id, name)
-    this.#state$.next(this.#snapshot())
+    this.#commit(tree => tree.removeRelation(id, name))
   }
 
   select(id: NodeId | null): void {
@@ -147,6 +126,13 @@ export class Studio {
     return this.#state$.asObservable()
   }
 
+  /** Runs a tree mutation, then publishes the new state. A mutation that throws publishes nothing. */
+  #commit<Result>(mutate: (tree: Tree) => Result): Result {
+    const result = mutate(this.#tree)
+    this.#state$.next(this.#snapshot())
+    return result
+  }
+
   #snapshot(): StudioSnapshot {
     return { root: this.#tree.root, selectedId: this.#selectedId }
   }
@@ -154,10 +140,14 @@ export class Studio {
   // DSL (static) -------------------------------------------------------------
 
   static defineComponent = defineComponent
+  static defineAdapter = defineAdapter
 
   static text = text
   static decimal = decimal
   static checkbox = checkbox
+  static code = code
+  static time = time
+  static date = date
   static select = select
   static enum = enumeration
   static group = group
@@ -169,36 +159,36 @@ export class Studio {
 
 export { StudioError } from './error'
 
-export { RELATION_OPERATORS, toExpression, fromExpression, describeExpression } from './relations-rules'
-export type { OperatorValue, RelationRule, RelationRuleSet, RuleOperator } from './relations-rules'
+export { buildLinkIndex } from './relation-graph'
+export type { NodeLinks } from './relation-graph'
+export { RELATION_OPERATORS } from './relations'
 
+export type { StudioAdapter } from './adapter'
 export type { NewNode, NodeMetaPatch } from './tree'
+export { walk } from './node'
 export type { Node, NodeId } from './node'
 export type { ComponentDefinition, PropsOf, RelationNamesOf } from './component'
 export type {
   CheckboxPrimitive,
+  CodePrimitive,
+  DatePrimitive,
+  DateRange,
   DecimalPrimitive,
   EnumPrimitive,
   GroupPrimitive,
   Primitive,
   SelectPrimitive,
   TextPrimitive,
+  TimePrimitive,
   ValueOf
 } from './primitives'
 export type {
-  ArithmeticOperator,
-  BuiltinOperator,
-  ComparisonOperator,
   JsonValue,
-  LogicalOperator,
-  Operand,
-  PredicateOperator,
-  RelationExpression,
+  OperatorValue,
   RelationDescriptor,
-  RelationDescriptorBuiltin,
-  RelationDescriptorCustom,
   RelationInstance,
-  RelationPreset,
   RelationReturns,
+  RelationRule,
+  RuleOperator,
   TargetFilter
 } from './relations'

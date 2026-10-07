@@ -5,14 +5,12 @@ import { MatSelectModule } from '@angular/material/select'
 import {
   RELATION_OPERATORS,
   Studio,
-  fromExpression,
-  toExpression,
   type JsonValue,
   type Node,
   type OperatorValue,
-  type RelationDescriptorBuiltin,
+  type RelationDescriptor,
+  type RelationInstance,
   type RelationRule,
-  type RelationRuleSet,
   type RuleOperator,
   type SelectPrimitive
 } from '@dynamic-ui/studio'
@@ -20,10 +18,9 @@ import { SelectFieldComponent } from './select-field.component'
 import { StudioFacade } from '../../studio-facade.service'
 
 /**
- * Rule builder for a single relation slot. Reads its rules straight from the
- * node (no local draft — the node is the source of truth) and writes every
- * edit back through the facade. Targets are linked by clicking a node on the
- * canvas (pick-on-canvas).
+ * Rule builder for one relation slot. The node is the source of truth: it reads
+ * the relation straight off the node and writes every edit back through the
+ * facade. Targets are linked by clicking a node on the canvas (pick-on-canvas).
  */
 @Component({
   selector: 'ds-relation-field',
@@ -47,9 +44,24 @@ import { StudioFacade } from '../../studio-facade.service'
             }
             <div class="relation__rule">
               <div class="relation__rule-head">
-                <button type="button" class="relation__target" (click)="repick($index)" title="Pick target on canvas">
+                @let target = facade.describeNode(rule.target);
+                <button
+                  type="button"
+                  class="relation__target"
+                  title="Pick another target on canvas"
+                  (click)="repick($index)"
+                  (mouseenter)="facade.highlight([rule.target])"
+                  (mouseleave)="facade.clearHighlight()"
+                  (focus)="facade.highlight([rule.target])"
+                  (blur)="facade.clearHighlight()"
+                >
                   <span class="material-icons" aria-hidden="true">ads_click</span>
-                  <span class="relation__target-label">{{ facade.nodeLabel(rule.target) }}</span>
+                  <span class="relation__target-label">
+                    {{ target.name }}
+                    @if (target.type) {
+                      <span class="relation__target-type">{{ target.type }}</span>
+                    }
+                  </span>
                 </button>
                 <button
                   type="button"
@@ -107,17 +119,15 @@ export class RelationFieldComponent {
 
   readonly node = input.required<Node>()
   readonly name = input.required<string>()
-  readonly descriptor = input.required<RelationDescriptorBuiltin>()
+  readonly descriptor = input.required<RelationDescriptor>()
 
   readonly title = computed(() => this.descriptor().label ?? Studio.humanize(this.name()))
 
   /** Synthesized primitive so the `is one of` value reuses the existing chips field. */
   readonly listPrimitive = { kind: 'select', multiple: true } as SelectPrimitive<string>
 
-  readonly ruleSet = computed<RelationRuleSet>(() => {
-    const instance = this.node().relations[this.name()]
-    return instance?.variant === 'builtin' ? fromExpression(instance.expression) : { combine: 'and', rules: [] }
-  })
+
+  readonly ruleSet = computed<RelationInstance>(() => this.node().relations[this.name()] ?? { combine: 'and', rules: [] })
 
   readonly operators = computed<RuleOperator[]>(() => {
     const all = Object.keys(RELATION_OPERATORS) as RuleOperator[]
@@ -144,22 +154,16 @@ export class RelationFieldComponent {
   }
 
   addCondition(): void {
-    this.facade.startPick(
-      this.targets().map(n => n.id),
-      target => {
-        const set = this.ruleSet()
-        this.#commit({ ...set, rules: [...set.rules, { target, operator: this.operators()[0]! }] })
-      }
-    )
+    this.facade.startPick(this.targets().map(n => n.id), target => {
+      const set = this.ruleSet()
+      this.#commit({ ...set, rules: [...set.rules, { target, operator: this.operators()[0]! }] })
+    })
   }
 
   repick(index: number): void {
-    this.facade.startPick(
-      this.targets().map(n => n.id),
-      target => {
-        this.#patch(index, rule => ({ ...rule, target }))
-      }
-    )
+    this.facade.startPick(this.targets().map(n => n.id), target => {
+      this.#patch(index, rule => ({ ...rule, target }))
+    })
   }
 
   setOperator(index: number, operator: RuleOperator): void {
@@ -189,13 +193,9 @@ export class RelationFieldComponent {
     this.#commit({ ...set, rules: set.rules.map((rule, i) => (i === index ? fn(rule) : rule)) })
   }
 
-  #commit(set: RelationRuleSet): void {
-    const expression = toExpression(set)
+  #commit(set: RelationInstance): void {
     const id = this.node().id
-    if (expression) {
-      this.facade.setRelation(id, this.name(), { variant: 'builtin', returns: this.descriptor().returns, expression })
-    } else {
-      this.facade.removeRelation(id, this.name())
-    }
+    if (set.rules.length) this.facade.setRelation(id, this.name(), set)
+    else this.facade.removeRelation(id, this.name())
   }
 }

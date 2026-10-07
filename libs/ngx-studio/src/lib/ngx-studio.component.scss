@@ -1,3 +1,5 @@
+@use './theme/dark';
+
 // Material Icons font — required for ds-canvas-node / ds-canvas-palette icons.
 // Loaded here so kit consumers get it automatically without extra setup.
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
@@ -62,6 +64,14 @@
   --ds-chip-bg: rgba(16, 24, 40, 0.04);
   --ds-chip-bg-hover: rgba(16, 24, 40, 0.08);
 
+  // Code editor syntax
+  --ds-code-key: #4f46e5;
+  --ds-code-string: #047857;
+  --ds-code-number: #b45309;
+  --ds-code-keyword: #be185d;
+  --ds-code-punctuation: #6b7280;
+  --ds-code-error: #dc2626;
+
   // Dropzone
   --ds-dropzone-bg: rgba(16, 24, 40, 0.02);
   --ds-dropzone-bg-active: rgba(99, 102, 241, 0.06);
@@ -100,6 +110,17 @@ ds-studio-header {
   }
 }
 
+// Non-canvas views (AST, Preview, Output) take the full width: palette and
+// inspector tracks collapse, reusing the same transition as the inspector.
+:host(.ds-studio--focus) {
+  grid-template-columns: 0px minmax(0, 1fr) 0px;
+
+  ds-canvas-palette {
+    visibility: hidden;
+    transition: visibility 0s 320ms;
+  }
+}
+
 // Hint, divider, and other Material subelements inherit `color` from the
 // studio so they don't fall back to the browser's default canvas text
 // (which was pure black regardless of the --mat-sys-* tokens).
@@ -133,76 +154,20 @@ ds-studio-header {
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :host:not([data-theme='light']) {
-    color-scheme: dark;
+// Dark theme. `data-theme` is always set by the host (resolved from the user's
+// preference or the system), so there is no prefers-color-scheme query here.
+:host([data-theme='dark']) {
+  color-scheme: dark;
 
-    --ds-canvas-bg: #0b0e14;
-    --ds-card-bg: #171a24;
-    --ds-card-bg-container: #12151e;
-    --ds-card-border: rgba(255, 255, 255, 0.08);
-    --ds-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-    --ds-card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.5);
-    --ds-text: #e5e7eb;
-    --ds-text-muted: #9ca3af;
-    --ds-border: rgba(255, 255, 255, 0.08);
-    --ds-chip-bg: rgba(255, 255, 255, 0.05);
-    --ds-chip-bg-hover: rgba(255, 255, 255, 0.08);
-    --ds-dropzone-bg: rgba(255, 255, 255, 0.02);
-    --ds-dropzone-bg-active: rgba(99, 102, 241, 0.12);
-    --ds-grid-dot: rgba(255, 255, 255, 0.07);
-    --ds-sidebar-bg: #141821;
-    --ds-hover: rgba(255, 255, 255, 0.05);
-    --ds-active: rgba(99, 102, 241, 0.15);
-    --ds-input-bg: rgba(255, 255, 255, 0.05);
+  @include dark.studio-tokens;
+  @include dark.material-tokens;
+}
 
-    // Angular Material v22 reads from --mat-sys-* system tokens. The prebuilt
-    // azure-blue theme defines LIGHT values on <html>; we override them in the
-    // studio so the inspector's Material inputs/checkboxes/toggles render
-    // correctly on our dark sidebar background.
-    --mat-sys-surface: #141821;
-    --mat-sys-surface-bright: #1a1f2b;
-    --mat-sys-surface-container-lowest: #0b0e14;
-    --mat-sys-surface-container-low: #12151e;
-    --mat-sys-surface-container: #171b25;
-    --mat-sys-surface-container-high: #1d2130;
-    --mat-sys-surface-container-highest: #22273a;
-    --mat-sys-surface-variant: #2a2f3f;
-    --mat-sys-surface-dim: #0b0e14;
-    --mat-sys-surface-tint: #6366f1;
-    --mat-sys-background: #141821;
+// Overlay panels live in the CDK overlay container, outside the host.
+::ng-deep .cdk-overlay-container[data-ds-theme='dark'] {
+  color-scheme: dark;
 
-    --mat-sys-on-surface: #e5e7eb;
-    --mat-sys-on-surface-variant: #9ca3af;
-    --mat-sys-on-background: #e5e7eb;
-
-    --mat-sys-outline: #4b5563;
-    --mat-sys-outline-variant: rgba(255, 255, 255, 0.12);
-
-    --mat-sys-primary: #a5b4fc;
-    --mat-sys-on-primary: #1e1b4b;
-    --mat-sys-primary-container: #4338ca;
-    --mat-sys-on-primary-container: #e0e7ff;
-    --mat-sys-primary-fixed: #e0e7ff;
-    --mat-sys-primary-fixed-dim: #a5b4fc;
-    --mat-sys-inverse-primary: #4f46e5;
-
-    --mat-sys-secondary: #c7d2fe;
-    --mat-sys-on-secondary: #312e81;
-    --mat-sys-secondary-container: #3730a3;
-    --mat-sys-on-secondary-container: #e0e7ff;
-
-    --mat-sys-error: #f87171;
-    --mat-sys-on-error: #450a0a;
-    --mat-sys-error-container: #7f1d1d;
-    --mat-sys-on-error-container: #fecaca;
-
-    --mat-sys-inverse-surface: #e5e7eb;
-    --mat-sys-inverse-on-surface: #141821;
-
-    --mat-sys-shadow: #000000;
-    --mat-sys-scrim: #000000;
-  }
+  @include dark.material-tokens;
 }
 
 // Pick-on-canvas hint banner — floats at the bottom while linking a relation target.

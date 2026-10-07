@@ -33,16 +33,13 @@ export class PropsFormComponent {
   readonly definition = input.required<ComponentDefinition>()
   readonly values = input.required<Record<string, unknown>>()
 
-  // TODO: rename — native `change` from inner <input> bubbles to the host and reaches the same handler
-  // eslint-disable-next-line @angular-eslint/no-output-native
   readonly change = output<InspectorFieldChange>()
 
   readonly entries = computed(() =>
-    listify(this.definition().props as Record<string, Primitive>, (key, primitive) => ({
-      key,
-      primitive,
-      label: primitive.label ?? Studio.humanize(key)
-    }))
+    listify(
+      this.definition().props as Record<string, Primitive>,
+      (key, primitive) => ({ key, primitive, label: Studio.humanize(key) })
+    )
   )
 
   valueOf(key: string): unknown {

@@ -9,8 +9,9 @@
  */
 
 import { StudioError } from './error'
-import type { Node, NodeId } from './node'
+import { walk, type Node, type NodeId } from './node'
 import type { RelationInstance } from './relations'
+import { buildLinkIndex, pruneRelations } from './relation-graph'
 
 export interface NewNode {
   name: string
@@ -20,6 +21,7 @@ export interface NewNode {
   children?: NewNode[]
   icon?: string
   title?: string
+  fieldName?: string
 }
 
 /** Kind of the synthetic root the studio falls back to — a plain container, not a registered component. */
@@ -39,13 +41,48 @@ export function createNode(input: NewNode = { name: ROOT_NAME }): Node {
   if (input.children) node.children = input.children.map(createNode)
   if (input.icon !== undefined) node.icon = input.icon
   if (input.title !== undefined) node.title = input.title
+  if (input.fieldName) node.fieldName = toFieldName(input.fieldName)
   return node
 }
+
+/** A field name is a single token in the output, so every whitespace run becomes an underscore. */
+export const toFieldName = (value: string): string => value.replace(/\s+/g, '_')
 
 export interface NodeMetaPatch {
   icon?: string | null
   title?: string | null
+  fieldName?: string | null
 }
+
+// Index ------------------------------------------------------------------------
+
+interface Entry {
+  node: Node
+  parent: Node | null
+}
+
+/**
+ * `id → node and its parent`, built in one walk per root. A root never changes
+ * after it is created, so the index is cached by root identity: every lookup
+ * against the same snapshot is O(1), and a mutation (a new root) rebuilds it lazily.
+ */
+const indexes = new WeakMap<Node, ReadonlyMap<NodeId, Entry>>()
+
+function indexOf(root: Node): ReadonlyMap<NodeId, Entry> {
+  let index = indexes.get(root)
+  if (!index) {
+    const entries = new Map<NodeId, Entry>()
+    const visit = (node: Node, parent: Node | null): void => {
+      entries.set(node.id, { node, parent })
+      node.children?.forEach(child => visit(child, node))
+    }
+    visit(root, null)
+    indexes.set(root, (index = entries))
+  }
+  return index
+}
+
+// Tree -------------------------------------------------------------------------
 
 export class Tree {
   #root: Node
@@ -58,57 +95,81 @@ export class Tree {
     return this.#root
   }
 
+  // Queries ------------------------------------------------------------------
+
+  /** Every node, depth-first, root first. */
+  nodes(): Generator<Node> {
+    return walk(this.#root)
+  }
+
   find(id: NodeId): Node | undefined {
-    return find(this.#root, id)
+    return indexOf(this.#root).get(id)?.node
   }
 
   parentOf(id: NodeId): Node | undefined {
-    return findParent(this.#root, id)
+    return indexOf(this.#root).get(id)?.parent ?? undefined
   }
 
   /** True when `nodeId` is `ancestorId` itself or lives anywhere inside its subtree. */
   isDescendant(ancestorId: NodeId, nodeId: NodeId): boolean {
-    if (ancestorId === nodeId) return true
-    const ancestor = find(this.#root, ancestorId)
-    return !!ancestor && contains(ancestor, nodeId)
+    const index = indexOf(this.#root)
+    for (let entry = index.get(nodeId); entry; entry = entry.parent ? index.get(entry.parent.id) : undefined) {
+      if (entry.node.id === ancestorId) return true
+    }
+    return false
   }
+
+  /** The ids of `id` and everything below it; empty for an unknown id. */
+  subtreeIds(id: NodeId): Set<NodeId> {
+    const node = this.find(id)
+    return new Set(node ? Array.from(walk(node), n => n.id) : [])
+  }
+
+  // Structure ----------------------------------------------------------------
 
   add(parentId: NodeId, input: NewNode, index?: number): NodeId {
     const node = createNode(input)
-    this.#update(parentId, parent => ({ ...parent, children: insertChild(parent.children, node, index) }))
+    this.#edit(parentId, parent => ({ ...parent, children: insertAt(parent.children, node, index) }))
     return node.id
   }
 
+  /** Removes a node with its subtree, and the relation rules elsewhere that pointed into it. */
   remove(id: NodeId): void {
     if (id === this.#root.id) throw new StudioError('Cannot remove the root node')
-    const parent = this.parentOf(id)
-    if (!parent) throw new StudioError(`Node "${id}" not found`)
-    this.#update(parent.id, p => ({ ...p, children: p.children!.filter(c => c.id !== id) }))
+    const removed = this.subtreeIds(id)
+    const dependents = this.#dependentsOf(removed)
+
+    this.#detach(id)
+    for (const dependent of dependents) {
+      this.#edit(dependent, node => ({ ...node, relations: pruneRelations(node.relations, removed) }))
+    }
   }
 
   move(id: NodeId, newParentId: NodeId, index?: number): void {
     if (id === this.#root.id) throw new StudioError('Cannot move the root node')
     if (id === newParentId) throw new StudioError('Cannot move a node into itself')
-    const node = this.find(id)
-    if (!node) throw new StudioError(`Node "${id}" not found`)
-    if (!this.find(newParentId)) throw new StudioError(`Node "${newParentId}" not found`)
+    const { node } = this.#entry(id)
+    this.#entry(newParentId)
     if (this.isDescendant(id, newParentId)) throw new StudioError('Cannot move a node into one of its descendants')
 
-    this.remove(id)
-    this.#update(newParentId, parent => ({ ...parent, children: insertChild(parent.children, node, index) }))
+    this.#detach(id)
+    this.#edit(newParentId, parent => ({ ...parent, children: insertAt(parent.children, node, index) }))
   }
+
+  // Node edits ---------------------------------------------------------------
 
   setProp(id: NodeId, path: readonly string[], value: unknown): void {
     if (path.length === 0) throw new StudioError('Prop path cannot be empty')
-    this.#update(id, node => ({ ...node, props: setIn(node.props, path, value) }))
+    this.#edit(id, node => ({ ...node, props: setIn(node.props, path, value) }))
   }
 
   setMeta(id: NodeId, patch: NodeMetaPatch): void {
-    this.#update(id, node => {
+    this.#edit(id, node => {
       const next = { ...node }
-      for (const key of ['icon', 'title'] as const) {
+      for (const key of ['icon', 'title', 'fieldName'] as const) {
         if (!(key in patch)) continue
-        if (patch[key]) next[key] = patch[key]!
+        const value = key === 'fieldName' && patch[key] ? toFieldName(patch[key]) : patch[key]
+        if (value) next[key] = value
         else delete next[key]
       }
       return next
@@ -116,66 +177,55 @@ export class Tree {
   }
 
   setRelation(id: NodeId, name: string, value: RelationInstance): void {
-    this.#update(id, node => ({ ...node, relations: { ...node.relations, [name]: value } }))
+    this.#edit(id, node => ({ ...node, relations: { ...node.relations, [name]: value } }))
   }
 
   removeRelation(id: NodeId, name: string): void {
-    this.#update(id, node => {
+    this.#edit(id, node => {
       const { [name]: _removed, ...rest } = node.relations
       return { ...node, relations: rest }
     })
   }
 
-  /** Replace the node at `id` with `fn(node)`, cloning only the path from the root. */
-  #update(id: NodeId, fn: (node: Node) => Node): void {
-    const next = mapNode(this.#root, id, fn)
-    if (!next) throw new StudioError(`Node "${id}" not found`)
-    this.#root = next
+  // Internals ----------------------------------------------------------------
+
+  #entry(id: NodeId): Entry {
+    const entry = indexOf(this.#root).get(id)
+    if (!entry) throw new StudioError(`Node "${id}" not found`)
+    return entry
+  }
+
+  /** Nodes outside `ids` whose relations point into it. */
+  #dependentsOf(ids: ReadonlySet<NodeId>): Set<NodeId> {
+    const links = buildLinkIndex(this.#root)
+    const dependents = new Set<NodeId>()
+    for (const id of ids) {
+      for (const from of links.get(id)?.from ?? []) if (!ids.has(from)) dependents.add(from)
+    }
+    return dependents
+  }
+
+  #detach(id: NodeId): void {
+    const { parent } = this.#entry(id)
+    this.#edit(parent!.id, p => ({ ...p, children: p.children!.filter(child => child.id !== id) }))
+  }
+
+  /** Replaces the node at `id` with `change(node)`, re-creating only the path from there up to the root. */
+  #edit(id: NodeId, change: (node: Node) => Node): void {
+    const index = indexOf(this.#root)
+    const { node, parent } = this.#entry(id)
+    let updated = change(node)
+    for (let ancestor = parent; ancestor; ancestor = index.get(ancestor.id)!.parent) {
+      const child = updated
+      updated = { ...ancestor, children: ancestor.children!.map(c => (c.id === child.id ? child : c)) }
+    }
+    this.#root = updated
   }
 }
 
 // Helpers --------------------------------------------------------------------
 
-function find(node: Node, id: NodeId): Node | undefined {
-  if (node.id === id) return node
-  if (!node.children) return undefined
-  for (const child of node.children) {
-    const hit = find(child, id)
-    if (hit) return hit
-  }
-  return undefined
-}
-
-function findParent(root: Node, id: NodeId): Node | undefined {
-  if (!root.children) return undefined
-  for (const child of root.children) {
-    if (child.id === id) return root
-    const hit = findParent(child, id)
-    if (hit) return hit
-  }
-  return undefined
-}
-
-function contains(node: Node, id: NodeId): boolean {
-  if (!node.children) return false
-  return node.children.some(c => c.id === id || contains(c, id))
-}
-
-/** Returns a new tree with `id` mapped through `fn` (path cloned), or `null` if `id` is absent. */
-function mapNode(node: Node, id: NodeId, fn: (node: Node) => Node): Node | null {
-  if (node.id === id) return fn(node)
-  if (!node.children) return null
-  let replaced: Node | null = null
-  const children = node.children.map(child => {
-    if (replaced) return child
-    const next = mapNode(child, id, fn)
-    if (next) replaced = next
-    return next ?? child
-  })
-  return replaced ? { ...node, children } : null
-}
-
-function insertChild(children: Node[] | undefined, node: Node, index = Infinity): Node[] {
+function insertAt(children: Node[] | undefined, node: Node, index = Infinity): Node[] {
   const next = children ? [...children] : []
   next.splice(Math.min(Math.max(index, 0), next.length), 0, node)
   return next
