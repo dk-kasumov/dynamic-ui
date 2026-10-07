@@ -1,6 +1,7 @@
 import { DOCUMENT } from '@angular/common'
 import { ApplicationRef, DestroyRef, Injectable, computed, effect, inject, signal } from '@angular/core'
 import { OverlayContainer } from '@angular/cdk/overlay'
+import { readStored, writeStored } from '../shared/storage'
 
 /** What the user picked. `system` follows the OS and is the default. */
 export type ThemePreference = 'system' | 'light' | 'dark'
@@ -29,7 +30,7 @@ export class StudioTheme {
   readonly #appRef = inject(ApplicationRef)
   readonly #systemQuery = this.#window?.matchMedia?.(DARK_QUERY) ?? null
   readonly #systemDark = signal(this.#systemQuery?.matches ?? false)
-  readonly #preference = signal<ThemePreference>(this.#read())
+  readonly #preference = signal<ThemePreference>(readStored(this.#window, STORAGE_KEY, isPreference, 'system'))
 
   readonly preference = this.#preference.asReadonly()
   readonly resolved = computed<ResolvedTheme>(() => this.#resolve(this.#preference()))
@@ -53,7 +54,7 @@ export class StudioTheme {
   set(preference: ThemePreference): void {
     if (preference === this.#preference()) return
     this.#apply(() => this.#preference.set(preference), this.#resolve(preference) !== this.resolved())
-    this.#write(preference)
+    writeStored(this.#window, STORAGE_KEY, preference)
   }
 
   #resolve(preference: ThemePreference): ResolvedTheme {
@@ -74,23 +75,5 @@ export class StudioTheme {
       update()
       this.#appRef.tick()
     })
-  }
-
-  // Storage can be missing or throw (private mode, blocked site data) — the theme still works without it.
-  #read(): ThemePreference {
-    try {
-      const stored = this.#window?.localStorage.getItem(STORAGE_KEY)
-      return isPreference(stored) ? stored : 'system'
-    } catch {
-      return 'system'
-    }
-  }
-
-  #write(preference: ThemePreference): void {
-    try {
-      this.#window?.localStorage.setItem(STORAGE_KEY, preference)
-    } catch {
-      // Not persisted; the preference still applies for this session.
-    }
   }
 }

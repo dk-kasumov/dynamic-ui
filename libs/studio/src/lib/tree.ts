@@ -216,8 +216,7 @@ export class Tree {
     const { node, parent } = this.#entry(id)
     let updated = change(node)
     for (let ancestor = parent; ancestor; ancestor = index.get(ancestor.id)!.parent) {
-      const child = updated
-      updated = { ...ancestor, children: ancestor.children!.map(c => (c.id === child.id ? child : c)) }
+      updated = { ...ancestor, children: ancestor.children!.map(c => (c.id === updated.id ? updated : c)) }
     }
     this.#root = updated
   }
@@ -233,8 +232,7 @@ function insertAt(children: Node[] | undefined, node: Node, index = Infinity): N
 
 /** Immutable deep set: clones every object along `path`, leaving siblings shared. */
 function setIn(obj: Record<string, unknown>, path: readonly string[], value: unknown): Record<string, unknown> {
-  const [head, ...rest] = path
-  const key = head
+  const [key, ...rest] = path
   if (rest.length === 0) return { ...obj, [key]: value }
   const child = obj[key]
   const base = child && typeof child === 'object' ? (child as Record<string, unknown>) : {}

@@ -2,6 +2,7 @@ import { DOCUMENT } from '@angular/common'
 import { Injectable, computed, inject, signal } from '@angular/core'
 import { Studio, type StudioAdapter } from '@dynamic-ui/studio'
 import { StudioFacade } from '../studio-facade.service'
+import { readStored, writeStored } from '../shared/storage'
 
 /** The ways the studio can show the document: edit it, or look at it through different lenses. */
 export type StudioView = 'canvas' | 'ast' | 'preview' | 'adapter'
@@ -29,7 +30,7 @@ const isView = (value: unknown): value is StudioView => VIEWS.includes(value as 
 export class StudioViews {
   readonly #facade = inject(StudioFacade)
   readonly #window = inject(DOCUMENT).defaultView
-  readonly #preferred = signal<StudioView>(this.#read())
+  readonly #preferred = signal<StudioView>(readStored(this.#window, STORAGE_KEY, isView, 'canvas'))
 
   /** Adapters registered by the host, by key. The key doubles as the display name. */
   readonly adapters = signal<Readonly<Record<string, StudioAdapter>>>({})
@@ -76,24 +77,6 @@ export class StudioViews {
     if (!this.available().includes(view)) return
     this.#facade.cancelPick()
     this.#preferred.set(view)
-    this.#write(view)
-  }
-
-  // Storage can be missing or throw (private mode, blocked site data) — the view still works without it.
-  #read(): StudioView {
-    try {
-      const stored = this.#window?.localStorage.getItem(STORAGE_KEY)
-      return isView(stored) ? stored : 'canvas'
-    } catch {
-      return 'canvas'
-    }
-  }
-
-  #write(view: StudioView): void {
-    try {
-      this.#window?.localStorage.setItem(STORAGE_KEY, view)
-    } catch {
-      // Not persisted; the choice still applies for this session.
-    }
+    writeStored(this.#window, STORAGE_KEY, view)
   }
 }

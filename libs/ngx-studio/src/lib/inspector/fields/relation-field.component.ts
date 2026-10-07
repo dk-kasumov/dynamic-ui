@@ -126,13 +126,14 @@ export class RelationFieldComponent {
   /** Synthesized primitive so the `is one of` value reuses the existing chips field. */
   readonly listPrimitive = { kind: 'select', multiple: true } as SelectPrimitive<string>
 
-
-  readonly ruleSet = computed<RelationInstance>(() => this.node().relations[this.name()] ?? { combine: 'and', rules: [] })
+  readonly ruleSet = computed<RelationInstance>(
+    () => this.node().relations[this.name()] ?? { combine: 'and', rules: [] }
+  )
 
   readonly operators = computed<RuleOperator[]>(() => {
     const all = Object.keys(RELATION_OPERATORS) as RuleOperator[]
     const allowed = this.descriptor().operators
-    return allowed ? all.filter(op => (allowed as readonly string[]).includes(op)) : all
+    return allowed ? all.filter(op => allowed.includes(op)) : all
   })
 
   /** Eligible targets for this relation; re-read on tree changes to keep the add button in sync. */
@@ -154,16 +155,22 @@ export class RelationFieldComponent {
   }
 
   addCondition(): void {
-    this.facade.startPick(this.targets().map(n => n.id), target => {
-      const set = this.ruleSet()
-      this.#commit({ ...set, rules: [...set.rules, { target, operator: this.operators()[0]! }] })
-    })
+    this.facade.startPick(
+      this.targets().map(n => n.id),
+      target => {
+        const set = this.ruleSet()
+        this.#commit({ ...set, rules: [...set.rules, { target, operator: this.operators()[0]! }] })
+      }
+    )
   }
 
   repick(index: number): void {
-    this.facade.startPick(this.targets().map(n => n.id), target => {
-      this.#patch(index, rule => ({ ...rule, target }))
-    })
+    this.facade.startPick(
+      this.targets().map(n => n.id),
+      target => {
+        this.#patch(index, rule => ({ ...rule, target }))
+      }
+    )
   }
 
   setOperator(index: number, operator: RuleOperator): void {
