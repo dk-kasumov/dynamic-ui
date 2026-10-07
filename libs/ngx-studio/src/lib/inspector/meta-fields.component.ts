@@ -58,6 +58,8 @@ export class MetaFieldsComponent {
   readonly node = input.required<Node>()
   readonly definition = input.required<ComponentDefinition>()
 
+  // TODO: rename — native `change` from inner <input> bubbles to the host and reaches the same handler
+  // eslint-disable-next-line @angular-eslint/no-output-native
   readonly change = output<InspectorMetaChange>()
 
   readonly iconValue = computed(() => this.node().icon ?? '')

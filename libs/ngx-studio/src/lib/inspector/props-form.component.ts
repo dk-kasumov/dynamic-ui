@@ -33,6 +33,8 @@ export class PropsFormComponent {
   readonly definition = input.required<ComponentDefinition>()
   readonly values = input.required<Record<string, unknown>>()
 
+  // TODO: rename — native `change` from inner <input> bubbles to the host and reaches the same handler
+  // eslint-disable-next-line @angular-eslint/no-output-native
   readonly change = output<InspectorFieldChange>()
 
   readonly entries = computed(() =>
