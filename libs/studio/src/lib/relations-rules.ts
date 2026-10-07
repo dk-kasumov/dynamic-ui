@@ -92,8 +92,15 @@ export function describeExpression(expr: RelationExpression, labelOf: (id: NodeI
     const op = RELATION_OPERATORS[rule.operator]
     const head = `${labelOf(rule.target)} ${op.label}`
     if (op.value === 'none') return head
-    const value = Array.isArray(rule.value) ? rule.value.join(', ') : String(rule.value ?? '')
+    const value = formatValue(rule.value)
     return `${head} ${value}`.trim()
   })
   return parts.join(combine === 'and' ? ' and ' : ' or ')
+}
+
+/** Rule value as summary text; objects become JSON instead of "[object Object]". */
+function formatValue(value: JsonValue | undefined): string {
+  if (value === undefined || value === null) return ''
+  if (Array.isArray(value)) return value.map(formatValue).join(', ')
+  return typeof value === 'object' ? JSON.stringify(value) : String(value)
 }

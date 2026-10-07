@@ -159,4 +159,15 @@ describe('relation rules codec', () => {
     const expr = toExpression({ combine: 'and', rules: [{ target: a, operator: 'isEmpty' }] })!
     expect(describeExpression(expr, id => (id === a ? 'Email' : id))).toBe('Email is empty')
   })
+
+  it('describes list and object values as readable text', () => {
+    const expr = toExpression({
+      combine: 'and',
+      rules: [
+        { target: a, operator: 'isOneOf', value: ['admin', 'owner'] },
+        { target: b, operator: 'equals', value: { code: 'UA' } }
+      ]
+    })!
+    expect(describeExpression(expr, id => id)).toBe('a is one of admin, owner and b equals {"code":"UA"}')
+  })
 })
