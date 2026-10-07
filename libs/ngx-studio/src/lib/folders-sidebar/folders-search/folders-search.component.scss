@@ -1,4 +1,6 @@
-:host { display: block; }
+:host {
+  display: block;
+}
 
 .search {
   display: flex;
@@ -17,7 +19,10 @@
     background: var(--ds-sidebar-bg, #fff);
   }
 
-  &__icon { flex: 0 0 auto; color: var(--ds-text-muted, #7a828a); }
+  &__icon {
+    flex: 0 0 auto;
+    color: var(--ds-text-muted, #7a828a);
+  }
 
   &__input {
     flex: 1;
@@ -29,7 +34,11 @@
     color: var(--ds-text, #1f2328);
     outline: none;
     appearance: none;
-    &::placeholder { color: var(--ds-text-muted, #7a828a); }
-    &::-webkit-search-cancel-button { display: none; }
+    &::placeholder {
+      color: var(--ds-text-muted, #7a828a);
+    }
+    &::-webkit-search-cancel-button {
+      display: none;
+    }
   }
 }

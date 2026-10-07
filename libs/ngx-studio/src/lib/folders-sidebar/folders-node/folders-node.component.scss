@@ -1,7 +1,9 @@
 $indent: 8px;
 $row-height: 32px;
 
-:host { display: block; }
+:host {
+  display: block;
+}
 
 .row {
   display: flex;
@@ -10,9 +12,13 @@ $row-height: 32px;
   padding-left: calc(var(--level, 0) * #{$indent});
   border-radius: 6px;
 
-  &:hover { background: var(--ds-hover, #eef0f2); }
+  &:hover {
+    background: var(--ds-hover, #eef0f2);
+  }
   &--active,
-  &--active:hover { background: var(--ds-active, #dfe9fd); }
+  &--active:hover {
+    background: var(--ds-active, #dfe9fd);
+  }
 }
 
 .toggle,
@@ -42,8 +48,12 @@ $row-height: 32px;
     transition: transform 0.15s ease;
   }
 
-  &--open::before { transform: rotate(45deg); }
-  &:focus-visible { outline: 2px solid var(--ds-accent, #2f6fed); }
+  &--open::before {
+    transform: rotate(45deg);
+  }
+  &:focus-visible {
+    outline: 2px solid var(--ds-accent, #2f6fed);
+  }
 }
 
 .label {
@@ -101,5 +111,7 @@ $row-height: 32px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .toggle::before { transition: none; }
+  .toggle::before {
+    transition: none;
+  }
 }

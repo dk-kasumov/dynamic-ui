@@ -1,0 +1,4 @@
+# Bulk formatting commits, skipped by `git blame` (git config blame.ignoreRevsFile .git-blame-ignore-revs)
+
+# style: apply prettier to all files
+d03d1b591a50244f7f7e7d056ca3af1d0478da3b

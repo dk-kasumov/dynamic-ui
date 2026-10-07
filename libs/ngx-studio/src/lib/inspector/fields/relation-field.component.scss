@@ -60,8 +60,13 @@
   font-weight: 600;
   cursor: pointer;
 
-  .material-icons { font-size: 15px; flex: 0 0 auto; }
-  &:hover { filter: brightness(0.96); }
+  .material-icons {
+    font-size: 15px;
+    flex: 0 0 auto;
+  }
+  &:hover {
+    filter: brightness(0.96);
+  }
 }
 
 .relation__target-label {
@@ -78,7 +83,10 @@
 }
 
 .relation__op,
-.relation__value { display: block; width: 100%; }
+.relation__value {
+  display: block;
+  width: 100%;
+}
 
 // Clickable AND/OR between conditions — toggles the whole set's combinator.
 .relation__joiner {
@@ -94,7 +102,9 @@
   letter-spacing: 0.04em;
   cursor: pointer;
 
-  &:hover { background: var(--ds-accent-soft); }
+  &:hover {
+    background: var(--ds-accent-soft);
+  }
 }
 
 .relation__remove {
@@ -110,8 +120,13 @@
   color: var(--ds-text-muted);
   cursor: pointer;
 
-  .material-icons { font-size: 17px; }
-  &:hover { color: #ef4444; background: rgba(239, 68, 68, 0.1); }
+  .material-icons {
+    font-size: 17px;
+  }
+  &:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+  }
 }
 
 .relation__add {
@@ -128,7 +143,16 @@
   font-weight: 600;
   cursor: pointer;
 
-  .material-icons { font-size: 16px; }
-  &:hover:not(:disabled) { background: var(--ds-accent-soft); border-color: var(--ds-accent); }
-  &:disabled { opacity: 0.5; cursor: not-allowed; color: var(--ds-text-muted); }
+  .material-icons {
+    font-size: 16px;
+  }
+  &:hover:not(:disabled) {
+    background: var(--ds-accent-soft);
+    border-color: var(--ds-accent);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    color: var(--ds-text-muted);
+  }
 }

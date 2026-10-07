@@ -12,7 +12,14 @@ import type { InspectorFieldChange } from './field-change'
 @Component({
   selector: 'ds-inspector',
   standalone: true,
-  imports: [MatIconModule, MatIconButton, MatDividerModule, MetaFieldsComponent, PropsFormComponent, RelationsFormComponent],
+  imports: [
+    MatIconModule,
+    MatIconButton,
+    MatDividerModule,
+    MetaFieldsComponent,
+    PropsFormComponent,
+    RelationsFormComponent
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './inspector.component.scss',
   template: `

@@ -167,18 +167,18 @@ That is the entire public API. `Registry` and `Tree` live inside the facade and 
 
 Primitives are used in two places: to declare the shape of **props** on a component, and (as `Studio.relation`) to declare the shape of **relations**.
 
-| Primitive                         | Purpose                                                                           |
-| --------------------------------- | --------------------------------------------------------------------------------- |
-| `Studio.text()`                   | Single-line string value.                                                         |
-| `Studio.decimal()`                | Numeric value.                                                                    |
-| `Studio.checkbox()`               | Boolean value.                                                                    |
-| `Studio.select()`                 | Single choice from a dynamic set of options.                                      |
-| `Studio.enum([...])`              | Single choice from a fixed set of options defined at registration time.           |
-| `Studio.code()`                   | JSON source, edited in a code editor.                                             |
-| `Studio.time()`                   | Time of day, stored as `HH:mm`.                                                   |
-| `Studio.date({ range?, format? })` | Calendar date (`yyyy-MM-dd`), or `{ start, end }` when `range` is true.          |
-| `Studio.group({ ... })`           | Nested object of primitives. Useful for grouping related props in the gear panel. |
-| `Studio.relation(options?)`       | A conditional link to other nodes. See [Relations](#relations).                   |
+| Primitive                          | Purpose                                                                           |
+| ---------------------------------- | --------------------------------------------------------------------------------- |
+| `Studio.text()`                    | Single-line string value.                                                         |
+| `Studio.decimal()`                 | Numeric value.                                                                    |
+| `Studio.checkbox()`                | Boolean value.                                                                    |
+| `Studio.select()`                  | Single choice from a dynamic set of options.                                      |
+| `Studio.enum([...])`               | Single choice from a fixed set of options defined at registration time.           |
+| `Studio.code()`                    | JSON source, edited in a code editor.                                             |
+| `Studio.time()`                    | Time of day, stored as `HH:mm`.                                                   |
+| `Studio.date({ range?, format? })` | Calendar date (`yyyy-MM-dd`), or `{ start, end }` when `range` is true.           |
+| `Studio.group({ ... })`            | Nested object of primitives. Useful for grouping related props in the gear panel. |
+| `Studio.relation(options?)`        | A conditional link to other nodes. See [Relations](#relations).                   |
 
 Every primitive also accepts `hint` (helper text under the field), e.g. `Studio.text({ hint: 'Name in format Name - Surname' })`.
 
@@ -221,10 +221,10 @@ Relations are first-class. They are the mechanism by which a dynamic UI stays dy
 
 Every relation declares what it produces:
 
-| `returns`     | Meaning                         | Typical use                                   |
-| ------------- | ------------------------------- | --------------------------------------------- |
-| `'boolean'`   | Condition.                      | `visible`, `disabled`, `required`.            |
-| `'value'`     | Computed value of a given type. | `placeholder = "Hi, " + firstName.value`.     |
+| `returns`          | Meaning                         | Typical use                                   |
+| ------------------ | ------------------------------- | --------------------------------------------- |
+| `'boolean'`        | Condition.                      | `visible`, `disabled`, `required`.            |
+| `'value'`          | Computed value of a given type. | `placeholder = "Hi, " + firstName.value`.     |
 | `'nodeReference'`  | A reference to one other node.  | "This field depends on that field."           |
 | `'nodeReferences'` | A list of node references.      | "These fields together determine the result." |
 

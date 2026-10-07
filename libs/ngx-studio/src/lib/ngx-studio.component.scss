@@ -27,7 +27,12 @@
   // and overlay drawer based on the studio's own width — not the viewport.
   container-type: inline-size;
   container-name: ds-studio;
-  font-family: 'Inter', 'Roboto', system-ui, -apple-system, sans-serif;
+  font-family:
+    'Inter',
+    'Roboto',
+    system-ui,
+    -apple-system,
+    sans-serif;
 
   // Accent
   --ds-accent: #6366f1;
@@ -133,12 +138,19 @@ ds-studio-header {
     scrollbar-color: var(--ds-border) transparent;
   }
 
-  *::-webkit-scrollbar { width: 4px; height: 4px; }
-  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
   *::-webkit-scrollbar-thumb {
     background: var(--ds-border);
     border-radius: 999px;
-    &:hover { background: var(--ds-text-muted); }
+    &:hover {
+      background: var(--ds-text-muted);
+    }
   }
 }
 
@@ -176,7 +188,9 @@ ds-studio-header {
   font-weight: 600;
   box-shadow: 0 10px 30px rgba(16, 24, 40, 0.25);
 
-  .material-icons { font-size: 18px; }
+  .material-icons {
+    font-size: 18px;
+  }
   kbd {
     padding: 1px 6px;
     border-radius: 4px;

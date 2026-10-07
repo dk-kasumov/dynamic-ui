@@ -234,7 +234,7 @@ function insertAt(children: Node[] | undefined, node: Node, index = Infinity): N
 /** Immutable deep set: clones every object along `path`, leaving siblings shared. */
 function setIn(obj: Record<string, unknown>, path: readonly string[], value: unknown): Record<string, unknown> {
   const [head, ...rest] = path
-  const key = head!
+  const key = head
   if (rest.length === 0) return { ...obj, [key]: value }
   const child = obj[key]
   const base = child && typeof child === 'object' ? (child as Record<string, unknown>) : {}

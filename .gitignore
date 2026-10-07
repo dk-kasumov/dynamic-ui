@@ -50,6 +50,8 @@ Thumbs.db
 .angular
 
 __screenshots__/
-
-
 storybook-static
+
+# Playwright
+playwright-report
+test-results

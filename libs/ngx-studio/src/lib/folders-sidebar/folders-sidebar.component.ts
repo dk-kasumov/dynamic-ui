@@ -1,9 +1,9 @@
-import { Component, computed, contentChild, input, output, signal } from '@angular/core';
-import { Folder } from './folder.model';
-import { filterFolders } from './filter-folders';
-import { FolderItemDirective } from './folder-item.directive';
-import { FoldersSearchComponent } from './folders-search/folders-search.component';
-import { FoldersNodeComponent } from './folders-node/folders-node.component';
+import { Component, computed, contentChild, input, output, signal } from '@angular/core'
+import { Folder } from './folder.model'
+import { filterFolders } from './filter-folders'
+import { FolderItemDirective } from './folder-item.directive'
+import { FoldersSearchComponent } from './folders-search/folders-search.component'
+import { FoldersNodeComponent } from './folders-node/folders-node.component'
 
 @Component({
   selector: 'ds-folders-sidebar',
@@ -34,22 +34,22 @@ import { FoldersNodeComponent } from './folders-node/folders-node.component';
         }
       </div>
     </aside>
-  `,
+  `
 })
 export class FoldersSidebarComponent {
-  folders = input<Folder[]>([]);
-  folderSelected = output<Folder>();
+  folders = input<Folder[]>([])
+  folderSelected = output<Folder>()
 
-  itemTpl = contentChild(FolderItemDirective);
+  itemTpl = contentChild(FolderItemDirective)
 
-  query = signal('');
-  selectedId = signal<Folder['id'] | null>(null);
+  query = signal('')
+  selectedId = signal<Folder['id'] | null>(null)
 
-  isSearching = computed(() => this.query().trim().length > 0);
-  filteredFolders = computed(() => filterFolders(this.folders(), this.query()));
+  isSearching = computed(() => this.query().trim().length > 0)
+  filteredFolders = computed(() => filterFolders(this.folders(), this.query()))
 
   onSelect(folder: Folder) {
-    this.selectedId.set(folder.id);
-    this.folderSelected.emit(folder);
+    this.selectedId.set(folder.id)
+    this.folderSelected.emit(folder)
   }
 }

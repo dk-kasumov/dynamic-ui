@@ -122,6 +122,8 @@ export class FieldHostComponent {
   readonly label = input.required<string>()
   readonly path = input.required<readonly string[]>()
 
+  // TODO: rename — native `change` from inner <input> bubbles to the host and reaches the same handler
+  // eslint-disable-next-line @angular-eslint/no-output-native
   readonly change = output<InspectorFieldChange>()
 
   readonly groupEntries = computed(() => {

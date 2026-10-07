@@ -14,11 +14,7 @@ const SEGMENTED_THRESHOLD = 4
   template: `
     @if (useSegmented()) {
       <div class="ds-enum-label">{{ label() }}</div>
-      <mat-button-toggle-group
-        class="ds-toggle-group"
-        [value]="effective()"
-        (change)="valueChange.emit($event.value)"
-      >
+      <mat-button-toggle-group class="ds-toggle-group" [value]="effective()" (change)="valueChange.emit($event.value)">
         @for (opt of primitive().options; track opt) {
           <mat-button-toggle [value]="opt">{{ opt }}</mat-button-toggle>
         }
@@ -50,5 +46,5 @@ export class EnumFieldComponent {
 
   readonly effective = computed(() => this.value() ?? this.primitive().default ?? null)
   readonly hint = computed(() => this.primitive().hint ?? this.primitive().description)
-  readonly useSegmented =computed(() => this.primitive().options.length <= SEGMENTED_THRESHOLD)
+  readonly useSegmented = computed(() => this.primitive().options.length <= SEGMENTED_THRESHOLD)
 }

@@ -1,4 +1,4 @@
-import { Component, model } from '@angular/core';
+import { Component, model } from '@angular/core'
 
 @Component({
   selector: 'ds-folders-search',
@@ -19,8 +19,8 @@ import { Component, model } from '@angular/core';
         (input)="value.set($any($event.target).value)"
       />
     </label>
-  `,
+  `
 })
 export class FoldersSearchComponent {
-  value = model('');
+  value = model('')
 }

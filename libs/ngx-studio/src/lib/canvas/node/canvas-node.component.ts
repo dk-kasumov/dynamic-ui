@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core'
 import type { NodeId } from '@dynamic-ui/studio'
 import { StudioFacade } from '../../studio-facade.service'
-import { DsSortableDirective, type DsSortableDropEvent } from '../sortable/sortable.directive'
+import { DsSortableDirective } from '../sortable/sortable.directive'
 
 interface LinkBadge {
   direction: 'out' | 'in'
