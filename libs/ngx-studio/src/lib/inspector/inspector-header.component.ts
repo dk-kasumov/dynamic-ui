@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core'
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core'
 import { MatIconModule } from '@angular/material/icon'
 import { MatIconButton } from '@angular/material/button'
 import { shortName } from '../canvas/icon'
@@ -16,7 +16,7 @@ import { shortName } from '../canvas/icon'
       </span>
       <div class="titles">
         <span class="eyebrow">{{ name() }}</span>
-        <span class="title">{{ label() || shortName(name()) }}</span>
+        <span class="title">{{ title() }}</span>
       </div>
     </div>
     <button mat-icon-button class="close" aria-label="Close" (click)="close.emit()">
@@ -31,5 +31,5 @@ export class InspectorHeaderComponent {
 
   readonly close = output<void>()
 
-  readonly shortName = shortName
+  readonly title = computed(() => this.label() || shortName(this.name()))
 }

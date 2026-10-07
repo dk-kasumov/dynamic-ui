@@ -1,9 +1,11 @@
-import { ChangeDetectionStrategy, Component, HostListener, inject } from '@angular/core'
+import { ChangeDetectionStrategy, Component, HostListener, Signal, computed, inject } from '@angular/core'
 import { MatDividerModule } from '@angular/material/divider'
-import { InspectorStore } from './inspector-store'
+import type { Node, NodeId } from '@dynamic-ui/studio'
+import { CanvasStore } from '../canvas/store/canvas-store.service'
 import { InspectorHeaderComponent } from './inspector-header.component'
 import { MetaFieldsComponent } from './meta-fields.component'
 import { PropsFormComponent } from './props-form.component'
+import type { InspectorFieldChange } from './field-change'
 
 @Component({
   selector: 'ds-inspector',
@@ -14,19 +16,18 @@ import { PropsFormComponent } from './props-form.component'
     MetaFieldsComponent,
     PropsFormComponent
   ],
-  providers: [InspectorStore],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './inspector.component.scss',
   template: `
-    @let n = store.node();
-    @let def = store.definition();
-    <div class="scrim" (click)="store.close()" aria-hidden="true"></div>
+    @let n = node();
+    @let def = definition();
+    <div class="scrim" (click)="close()" aria-hidden="true"></div>
     <aside class="inspector" role="dialog" aria-label="Component settings">
       <ds-inspector-header
-        [icon]="store.icon()"
+        [icon]="icon()"
         [name]="def.name"
         [label]="def.label"
-        (close)="store.close()"
+        (close)="close()"
       />
 
       <div class="inspector__body">
@@ -35,7 +36,7 @@ import { PropsFormComponent } from './props-form.component'
           <ds-meta-fields
             [node]="n"
             [definition]="def"
-            [effectiveIcon]="store.icon()"
+            [effectiveIcon]="icon()"
             (change)="store.setMeta(n.id, $event)"
           />
         </section>
@@ -47,7 +48,7 @@ import { PropsFormComponent } from './props-form.component'
           <ds-props-form
             [definition]="def"
             [values]="n.props"
-            (change)="store.setProp(n.id, $event)"
+            (change)="onPropChange(n.id, $event)"
           />
         </section>
       </div>
@@ -55,10 +56,18 @@ import { PropsFormComponent } from './props-form.component'
   `
 })
 export class InspectorComponent {
-  protected readonly store = inject(InspectorStore)
+  protected readonly store = inject(CanvasStore)
+
+  readonly node = this.store.inspectedNode as Signal<Node>
+  readonly definition = computed(() => this.store.component(this.node().name)!)
+  readonly icon = computed(() => this.store.iconOf(this.node()))
 
   @HostListener('document:keydown.escape')
   close(): void {
-    this.store.close()
+    this.store.closeInspector()
+  }
+
+  onPropChange(id: NodeId, change: InspectorFieldChange): void {
+    this.store.setProp(id, change.path, change.value)
   }
 }
