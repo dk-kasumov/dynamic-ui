@@ -1,8 +1,18 @@
 {
+  "$schema": "https://json.schemastore.org/prettierrc",
   "printWidth": 120,
+  "tabWidth": 2,
+  "useTabs": false,
+  "endOfLine": "lf",
   "semi": false,
   "singleQuote": true,
   "trailingComma": "none",
   "arrowParens": "avoid",
-  "bracketSpacing": true
+  "bracketSpacing": true,
+  "overrides": [
+    {
+      "files": "*.html",
+      "options": { "parser": "angular" }
+    }
+  ]
 }
