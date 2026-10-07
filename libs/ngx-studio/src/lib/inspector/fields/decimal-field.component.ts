@@ -20,6 +20,9 @@ import type { DecimalPrimitive } from '@dynamic-ui/studio'
         [placeholder]="primitive().default?.toString() ?? ''"
         (input)="onInput($event)"
       />
+      @if (primitive().hint ?? primitive().description; as hint) {
+        <mat-hint>{{ hint }}</mat-hint>
+      }
     </mat-form-field>
   `
 })
@@ -32,7 +35,10 @@ export class DecimalFieldComponent {
 
   onInput(event: Event): void {
     const raw = (event.target as HTMLInputElement).value
-    if (raw === '') { this.valueChange.emit(null); return }
+    if (raw === '') {
+      this.valueChange.emit(null)
+      return
+    }
     const n = Number(raw)
     if (!Number.isNaN(n)) this.valueChange.emit(n)
   }

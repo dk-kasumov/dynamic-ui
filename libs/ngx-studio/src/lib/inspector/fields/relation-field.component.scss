@@ -1,0 +1,158 @@
+// Flattened hierarchy: no box per relation or per condition — just a titled group
+// whose conditions hang off a thin left rail, so the narrow panel keeps its width.
+.relation {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.relation__head {
+  display: flex;
+  align-items: center;
+}
+
+.relation__name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--ds-text);
+}
+
+// The left rail groups a relation's conditions without a heavy container.
+.relation__conditions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 12px;
+  border-left: 2px solid var(--ds-accent-ring, var(--ds-accent-soft));
+}
+
+.relation__rule {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.relation__rule-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+// Operator and value stack full-width (long operator labels never truncate) with breathing room.
+.relation__rule-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.relation__target {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--ds-accent);
+  border-radius: 999px;
+  background: var(--ds-accent-soft);
+  color: var(--ds-accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  .material-icons {
+    font-size: 15px;
+    flex: 0 0 auto;
+  }
+  &:hover {
+    filter: brightness(0.96);
+  }
+}
+
+.relation__target-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+// The component type stays visible but secondary when a more specific name leads.
+.relation__target-type {
+  margin-left: 4px;
+  font-weight: 500;
+  opacity: 0.65;
+}
+
+.relation__op,
+.relation__value {
+  display: block;
+  width: 100%;
+}
+
+// Clickable AND/OR between conditions — toggles the whole set's combinator.
+.relation__joiner {
+  align-self: flex-start;
+  padding: 2px 12px;
+  border: 1px solid var(--ds-accent);
+  border-radius: 999px;
+  background: var(--ds-sidebar-bg, var(--ds-card-bg));
+  color: var(--ds-accent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--ds-accent-soft);
+  }
+}
+
+.relation__remove {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ds-text-muted);
+  cursor: pointer;
+
+  .material-icons {
+    font-size: 17px;
+  }
+  &:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+  }
+}
+
+.relation__add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 6px 10px;
+  border: 1px dashed var(--ds-card-border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ds-accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+
+  .material-icons {
+    font-size: 16px;
+  }
+  &:hover:not(:disabled) {
+    background: var(--ds-accent-soft);
+    border-color: var(--ds-accent);
+  }
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    color: var(--ds-text-muted);
+  }
+}

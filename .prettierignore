@@ -5,3 +5,6 @@ coverage
 .nx
 
 .angular
+storybook-static
+playwright-report
+test-results

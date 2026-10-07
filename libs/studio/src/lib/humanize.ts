@@ -1,7 +1,6 @@
 /**
  * Converts a camelCase / snake_case / kebab-case identifier into a space-separated
- * title-cased label — used by the inspector to derive a field label from a prop key
- * when the primitive does not carry an explicit `label`.
+ * title-cased label — used by the inspector to derive a field label from a prop key.
  *
  *   humanize('ariaLabel')  -> 'Aria Label'
  *   humanize('maxLength')  -> 'Max Length'
@@ -22,5 +21,5 @@ export function humanize(key: string): string {
 
 function capitalizeWord(word: string): string {
   if (word === word.toUpperCase()) return word
-  return word[0]!.toUpperCase() + word.slice(1)
+  return word[0].toUpperCase() + word.slice(1)
 }

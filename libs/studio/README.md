@@ -12,7 +12,7 @@ For the overall project vision, see the [root README](../../README.md).
 
 - **Component registration API** — primitives for declaring the shape of each component's props and relations.
 - **Node and tree model** — the single-shape node contract that the entire editor manipulates.
-- **Relation expressions** — the structured expression tree used to describe conditional and computed links between nodes.
+- **Relations** — a node's conditional links to other nodes: a flat list of `{ target, operator, value? }` rules combined with AND or OR.
 - **Canonical DSL** — serialization and deserialization of the node tree into pure JSON.
 - **Validation** — schema-level and instance-level checks (type correctness, broken references, containers receiving children they cannot hold).
 
@@ -28,7 +28,7 @@ For the overall project vision, see the [root README](../../README.md).
 Only **one** class is exported — `Studio`. It is both:
 
 - A **facade** — a `Studio` instance owns the registry, the node tree, selection, and subscriptions.
-- A **DSL namespace** — all schema factories (`Studio.text()`, `Studio.relation()`, …) are static methods on it, along with `Studio.defineComponent()` and `Studio.createNode()`.
+- A **DSL namespace** — all schema factories (`Studio.text()`, `Studio.relation()`, …) are static methods on it, along with `Studio.defineComponent()`.
 
 Internal classes (`Registry`, `Store`, `Tree`) are **not** exported. The only other export is `StudioError` for `instanceof` discrimination plus the TypeScript types consumers need.
 
@@ -47,7 +47,8 @@ Every element in a tree is a **node**, and every node has exactly the same shape
 ```ts
 type Node = {
   id: string // stable instance identifier
-  name: string // registered component name
+  name: string // registered component title
+  fieldName?: string // key of the value in the output
   props: object // static values the component consumes
   relations: object // dynamic links to other nodes
   children?: Node[] // only present if the component is a container
@@ -72,7 +73,7 @@ A developer tells the studio which components exist, what props each one accepts
 import { Studio } from '@dynamic-ui/studio'
 
 const textInput = Studio.defineComponent({
-  name: 'Controls/TextInput',
+  title: 'Controls/TextInput',
 
   props: {
     label: Studio.text(),
@@ -91,13 +92,25 @@ const textInput = Studio.defineComponent({
 
 That's a complete component definition. The core has no built-in knowledge that this is a "text input"; from its point of view it's just a leaf component (not a container) with a declared prop shape and three available relations.
 
+The display label is derived from the last `/`-separated segment of `title` (`Controls/TextInput` → `TextInput`), so the title is the single source for both identity and the palette hierarchy. A prop's label in the gear panel is always derived from its key (`maxLength` → `Max Length`); primitives have no `label` option.
+
+### Adapters
+
+An adapter maps the AST onto whatever the host needs — framework props, a backend schema, generated code. It is a single function, and the studio never interprets its result:
+
+```ts
+const reactProps = Studio.defineAdapter({ map: root => toReactTree(root) })
+```
+
+The UI package runs registered adapters against the live tree and shows their output next to the AST (see `@dynamic-ui/ngx-studio`).
+
 ### Containers
 
 Any component that should accept children sets `container: true`:
 
 ```ts
 const stepper = Studio.defineComponent({
-  name: 'Containers/Stepper',
+  title: 'Containers/Stepper',
 
   container: true,
 
@@ -113,15 +126,16 @@ There is no concept of "slot" or "named region". If you need a container with st
 
 ## Instantiating the studio
 
-Once components are defined, create a `Studio` with them and a root node. From this point on, the UI package (or any consumer) talks to the studio instance directly — mutations, inspection, subscriptions:
+Once components are defined, create a `Studio` with them. The studio owns the root container, so `root` is optional — omit it for an empty canvas, or pass a plain description (the studio builds the nodes and ids) to seed content. From this point on, the UI package (or any consumer) talks to the studio instance directly — mutations, inspection, subscriptions:
 
 ```ts
 import { Studio } from '@dynamic-ui/studio'
 
-const studio = new Studio({
-  components: [form, textInput, button],
-  root: Studio.createNode({ name: 'Containers/Form' })
-})
+// Empty canvas — the studio creates the root for you.
+const studio = new Studio({ components: [form, textInput, button] })
+
+// …or seed it with a starting tree:
+// new Studio({ components, root: { name: 'Containers/Form', children: [...] } })
 
 // Palette: list every registered component, look one up by name.
 studio.getComponents()
@@ -132,25 +146,20 @@ studio.root
 studio.findNode(someId)
 studio.parentOf(someId)
 
-// Mutations — forward to the internal store, which emits after each change.
+// Mutations — applied to the immutable tree; `state$` emits a fresh snapshot after each.
 const fieldId = studio.addNode(studio.root.id, { name: 'Controls/TextInput' })
 studio.setProp(fieldId, ['label'], 'Email')
 studio.setRelation(fieldId, 'required', {
-  variant: 'builtin',
-  returns: 'boolean',
-  expression: {
-    operator: 'equals',
-    left: { kind: 'reference', nodeId: 'role-id' },
-    right: { kind: 'value', value: 'admin' }
-  }
+  combine: 'and',
+  rules: [{ target: 'role-id', operator: 'equals', value: 'admin' }]
 })
 
-// Selection and subscriptions — UI uses these to render the gear and re-render on changes.
+// Selection and reactivity — UI binds to `state$` (RxJS) to re-render on changes.
 studio.select(fieldId)
-const unsubscribe = studio.subscribe(() => renderCanvas(studio))
+const sub = studio.state$.subscribe(snapshot => renderCanvas(snapshot))
 ```
 
-That is the entire public API. `Registry`, `Store`, and `Tree` live inside the facade and are not exported — swapping their implementations is a non-breaking change.
+That is the entire public API. `Registry` and `Tree` live inside the facade and are not exported — swapping their implementations is a non-breaking change.
 
 ---
 
@@ -158,16 +167,20 @@ That is the entire public API. `Registry`, `Store`, and `Tree` live inside the f
 
 Primitives are used in two places: to declare the shape of **props** on a component, and (as `Studio.relation`) to declare the shape of **relations**.
 
-| Primitive                         | Purpose                                                                           |
-| --------------------------------- | --------------------------------------------------------------------------------- |
-| `Studio.text()`                   | Single-line string value.                                                         |
-| `Studio.decimal()`                | Numeric value.                                                                    |
-| `Studio.checkbox()`               | Boolean value.                                                                    |
-| `Studio.select()`                 | Single choice from a dynamic set of options.                                      |
-| `Studio.enum([...])`              | Single choice from a fixed set of options defined at registration time.           |
-| `Studio.group({ ... })`           | Nested object of primitives. Useful for grouping related props in the gear panel. |
-| `Studio.relation(options?)`       | A dynamic link to one or more other nodes. See [Relations](#relations).           |
-| `Studio.relation.custom({ ... })` | Escape hatch for domain-specific relations with a developer-supplied editor.      |
+| Primitive                          | Purpose                                                                           |
+| ---------------------------------- | --------------------------------------------------------------------------------- |
+| `Studio.text()`                    | Single-line string value.                                                         |
+| `Studio.decimal()`                 | Numeric value.                                                                    |
+| `Studio.checkbox()`                | Boolean value.                                                                    |
+| `Studio.select()`                  | Single choice from a dynamic set of options.                                      |
+| `Studio.enum([...])`               | Single choice from a fixed set of options defined at registration time.           |
+| `Studio.code()`                    | JSON source, edited in a code editor.                                             |
+| `Studio.time()`                    | Time of day, stored as `HH:mm`.                                                   |
+| `Studio.date({ range?, format? })` | Calendar date (`yyyy-MM-dd`), or `{ start, end }` when `range` is true.           |
+| `Studio.group({ ... })`            | Nested object of primitives. Useful for grouping related props in the gear panel. |
+| `Studio.relation(options?)`        | A conditional link to other nodes. See [Relations](#relations).                   |
+
+Every primitive also accepts `hint` (helper text under the field), e.g. `Studio.text({ hint: 'Name in format Name - Surname' })`.
 
 Each primitive produces a descriptor the studio uses to:
 
@@ -175,7 +188,7 @@ Each primitive produces a descriptor the studio uses to:
 2. Validate values on save.
 3. Serialize the configured value into the DSL.
 
-The primitive set is intentionally small. The core does not try to cover every possible input type; richer widgets (date pickers, color pickers, code editors) belong in the UI packages or in developer-provided custom primitives.
+The primitive set is intentionally small. The core does not try to cover every possible input type; richer widgets (color pickers, rich-text editors) belong in the UI packages or in developer-provided custom primitives.
 
 ---
 
@@ -188,7 +201,7 @@ Every component declares two separate bags: `props` and `relations`. They are di
 
 The rule of thumb: **does the component itself need to know this value to render?** If yes → `props`. If no (the surrounding runtime applies it) → `relations`.
 
-Separating these two is what keeps the adapter clean: props are a simple projection, relations require a reactive walker over an expression tree. Mixing them in one bag would force every adapter to re-discover the distinction at runtime.
+Separating these two is what keeps the adapter clean: props are a simple projection, relations are wired reactively. Mixing them in one bag would force every adapter to re-discover the distinction at runtime.
 
 ### When a prop and a relation overlap
 
@@ -208,42 +221,39 @@ Relations are first-class. They are the mechanism by which a dynamic UI stays dy
 
 Every relation declares what it produces:
 
-| `returns`     | Meaning                         | Typical use                                   |
-| ------------- | ------------------------------- | --------------------------------------------- |
-| `'boolean'`   | Condition.                      | `visible`, `disabled`, `required`.            |
-| `'value'`     | Computed value of a given type. | `placeholder = "Hi, " + firstName.value`.     |
+| `returns`          | Meaning                         | Typical use                                   |
+| ------------------ | ------------------------------- | --------------------------------------------- |
+| `'boolean'`        | Condition.                      | `visible`, `disabled`, `required`.            |
+| `'value'`          | Computed value of a given type. | `placeholder = "Hi, " + firstName.value`.     |
 | `'nodeReference'`  | A reference to one other node.  | "This field depends on that field."           |
 | `'nodeReferences'` | A list of node references.      | "These fields together determine the result." |
 
-### Structured expression tree, not expression strings
+### An instance is a flat list of rules
 
-A relation's output in the DSL is a structured JSON expression tree, not a string expression. Operators are nodes, operands are nodes, composition uses `and` / `or` / `not`.
+A relation set on a node is just its conditions and how they combine — no nested expression tree:
+
+```ts
+interface RelationInstance {
+  combine: 'and' | 'or'
+  rules: { target: NodeId; operator: RuleOperator; value?: JsonValue }[]
+}
+```
 
 ```json
 {
-  "operator": "and",
-  "operands": [
-    { "operator": "equals", "left": { "reference": "country-5" }, "right": { "value": "US" } },
-    { "operator": "isValid", "operand": { "reference": "email-3" } }
+  "combine": "or",
+  "rules": [
+    { "target": "country-5", "operator": "equals", "value": "US" },
+    { "target": "email-3", "operator": "isEmpty" }
   ]
 }
 ```
 
-Why an expression tree rather than a string:
+The core does not evaluate this — it only records it. What a relation name (`visible`) and an operator (`equals`) mean is entirely the adapter's call; the adapter maps each rule to whatever its runtime needs.
 
-- **No parser needed.** Every adapter is a straightforward tree walker (~a few hundred lines of code).
-- **Validation is easy.** Broken references, type mismatches, unknown operators — all caught structurally.
-- **The gear panel renders directly from the expression tree.** Each node of the tree corresponds to a visual row.
-- **Translating to runtime-specific condition formats** (JSONForms rules, Formily reactions, FormIO conditions, SurveyJS expressions) is a case-by-case mapping over the expression tree, not a string rewrite.
+### Operators
 
-### Built-in operators (initial set)
-
-Comparison: `equals`, `notEquals`, `greaterThan`, `greaterThanOrEqual`, `lessThan`, `lessThanOrEqual`, `isOneOf`, `matchesPattern`.
-Predicates: `isEmpty`, `isValid`, `isTouched`, `isFormValid`.
-Composition: `and`, `or`, `not`.
-Arithmetic (for `returns: 'value'`): `add`, `subtract`, `multiply`, `divide`, `concatenate`.
-
-Operators are the only part of the DSL that is versioned by the core itself. Future additions bump `schemaVersion`; adapters document which operators they support.
+`equals`, `notEquals`, `greaterThan`, `greaterThanOrEqual`, `lessThan`, `lessThanOrEqual`, `isOneOf` (take a value), `isEmpty`, `isNotEmpty`, `isValid`, `isInvalid`, `isTouched`, `isUntouched` (take none). The set is exported as `RELATION_OPERATORS`, each with a label and its value shape (`none` / `single` / `list`).
 
 ### Configuring a relation at registration
 
@@ -251,50 +261,16 @@ Operators are the only part of the DSL that is versioned by the core itself. Fut
 Studio.relation({
   returns: 'boolean',
 
-  // Studio-time constraints on what the gear panel offers.
-  // These do NOT appear in the output DSL.
+  // Studio-time constraints on what the gear panel offers; not part of the output.
   targetFilter: {
     kinds: ['Controls/TextInput', 'Controls/Dropdown'],
-    scope: 'form' // 'form' | 'siblings' | 'any'
+    scope: 'siblings' // 'siblings' | 'any'
   },
 
-  // Whitelist of operators shown in the UI.
-  // Omit to allow all built-ins.
-  operators: ['equals', 'notEquals', 'isEmpty', 'isValid'],
-
-  // 'simple' = flat list of rules; 'advanced' = grouped composition (AND/OR groups).
-  mode: 'simple',
-
-  // Named presets that pre-fill the expression.
-  presets: [
-    {
-      label: 'Shown when target is valid',
-      expression: { operator: 'isValid', operand: { reference: '$pick' } }
-      // $pick is a placeholder — the manager fills it by picking a node in the UI.
-    }
-  ],
-
-  default: false
+  // Whitelist of operators shown in the UI. Omit to allow all.
+  operators: ['equals', 'notEquals', 'isEmpty']
 })
 ```
-
-### Custom relations
-
-When a developer needs a relation with a domain-specific UI (e.g., a time-slot picker, a tax-bracket editor, a cron expression builder), they register it with their own editor component:
-
-```ts
-Studio.relation.custom({
-  id: 'timeSlotAvailability',
-  editor: TimeSlotEditor, // framework-specific component
-  schema: timeSlotPayloadSchema, // Zod/JSON Schema describing payload shape
-  summary: v => `${v.from}–${v.to}`, // short string shown on the node card
-  default: { from: '09:00', to: '18:00' }
-})
-```
-
-Custom relations serialize into the DSL under their `id`. Adapters that know this `id` interpret the payload; adapters that don't either skip the relation or emit a warning. This is the extension point that lets the ecosystem grow beyond what the core ships with — without the core needing to anticipate every domain.
-
----
 
 ## Composition patterns
 
@@ -319,9 +295,8 @@ Each of these is "just a component" from the core's point of view. The developer
 Two different identifiers exist, and they must not be conflated:
 
 - **`id`** — the stable instance identifier assigned by the studio when a node is created. Never shown to the end user, never editable, never reused. Everything that references a node (relations, parent-child, selection state, undo history) uses this id.
-- **`name`** — the registered component name (e.g., `Controls/TextInput`). Set by the developer at registration time.
-
-A separate human-facing name (e.g., `email` as the field name under which the value is stored in the final form) is typically a **prop** of the component (`fieldName: Studio.text()`), not something the core manages. The adapter uses that prop when wiring the final form.
+- **`name`** — the title of the registered component the node is an instance of (e.g., `Controls/TextInput`). Set by the developer at registration time via `title`.
+- **`fieldName`** — optional key under which the node's value is stored in the final output (e.g., `firstName`). Edited in the gear panel for every component; whitespace is stored as `_` (`first name` → `first_name`).
 
 ---
 
@@ -348,13 +323,8 @@ The studio serializes the tree to pure JSON:
         },
         "relations": {
           "required": {
-            "variant": "builtin",
-            "returns": "boolean",
-            "expression": {
-              "operator": "equals",
-              "left": { "reference": "role-3" },
-              "right": { "value": "admin" }
-            }
+            "combine": "and",
+            "rules": [{ "target": "role-3", "operator": "equals", "value": "admin" }]
           }
         }
       },
@@ -398,7 +368,7 @@ What an adapter does:
 - Walks the node tree.
 - Maps each `name` to a concrete component in the host framework.
 - Projects `props` directly onto the component.
-- Walks each relation's expression tree and wires it up using the host runtime's reactivity (RxJS, signals, hooks, computed, whatever).
+- Walks each relation's rules and wires them up using the host runtime's reactivity (RxJS, signals, hooks, computed, whatever).
 - Returns a handle the host application can mount, read values from, and submit.
 
 What an adapter does **not** do:
@@ -436,7 +406,7 @@ No special categories: no inputs, no containers-as-a-separate-concept, no slots,
 
 ## Status
 
-Early. The public API will change as the primitives, relation expressions, and DSL stabilize. Do not depend on this package in production yet.
+Early. The public API will change as the primitives, relations, and DSL stabilize. Do not depend on this package in production yet.
 
 ## License
 

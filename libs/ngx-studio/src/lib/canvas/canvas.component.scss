@@ -14,7 +14,10 @@
     radial-gradient(circle at 1px 1px, var(--ds-grid-dot) 1px, transparent 0),
     radial-gradient(circle at 20% 10%, rgba(99, 102, 241, 0.08), transparent 45%),
     radial-gradient(circle at 80% 90%, rgba(14, 165, 233, 0.05), transparent 50%);
-  background-size: 20px 20px, auto, auto;
+  background-size:
+    20px 20px,
+    auto,
+    auto;
   color: var(--ds-text);
 
   &__inner {
@@ -47,15 +50,26 @@
     pointer-events: none;
   }
 
-  &__empty-glyph { color: var(--ds-accent); opacity: 0.9; }
-  &__empty-title { font-size: 14px; font-weight: 600; color: var(--ds-text); }
-  &__empty-hint { font-size: 12px; }
+  &__empty-glyph {
+    color: var(--ds-accent);
+    opacity: 0.9;
+  }
+  &__empty-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ds-text);
+  }
+  &__empty-hint {
+    font-size: 12px;
+  }
 }
 
 :host ::ng-deep .ds-sortable-ghost {
   position: relative;
   opacity: 0.45;
-  > * { visibility: hidden; }
+  > * {
+    visibility: hidden;
+  }
   &::after {
     content: '';
     position: absolute;
@@ -67,9 +81,17 @@
   }
 }
 
-:host ::ng-deep .ds-sortable-chosen { cursor: grabbing; opacity: 0.7; }
+:host ::ng-deep .ds-sortable-chosen {
+  cursor: grabbing;
+  opacity: 0.7;
+}
 
 @keyframes ds-canvas-pulse {
-  0%, 100% { border-color: var(--ds-border-dashed); }
-  50% { border-color: var(--ds-accent); }
+  0%,
+  100% {
+    border-color: var(--ds-border-dashed);
+  }
+  50% {
+    border-color: var(--ds-accent);
+  }
 }

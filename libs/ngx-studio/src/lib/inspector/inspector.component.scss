@@ -20,14 +20,78 @@
 .inspector {
   display: flex;
   flex-direction: column;
-  width: 320px;        // Fixed width so content layout stays stable while the
-                       // grid column transitions open; overflow is clipped by
-                       // the studio's `overflow: hidden`.
+  width: 360px; // Fixed width so content layout stays stable while the
+  // grid column transitions open; overflow is clipped by
+  // the studio's `overflow: hidden`.
   height: 100%;
   box-sizing: border-box;
   background: var(--ds-sidebar-bg);
   border-left: 1px solid var(--ds-border);
   z-index: 11;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--ds-border);
+  }
+
+  &__title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    color: var(--ds-accent);
+    background: var(--ds-accent-soft);
+    border-radius: 8px;
+    flex: 0 0 auto;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  &__titles {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ds-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ds-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__close {
+    color: var(--ds-text-muted);
+    flex: 0 0 auto;
+  }
 
   &__body {
     display: flex;
@@ -68,8 +132,12 @@
     --mat-form-field-container-text-size: 13px;
     --mat-form-field-subscript-text-size: 11px;
 
-    .mat-mdc-text-field-wrapper { padding-bottom: 0; }
-    .mdc-text-field__input { font-size: 13px; }
+    .mat-mdc-text-field-wrapper {
+      padding-bottom: 0;
+    }
+    .mdc-text-field__input {
+      font-size: 13px;
+    }
   }
 
   .mat-mdc-checkbox {
@@ -107,7 +175,9 @@
 // studio grid stays 2-col (the 3rd 0px track is unused) and the inspector
 // positions itself absolutely with its own slide-in animation.
 @container ds-studio (max-width: 1199px) {
-  .scrim { display: block; }
+  .scrim {
+    display: block;
+  }
   .inspector {
     position: absolute;
     inset-block: 0;
@@ -132,16 +202,30 @@
 }
 
 @keyframes ds-inspector-in {
-  from { transform: translateX(100%); opacity: 0; }
-  to   { transform: translateX(0);    opacity: 1; }
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
 
 @keyframes ds-inspector-up {
-  from { transform: translateY(100%); }
-  to   { transform: translateY(0); }
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 @keyframes ds-inspector-scrim {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }

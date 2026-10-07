@@ -2,6 +2,11 @@
   "name": "dynamic-ui",
   "$schema": "node_modules/nx/schemas/project-schema.json",
   "targets": {
+    "lint": {
+      "command": "eslint e2e *.ts *.js *.mjs",
+      "cache": true,
+      "inputs": ["{workspaceRoot}/e2e/**/*", "{workspaceRoot}/*.{ts,js,mjs}"]
+    },
     "local-registry": {
       "executor": "@nx/js:verdaccio",
       "options": {

@@ -6,11 +6,6 @@
     "moduleResolution": "bundler",
     "types": ["node", "jest"]
   },
-  "include": [
-    "libs/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["libs/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }

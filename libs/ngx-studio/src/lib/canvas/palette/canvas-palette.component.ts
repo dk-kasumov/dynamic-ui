@@ -5,7 +5,7 @@ import type { Folder, FolderItem } from '../../folders-sidebar/folder.model'
 import { FolderItemDirective } from '../../folders-sidebar/folder-item.directive'
 import { FoldersSidebarComponent } from '../../folders-sidebar/folders-sidebar.component'
 import { iconOrDefault } from '../icon'
-import { CanvasStore } from '../store/canvas-store.service'
+import { StudioFacade } from '../../studio-facade.service'
 import { DsSortableDirective } from '../sortable/sortable.directive'
 
 @Component({
@@ -18,13 +18,13 @@ import { DsSortableDirective } from '../sortable/sortable.directive'
     <ds-folders-sidebar [folders]="folders()">
       <ng-template dsFolderItem let-item>
         @let def = defOf(item);
-        <div class="chip-slot" dsSortable [options]="sortOptions" (dsSortableDrop)="store.applyDrop($event)">
-          <div class="chip ds-sortable-item" [attr.data-ds-palette-name]="def.name">
+        <div class="chip-slot" dsSortable [options]="sortOptions" (dsSortableDrop)="facade.applyDrop($event)">
+          <div class="chip ds-sortable-item" [attr.data-ds-palette-name]="def.title">
             <span class="chip__icon">
               <span class="material-icons" aria-hidden="true">{{ iconOrDefault(def.icon, def) }}</span>
             </span>
             <div class="chip__text">
-              <span class="chip__title">{{ def.label || item.name }}</span>
+              <span class="chip__title">{{ def.label }}</span>
               @if (def.description) {
                 <span class="chip__sub">{{ def.description }}</span>
               }
@@ -41,7 +41,7 @@ import { DsSortableDirective } from '../sortable/sortable.directive'
   `
 })
 export class CanvasPaletteComponent {
-  readonly store = inject(CanvasStore)
+  readonly facade = inject(StudioFacade)
 
   readonly components = input.required<readonly ComponentDefinition[]>()
 
@@ -56,11 +56,11 @@ export class CanvasPaletteComponent {
   }
 
   defOf(item: FolderItem): ComponentDefinition {
-    return this.store.component(String(item.id))!
+    return this.facade.component(String(item.id))!
   }
 }
 
-// Builds a nested Folder tree from flat component names like 'Controls/TextInput'.
+// Builds a nested Folder tree from flat component titles like 'Controls/TextInput'.
 // Supports arbitrary nesting depth.
 function componentsToFolders(components: readonly ComponentDefinition[]): Folder[] {
   type FolderNode = { children: Record<string, FolderNode>; items: FolderItem[] }
@@ -68,14 +68,14 @@ function componentsToFolders(components: readonly ComponentDefinition[]): Folder
   const root: FolderNode = { children: {}, items: [] }
 
   for (const c of components) {
-    const parts = c.name.split('/')
+    const parts = c.title.split('/')
     const leaf = parts.pop()!
     let node = root
     for (const part of parts) {
       node.children[part] ??= { children: {}, items: [] }
       node = node.children[part]!
     }
-    node.items.push({ id: c.name, name: leaf })
+    node.items.push({ id: c.title, name: leaf })
   }
 
   const build = (node: FolderNode, prefix: string): Folder[] =>

@@ -22,11 +22,10 @@ export const Default: Story = {
             name: 'Controllers',
             items: [
               { id: 'f1', name: 'input' },
-              { id: 'f2', name: 'calendar' },
-
+              { id: 'f2', name: 'calendar' }
             ]
-          },
-        ],
+          }
+        ]
       },
       { id: 4, name: 'Документы' }
     ]

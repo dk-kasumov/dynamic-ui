@@ -13,6 +13,9 @@ import type { CheckboxPrimitive } from '@dynamic-ui/studio'
       [checked]="effective()"
       (change)="valueChange.emit($event.checked)"
     >{{ label() }}</mat-checkbox>
+    @if (primitive().hint ?? primitive().description; as hint) {
+      <div class="ds-hint">{{ hint }}</div>
+    }
   `
 })
 export class CheckboxFieldComponent {
