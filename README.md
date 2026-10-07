@@ -68,6 +68,8 @@ libs/
 - Tests use **Vitest 4** (Angular projects) and **Jest** (core).
 - **Storybook 10** is set up for the Angular UI package.
 - **Prettier** with a minimalist config (120 cols, no semicolons, single quotes).
+- **ESLint** (typescript-eslint, angular-eslint, Nx module boundaries) — `npm run lint`. Project tags `type:core` / `type:ui` enforce that the core never imports a UI framework.
+- **husky** git hooks: `pre-commit` runs ESLint and Prettier on staged files via lint-staged, `commit-msg` checks [Conventional Commits](https://www.conventionalcommits.org/) via commitlint.
 
 ## Where to start
 
