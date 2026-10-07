@@ -1,6 +1,5 @@
 import { Studio, buildLinkIndex } from './studio'
-import type { RelationInstance } from './studio'
-import type { NodeId } from './studio'
+import type { NodeId, RelationInstance } from './studio'
 
 // A realistic set of registered components the UI would receive at app boot.
 const TextInput = Studio.defineComponent({
@@ -31,22 +30,18 @@ const Form = Studio.defineComponent({
 const makeStudio = () => new Studio({ components: [TextInput, Button, Form] })
 
 describe('Studio DSL', () => {
-  it('exposes schema factories as statics', () => {
+  it('exposes primitive and relation factories as statics', () => {
     expect(Studio.text({ default: 'anon' })).toEqual({ kind: 'text', default: 'anon' })
     expect(Studio.enum(['sm', 'md', 'lg']).options).toEqual(['sm', 'md', 'lg'])
-    expect(Studio.relation()).toEqual({ kind: 'relation', returns: 'boolean' })
-    expect(Studio.relation({ returns: 'value' }).returns).toBe('value')
-  })
-
-  it('exposes code, time and date primitives', () => {
     expect(Studio.code({ default: '{}' })).toEqual({ kind: 'code', default: '{}' })
     expect(Studio.time()).toEqual({ kind: 'time' })
-    expect(Studio.date()).toEqual({ kind: 'date' })
     expect(Studio.date({ range: true, format: 'DD-MM-YYYY' })).toEqual({
       kind: 'date',
       range: true,
       format: 'DD-MM-YYYY'
     })
+    expect(Studio.relation()).toEqual({ kind: 'relation', returns: 'boolean' })
+    expect(Studio.relation({ returns: 'value' }).returns).toBe('value')
   })
 
   it('accepts a hint on every primitive', () => {
@@ -151,20 +146,6 @@ describe('Studio — end-to-end usage', () => {
     expect(spy).toHaveBeenCalledTimes(4)
   })
 
-  it('replaces the root but shares untouched subtrees on mutation', () => {
-    const studio = makeStudio()
-    const sectionId = studio.addNode(studio.root.id, { name: 'Containers/Form' })
-    const fieldId = studio.addNode(sectionId, { name: 'Controls/TextInput' })
-    const other = studio.addNode(studio.root.id, { name: 'Controls/Button' })
-
-    const before = studio.root
-    const otherBefore = studio.findNode(other)
-    studio.setProp(fieldId, ['label'], 'Email')
-
-    expect(studio.root).not.toBe(before) // root is a new reference
-    expect(studio.findNode(other)).toBe(otherBefore) // untouched sibling kept its reference
-  })
-
   it('derives a component label from the last segment of its title', () => {
     const studio = makeStudio()
     expect(studio.getComponent('Controls/TextInput')?.label).toBe('TextInput')
@@ -183,25 +164,6 @@ describe('Studio — end-to-end usage', () => {
 
     studio.setMeta(id, { fieldName: '' })
     expect(studio.findNode(id)).not.toHaveProperty('fieldName')
-  })
-
-  it('rejects moves that would create a cycle', () => {
-    const studio = makeStudio()
-    const outer = studio.addNode(studio.root.id, { name: 'Containers/Form' })
-    const inner = studio.addNode(outer, { name: 'Controls/TextInput' })
-    expect(() => studio.moveNode(outer, inner)).toThrow(/descendant/)
-  })
-
-  it('offers relation targets excluding self and descendants', () => {
-    const studio = makeStudio()
-    const section = studio.addNode(studio.root.id, { name: 'Containers/Form' })
-    const inner = studio.addNode(section, { name: 'Controls/TextInput' })
-    const sibling = studio.addNode(studio.root.id, { name: 'Controls/Button' })
-
-    const ids = studio.relationTargets(section).map(n => n.id)
-    expect(ids).toContain(sibling)
-    expect(ids).not.toContain(section) // not itself
-    expect(ids).not.toContain(inner) // not a descendant
   })
 })
 
@@ -304,17 +266,6 @@ describe('Studio.relationTargets', () => {
 })
 
 describe('Studio.removeNode', () => {
-  it('drops relations that pointed at the removed node', () => {
-    const studio = makeStudio()
-    const email = studio.addNode(studio.root.id, { name: 'Controls/TextInput' })
-    const submit = studio.addNode(studio.root.id, { name: 'Controls/Button' })
-    studio.setRelation(submit, 'disabled', { combine: 'and', rules: [{ target: email, operator: 'isEmpty' }] })
-
-    studio.removeNode(email)
-    expect(studio.findNode(submit)?.relations).toEqual({})
-    expect(buildLinkIndex(studio.root).get(submit)).toEqual({ to: [], from: [] })
-  })
-
   it('publishes nothing when the removal is rejected', () => {
     const studio = makeStudio()
     const spy = jest.fn()

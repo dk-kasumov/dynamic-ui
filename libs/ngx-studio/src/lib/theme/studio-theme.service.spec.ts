@@ -37,15 +37,13 @@ describe('StudioTheme', () => {
   })
   afterEach(() => vi.unstubAllGlobals())
 
-  it('follows the system theme by default', () => {
-    const theme = configure({ systemDark: false })
+  it.each([
+    [false, 'light'],
+    [true, 'dark']
+  ])('follows the system theme by default (system dark: %s)', (systemDark, resolved) => {
+    const theme = configure({ systemDark })
     expect(theme.preference()).toBe('system')
-    expect(theme.resolved()).toBe('light')
-  })
-
-  it('resolves to dark when the system is dark', () => {
-    const theme = configure({ systemDark: true })
-    expect(theme.resolved()).toBe('dark')
+    expect(theme.resolved()).toBe(resolved)
   })
 
   it('tracks live system changes while the preference is system', () => {

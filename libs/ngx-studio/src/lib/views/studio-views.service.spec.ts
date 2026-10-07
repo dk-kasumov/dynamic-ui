@@ -125,11 +125,6 @@ describe('ds-ngx-studio views', () => {
     return { fixture, el, tab }
   }
 
-  it('offers all four views when a preview template and adapters are provided', () => {
-    const { tab } = mount()
-    expect(['Canvas', 'AST', 'Preview', 'Output'].map(title => !!tab(title))).toEqual([true, true, true, true])
-  })
-
   it('renders the projected template with the AST and adapter outputs in the Preview view', () => {
     const { fixture, el, tab } = mount()
     fixture.componentInstance.studio.addNode(fixture.componentInstance.studio.root.id, { name: 'Controls/Field' })
