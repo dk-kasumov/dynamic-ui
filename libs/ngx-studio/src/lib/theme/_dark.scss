@@ -1,0 +1,80 @@
+// Dark palette, split in two so it can be applied both to the studio host and
+// to the CDK overlay container (datepicker, select and tooltip panels render
+// there, outside the host, and would otherwise stay light).
+
+// Studio design tokens (--ds-*).
+@mixin studio-tokens {
+  --ds-canvas-bg: #0b0e14;
+  --ds-card-bg: #171a24;
+  --ds-card-bg-container: #12151e;
+  --ds-card-border: rgba(255, 255, 255, 0.08);
+  --ds-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --ds-card-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --ds-text: #e5e7eb;
+  --ds-text-muted: #9ca3af;
+  --ds-border: rgba(255, 255, 255, 0.08);
+  --ds-chip-bg: rgba(255, 255, 255, 0.05);
+  --ds-chip-bg-hover: rgba(255, 255, 255, 0.08);
+  --ds-code-key: #a5b4fc;
+  --ds-code-string: #6ee7b7;
+  --ds-code-number: #fbbf24;
+  --ds-code-keyword: #f9a8d4;
+  --ds-code-punctuation: #9ca3af;
+  --ds-code-error: #f87171;
+  --ds-dropzone-bg: rgba(255, 255, 255, 0.02);
+  --ds-dropzone-bg-active: rgba(99, 102, 241, 0.12);
+  --ds-grid-dot: rgba(255, 255, 255, 0.07);
+  --ds-sidebar-bg: #141821;
+  --ds-hover: rgba(255, 255, 255, 0.05);
+  --ds-active: rgba(99, 102, 241, 0.15);
+  --ds-input-bg: rgba(255, 255, 255, 0.05);
+}
+
+@mixin material-tokens {
+  // Angular Material v22 reads from --mat-sys-* system tokens. The prebuilt
+  // azure-blue theme defines LIGHT values on <html>; we override them in the
+  // studio so the inspector's Material inputs/checkboxes/toggles render
+  // correctly on our dark sidebar background.
+  --mat-sys-surface: #141821;
+  --mat-sys-surface-bright: #1a1f2b;
+  --mat-sys-surface-container-lowest: #0b0e14;
+  --mat-sys-surface-container-low: #12151e;
+  --mat-sys-surface-container: #171b25;
+  --mat-sys-surface-container-high: #1d2130;
+  --mat-sys-surface-container-highest: #22273a;
+  --mat-sys-surface-variant: #2a2f3f;
+  --mat-sys-surface-dim: #0b0e14;
+  --mat-sys-surface-tint: #6366f1;
+  --mat-sys-background: #141821;
+
+  --mat-sys-on-surface: #e5e7eb;
+  --mat-sys-on-surface-variant: #9ca3af;
+  --mat-sys-on-background: #e5e7eb;
+
+  --mat-sys-outline: #4b5563;
+  --mat-sys-outline-variant: rgba(255, 255, 255, 0.12);
+
+  --mat-sys-primary: #a5b4fc;
+  --mat-sys-on-primary: #1e1b4b;
+  --mat-sys-primary-container: #4338ca;
+  --mat-sys-on-primary-container: #e0e7ff;
+  --mat-sys-primary-fixed: #e0e7ff;
+  --mat-sys-primary-fixed-dim: #a5b4fc;
+  --mat-sys-inverse-primary: #4f46e5;
+
+  --mat-sys-secondary: #c7d2fe;
+  --mat-sys-on-secondary: #312e81;
+  --mat-sys-secondary-container: #3730a3;
+  --mat-sys-on-secondary-container: #e0e7ff;
+
+  --mat-sys-error: #f87171;
+  --mat-sys-on-error: #450a0a;
+  --mat-sys-error-container: #7f1d1d;
+  --mat-sys-on-error-container: #fecaca;
+
+  --mat-sys-inverse-surface: #e5e7eb;
+  --mat-sys-inverse-on-surface: #141821;
+
+  --mat-sys-shadow: #000000;
+  --mat-sys-scrim: #000000;
+}

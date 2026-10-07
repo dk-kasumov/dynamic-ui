@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core'
 import { MatDividerModule } from '@angular/material/divider'
-import type { ComponentDefinition, Node, RelationDescriptorBuiltin } from '@dynamic-ui/studio'
+import type { ComponentDefinition, Node } from '@dynamic-ui/studio'
 import { listify } from 'radash'
 import { RelationFieldComponent } from './fields/relation-field.component'
 
-/** Lists a component's builtin relation slots, one rule builder each. */
+/** Lists a component's relation slots, one rule builder each. */
 @Component({
   selector: 'ds-relations-form',
   standalone: true,
@@ -34,8 +34,5 @@ export class RelationsFormComponent {
   readonly definition = input.required<ComponentDefinition>()
   readonly node = input.required<Node>()
 
-  readonly entries = computed(() =>
-    listify(this.definition().relations, (name, descriptor) => ({ name, descriptor }))
-      .filter((entry): entry is { name: string; descriptor: RelationDescriptorBuiltin } => entry.descriptor.variant === 'builtin')
-  )
+  readonly entries = computed(() => listify(this.definition().relations, (name, descriptor) => ({ name, descriptor })))
 }

@@ -5,7 +5,18 @@
     "@angular/cdk": "^22.0.0",
     "@angular/common": "^22.1.0",
     "@angular/core": "^22.1.0",
-    "@angular/material": "^22.0.0"
+    "@angular/forms": "^22.1.0",
+    "@angular/material": "^22.0.0",
+    "@angular/material-date-fns-adapter": "^22.0.0",
+    "@codemirror/autocomplete": "^6.0.0",
+    "@codemirror/commands": "^6.0.0",
+    "@codemirror/lang-json": "^6.0.0",
+    "@codemirror/language": "^6.0.0",
+    "@codemirror/lint": "^6.0.0",
+    "@codemirror/state": "^6.0.0",
+    "@codemirror/view": "^6.0.0",
+    "@lezer/highlight": "^1.0.0",
+    "date-fns": "^4.0.0"
   },
   "sideEffects": false
 }

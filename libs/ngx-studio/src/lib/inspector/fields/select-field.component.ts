@@ -34,7 +34,7 @@ import type { SelectPrimitive } from '@dynamic-ui/studio'
           (matChipInputTokenEnd)="addToken($event)"
           placeholder="Add value…"
         />
-        <mat-hint>Press Enter or comma to add</mat-hint>
+        <mat-hint>{{ primitive().hint ?? primitive().description ?? 'Press Enter or comma to add' }}</mat-hint>
       </mat-form-field>
     } @else {
       <mat-form-field appearance="outline" class="ds-field" subscriptSizing="dynamic">
@@ -46,6 +46,9 @@ import type { SelectPrimitive } from '@dynamic-ui/studio'
           [placeholder]="defaultText()"
           (input)="onSingleInput($event)"
         />
+        @if (primitive().hint ?? primitive().description; as hint) {
+          <mat-hint>{{ hint }}</mat-hint>
+        }
       </mat-form-field>
     }
   `

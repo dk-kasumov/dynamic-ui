@@ -1,129 +1,80 @@
 /**
- * Relation descriptors (schema side) and relation instances (data side).
+ * Relations: a node's dynamic links to other nodes.
  *
- * A relation is a first-class dynamic link between nodes. It is separate from
- * `props` because adapters wire it reactively; props are projected as-is.
+ * A relation is separate from `props` because an adapter wires it reactively,
+ * while props are projected as-is. The studio does not evaluate a relation — it
+ * only records it. What a relation name (`visible`, `required`) or an operator
+ * (`equals`, `isEmpty`) means is entirely up to the adapter.
  */
+
+import type { NodeId } from './node'
 
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue }
 
+/** The kind of value a relation is expected to produce; declared on the schema for the adapter. */
 export type RelationReturns = 'boolean' | 'value' | 'nodeReference' | 'nodeReferences'
 
-// Operands -------------------------------------------------------------------
+/** Whether an operator takes no value, one value, or a list of values. */
+export type OperatorValue = 'none' | 'single' | 'list'
 
-export type Operand =
-  | { kind: 'reference'; nodeId: string }
-  | { kind: 'self' }
-  | { kind: 'value'; value: JsonValue }
+/** The operators a condition may use, each with its dropdown label and value shape. */
+export const RELATION_OPERATORS = {
+  equals: { label: 'equals', value: 'single' },
+  notEquals: { label: 'does not equal', value: 'single' },
+  greaterThan: { label: 'is greater than', value: 'single' },
+  greaterThanOrEqual: { label: 'is at least', value: 'single' },
+  lessThan: { label: 'is less than', value: 'single' },
+  lessThanOrEqual: { label: 'is at most', value: 'single' },
+  isOneOf: { label: 'is one of', value: 'list' },
+  isEmpty: { label: 'is empty', value: 'none' },
+  isNotEmpty: { label: 'is not empty', value: 'none' },
+  isValid: { label: 'is valid', value: 'none' },
+  isInvalid: { label: 'is invalid', value: 'none' },
+  isTouched: { label: 'is touched', value: 'none' },
+  isUntouched: { label: 'is untouched', value: 'none' }
+} as const satisfies Record<string, { label: string; value: OperatorValue }>
 
-// Operators ------------------------------------------------------------------
-
-export type ComparisonOperator = 'equals' | 'notEquals' | 'greaterThan' | 'greaterThanOrEqual' | 'lessThan' | 'lessThanOrEqual'
-export type ArithmeticOperator = 'add' | 'subtract' | 'multiply' | 'divide'
-export type LogicalOperator = 'and' | 'or'
-export type PredicateOperator =
-  | 'isEmpty'
-  | 'isNotEmpty'
-  | 'isValid'
-  | 'isInvalid'
-  | 'isTouched'
-  | 'isUntouched'
-
-export type BuiltinOperator =
-  | ComparisonOperator
-  | ArithmeticOperator
-  | LogicalOperator
-  | PredicateOperator
-  | 'isOneOf'
-  | 'not'
-  | 'matchesPattern'
-  | 'isFormValid'
-  | 'concatenate'
-
-// Expression tree ------------------------------------------------------------
-
-interface BinaryExpression<Operator extends string> {
-  operator: Operator
-  left: Operand
-  right: Operand
-}
-
-interface UnaryExpression<Operator extends string, Argument = Operand> {
-  operator: Operator
-  operand: Argument
-}
-
-interface ListExpression<Operator extends string, Item> {
-  operator: Operator
-  operands: Item[]
-}
-
-export type RelationExpression =
-  | BinaryExpression<ComparisonOperator | 'isOneOf' | ArithmeticOperator>
-  | UnaryExpression<PredicateOperator>
-  | UnaryExpression<'not', RelationExpression>
-  | ListExpression<LogicalOperator, RelationExpression>
-  | ListExpression<'concatenate', Operand>
-  | { operator: 'matchesPattern'; left: Operand; pattern: string; flags?: string }
-  | { operator: 'isFormValid' }
-
-// Descriptors (schema) -------------------------------------------------------
-
-export interface TargetFilter {
-  kinds?: readonly string[]
-  scope?: 'form' | 'siblings' | 'any'
-}
-
-export interface RelationPreset {
-  label: string
-  /** Any `{ kind: 'reference', nodeId: '$pick' }` in the expression is a placeholder the manager fills in the UI. */
-  expression: RelationExpression
-}
-
-export interface RelationDescriptorBuiltin<Returns extends RelationReturns = RelationReturns> {
-  kind: 'relation'
-  variant: 'builtin'
-  returns: Returns
-  label?: string
-  description?: string
-  targetFilter?: TargetFilter
-  operators?: readonly BuiltinOperator[]
-  mode?: 'simple' | 'advanced'
-  presets?: readonly RelationPreset[]
-  default?: unknown
-}
-
-export interface RelationDescriptorCustom<Payload = JsonValue> {
-  kind: 'relation'
-  variant: 'custom'
-  id: string
-  label?: string
-  description?: string
-  default?: Payload
-}
-
-export type RelationDescriptor = RelationDescriptorBuiltin | RelationDescriptorCustom
+export type RuleOperator = keyof typeof RELATION_OPERATORS
 
 // Instance (data on a node) --------------------------------------------------
 
-export type RelationInstance =
-  | { variant: 'builtin'; returns: RelationReturns; expression: RelationExpression }
-  | { variant: 'custom'; customId: string; payload: JsonValue }
+/** One condition: a target node, how to test it, and (unless the operator takes none) a value. */
+export interface RelationRule {
+  target: NodeId
+  operator: RuleOperator
+  value?: JsonValue
+}
 
-// Factories ------------------------------------------------------------------
+/** A relation on a node: its conditions, and whether they combine with AND or OR. */
+export interface RelationInstance {
+  combine: 'and' | 'or'
+  rules: RelationRule[]
+}
 
-function builtinRelation<Returns extends RelationReturns = 'boolean'>(
-  options: Omit<RelationDescriptorBuiltin<Returns>, 'kind' | 'variant' | 'returns'> & { returns?: Returns } = {}
-): RelationDescriptorBuiltin<Returns> {
+// Descriptor (schema) --------------------------------------------------------
+
+/** Narrows which nodes a relation may target. */
+export interface TargetFilter {
+  /** Allowed component names; any when omitted. */
+  kinds?: readonly string[]
+  /** `siblings` limits targets to the node's own siblings; `any` (default) allows the whole tree. */
+  scope?: 'siblings' | 'any'
+}
+
+/** What a developer declares for a relation slot in `defineComponent`. */
+export interface RelationDescriptor<Returns extends RelationReturns = RelationReturns> {
+  kind: 'relation'
+  returns: Returns
+  /** Display name in the inspector; derived from the slot key when omitted. */
+  label?: string
+  /** Restricts the operators offered; all of them when omitted. */
+  operators?: readonly RuleOperator[]
+  targetFilter?: TargetFilter
+}
+
+export function relation<Returns extends RelationReturns = 'boolean'>(
+  options: Omit<RelationDescriptor<Returns>, 'kind' | 'returns'> & { returns?: Returns } = {}
+): RelationDescriptor<Returns> {
   const { returns, ...rest } = options
-  return { kind: 'relation', variant: 'builtin', returns: (returns ?? 'boolean') as Returns, ...rest }
+  return { kind: 'relation', returns: (returns ?? 'boolean') as Returns, ...rest }
 }
-
-function customRelation<Payload = JsonValue>(
-  options: Omit<RelationDescriptorCustom<Payload>, 'kind' | 'variant'>
-): RelationDescriptorCustom<Payload> {
-  return { kind: 'relation', variant: 'custom', ...options }
-}
-
-/** `Studio.relation(...)` with `.custom(...)` attached. */
-export const relation = Object.freeze(Object.assign(builtinRelation, { custom: customRelation }))

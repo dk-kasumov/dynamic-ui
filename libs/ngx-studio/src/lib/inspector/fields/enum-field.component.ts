@@ -23,6 +23,9 @@ const SEGMENTED_THRESHOLD = 4
           <mat-button-toggle [value]="opt">{{ opt }}</mat-button-toggle>
         }
       </mat-button-toggle-group>
+      @if (hint(); as text) {
+        <div class="ds-hint">{{ text }}</div>
+      }
     } @else {
       <mat-form-field appearance="outline" class="ds-field">
         <mat-label>{{ label() }}</mat-label>
@@ -31,6 +34,9 @@ const SEGMENTED_THRESHOLD = 4
             <mat-option [value]="opt">{{ opt }}</mat-option>
           }
         </mat-select>
+        @if (hint(); as text) {
+          <mat-hint>{{ text }}</mat-hint>
+        }
       </mat-form-field>
     }
   `
@@ -43,5 +49,6 @@ export class EnumFieldComponent {
   readonly valueChange = output<string>()
 
   readonly effective = computed(() => this.value() ?? this.primitive().default ?? null)
-  readonly useSegmented = computed(() => this.primitive().options.length <= SEGMENTED_THRESHOLD)
+  readonly hint = computed(() => this.primitive().hint ?? this.primitive().description)
+  readonly useSegmented =computed(() => this.primitive().options.length <= SEGMENTED_THRESHOLD)
 }

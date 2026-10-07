@@ -26,7 +26,7 @@ import type { InspectorFieldChange } from './field-change'
             <mat-icon>{{ facade.iconOf(n) }}</mat-icon>
           </span>
           <div class="inspector__titles">
-            <span class="inspector__eyebrow">{{ def.name }}</span>
+            <span class="inspector__eyebrow">{{ def.title }}</span>
             <span class="inspector__title">{{ def.label }}</span>
           </div>
         </div>

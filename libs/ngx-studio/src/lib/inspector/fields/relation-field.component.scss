@@ -70,6 +70,13 @@
   text-overflow: ellipsis;
 }
 
+// The component type stays visible but secondary when a more specific name leads.
+.relation__target-type {
+  margin-left: 4px;
+  font-weight: 500;
+  opacity: 0.65;
+}
+
 .relation__op,
 .relation__value { display: block; width: 100%; }
 
