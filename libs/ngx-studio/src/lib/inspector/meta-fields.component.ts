@@ -31,9 +31,7 @@ export type InspectorMetaChange = NodeMetaPatch
             autocomplete="off"
             (input)="onIconInput($event)"
           />
-          <mat-hint>
-            Material Icons ligature, e.g. <code>check_box</code>
-          </mat-hint>
+          <mat-hint> Material Icons ligature, e.g. <code>check_box</code> </mat-hint>
         </mat-form-field>
       </div>
 
@@ -46,7 +44,9 @@ export type InspectorMetaChange = NodeMetaPatch
           [placeholder]="definition().description ?? 'Shown as the card subtitle'"
           (input)="onTitleInput($event)"
         />
-        <mat-hint>Optional — shown on the canvas card. Leave empty to use the component's default description.</mat-hint>
+        <mat-hint
+          >Optional — shown on the canvas card. Leave empty to use the component's default description.</mat-hint
+        >
       </mat-form-field>
     </div>
   `,

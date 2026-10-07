@@ -114,7 +114,6 @@ export class RelationFieldComponent {
   /** Synthesized primitive so the `is one of` value reuses the existing chips field. */
   readonly listPrimitive = { kind: 'select', multiple: true } as SelectPrimitive<string>
 
-
   readonly ruleSet = computed<RelationRuleSet>(() => {
     const instance = this.node().relations[this.name()]
     return instance?.variant === 'builtin' ? fromExpression(instance.expression) : { combine: 'and', rules: [] }
@@ -145,16 +144,22 @@ export class RelationFieldComponent {
   }
 
   addCondition(): void {
-    this.facade.startPick(this.targets().map(n => n.id), target => {
-      const set = this.ruleSet()
-      this.#commit({ ...set, rules: [...set.rules, { target, operator: this.operators()[0]! }] })
-    })
+    this.facade.startPick(
+      this.targets().map(n => n.id),
+      target => {
+        const set = this.ruleSet()
+        this.#commit({ ...set, rules: [...set.rules, { target, operator: this.operators()[0]! }] })
+      }
+    )
   }
 
   repick(index: number): void {
-    this.facade.startPick(this.targets().map(n => n.id), target => {
-      this.#patch(index, rule => ({ ...rule, target }))
-    })
+    this.facade.startPick(
+      this.targets().map(n => n.id),
+      target => {
+        this.#patch(index, rule => ({ ...rule, target }))
+      }
+    )
   }
 
   setOperator(index: number, operator: RuleOperator): void {

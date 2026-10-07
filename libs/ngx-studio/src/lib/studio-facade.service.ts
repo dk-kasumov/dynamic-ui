@@ -44,7 +44,7 @@ export class StudioFacade {
   readonly inspectedNode = computed<Node | null>(() => {
     this.#state() // recompute on every tree mutation, not only when the selection changes
     const id = this.inspectedId()
-    return id ? this.#studio().findNode(id) ?? null : null
+    return id ? (this.#studio().findNode(id) ?? null) : null
   })
 
   /** Shared SortableJS config for both the canvas root and any container node. */

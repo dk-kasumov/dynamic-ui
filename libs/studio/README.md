@@ -211,10 +211,10 @@ Relations are first-class. They are the mechanism by which a dynamic UI stays dy
 
 Every relation declares what it produces:
 
-| `returns`     | Meaning                         | Typical use                                   |
-| ------------- | ------------------------------- | --------------------------------------------- |
-| `'boolean'`   | Condition.                      | `visible`, `disabled`, `required`.            |
-| `'value'`     | Computed value of a given type. | `placeholder = "Hi, " + firstName.value`.     |
+| `returns`          | Meaning                         | Typical use                                   |
+| ------------------ | ------------------------------- | --------------------------------------------- |
+| `'boolean'`        | Condition.                      | `visible`, `disabled`, `required`.            |
+| `'value'`          | Computed value of a given type. | `placeholder = "Hi, " + firstName.value`.     |
 | `'nodeReference'`  | A reference to one other node.  | "This field depends on that field."           |
 | `'nodeReferences'` | A list of node references.      | "These fields together determine the result." |
 

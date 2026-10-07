@@ -25,9 +25,19 @@ import { RelationFieldComponent } from './fields/relation-field.component'
     }
   `,
   styles: `
-    .form { display: flex; flex-direction: column; gap: 16px; }
-    .form__empty { margin: 0; color: var(--ds-text-muted); font-size: 0.85rem; }
-    mat-divider { margin: 0; }
+    .form {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .form__empty {
+      margin: 0;
+      color: var(--ds-text-muted);
+      font-size: 0.85rem;
+    }
+    mat-divider {
+      margin: 0;
+    }
   `
 })
 export class RelationsFormComponent {
@@ -35,7 +45,9 @@ export class RelationsFormComponent {
   readonly node = input.required<Node>()
 
   readonly entries = computed(() =>
-    listify(this.definition().relations, (name, descriptor) => ({ name, descriptor }))
-      .filter((entry): entry is { name: string; descriptor: RelationDescriptorBuiltin } => entry.descriptor.variant === 'builtin')
+    listify(this.definition().relations, (name, descriptor) => ({ name, descriptor })).filter(
+      (entry): entry is { name: string; descriptor: RelationDescriptorBuiltin } =>
+        entry.descriptor.variant === 'builtin'
+    )
   )
 }

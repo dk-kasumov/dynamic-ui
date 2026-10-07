@@ -25,14 +25,19 @@
   border-radius: var(--ds-radius-sm);
   cursor: grab;
   user-select: none;
-  transition: background 140ms ease, border-color 140ms ease, transform 140ms ease;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    transform 140ms ease;
 
   &:hover {
     background: var(--ds-chip-bg-hover);
     border-color: var(--ds-border);
     transform: translateX(2px);
   }
-  &:active { cursor: grabbing; }
+  &:active {
+    cursor: grabbing;
+  }
 
   &__icon {
     display: inline-flex;
@@ -45,7 +50,9 @@
     border-radius: 6px;
     flex: 0 0 auto;
 
-    .material-icons { font-size: 16px; }
+    .material-icons {
+      font-size: 16px;
+    }
   }
 
   &__text {
@@ -83,6 +90,8 @@
     opacity: 0.85;
     flex: 0 0 auto;
 
-    .material-icons { font-size: 16px; }
+    .material-icons {
+      font-size: 16px;
+    }
   }
 }

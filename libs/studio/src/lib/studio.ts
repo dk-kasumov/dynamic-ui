@@ -94,9 +94,7 @@ export class Studio {
       walk(this.#tree.root)
     }
     return pool.filter(
-      node =>
-        !this.isDescendant(nodeId, node.id) &&
-        (!filter?.kinds || filter.kinds.includes(node.name))
+      node => !this.isDescendant(nodeId, node.id) && (!filter?.kinds || filter.kinds.includes(node.name))
     )
   }
 

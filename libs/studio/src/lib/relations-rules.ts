@@ -49,7 +49,11 @@ function ruleToExpression(rule: RelationRule): RelationExpression {
   // The operator string is from the known union; this module is the single trusted mapping point.
   return RELATION_OPERATORS[rule.operator].value === 'none'
     ? ({ operator: rule.operator, operand: reference(rule.target) } as RelationExpression)
-    : ({ operator: rule.operator, left: reference(rule.target), right: { kind: 'value', value: rule.value ?? null } } as RelationExpression)
+    : ({
+        operator: rule.operator,
+        left: reference(rule.target),
+        right: { kind: 'value', value: rule.value ?? null }
+      } as RelationExpression)
 }
 
 /** Serialize a rule set to an expression, or `null` when there is nothing to apply. */

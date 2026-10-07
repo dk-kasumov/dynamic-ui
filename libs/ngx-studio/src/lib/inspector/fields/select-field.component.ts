@@ -11,8 +11,13 @@ import type { SelectPrimitive } from '@dynamic-ui/studio'
   imports: [MatFormFieldModule, MatInputModule, MatChipsModule, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
-    :host { display: block; width: 100%; }
-    .ds-field { width: 100%; }
+    :host {
+      display: block;
+      width: 100%;
+    }
+    .ds-field {
+      width: 100%;
+    }
   `,
   template: `
     @if (multiple()) {

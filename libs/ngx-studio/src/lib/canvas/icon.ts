@@ -5,4 +5,3 @@ export const defaultIcon = (def: ComponentDefinition): string => (def.container 
 
 /** Applies the Material fallback to an icon token resolved by the core. */
 export const iconOrDefault = (icon: string | undefined, def: ComponentDefinition): string => icon || defaultIcon(def)
-

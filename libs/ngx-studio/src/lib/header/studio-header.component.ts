@@ -17,13 +17,7 @@ import { StudioFacade } from '../studio-facade.service'
       <span class="header__title">Studio</span>
     </div>
     <div class="header__actions">
-      <button
-        type="button"
-        class="header__btn"
-        (click)="export()"
-        [disabled]="empty()"
-        title="Export canvas as JSON"
-      >
+      <button type="button" class="header__btn" (click)="export()" [disabled]="empty()" title="Export canvas as JSON">
         <span class="material-icons" aria-hidden="true">download</span>
         <span>Export</span>
       </button>

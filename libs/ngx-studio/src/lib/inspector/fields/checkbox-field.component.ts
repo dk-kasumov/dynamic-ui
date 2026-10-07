@@ -8,11 +8,9 @@ import type { CheckboxPrimitive } from '@dynamic-ui/studio'
   imports: [MatCheckboxModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <mat-checkbox
-      class="ds-checkbox"
-      [checked]="effective()"
-      (change)="valueChange.emit($event.checked)"
-    >{{ label() }}</mat-checkbox>
+    <mat-checkbox class="ds-checkbox" [checked]="effective()" (change)="valueChange.emit($event.checked)">{{
+      label()
+    }}</mat-checkbox>
   `
 })
 export class CheckboxFieldComponent {

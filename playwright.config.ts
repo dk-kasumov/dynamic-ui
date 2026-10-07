@@ -9,18 +9,18 @@ export default defineConfig({
   reporter: 'html',
   use: {
     baseURL: 'http://localhost:4400',
-    trace: 'on-first-retry',
+    trace: 'on-first-retry'
   },
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
+      use: { ...devices['Desktop Chrome'] }
+    }
   ],
   webServer: {
     command: 'npx nx storybook ngx-studio',
     url: 'http://localhost:4400',
     reuseExistingServer: !process.env['CI'],
-    timeout: 120_000,
-  },
+    timeout: 120_000
+  }
 })

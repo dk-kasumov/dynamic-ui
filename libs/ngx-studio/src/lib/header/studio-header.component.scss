@@ -53,7 +53,10 @@
   border: 1px solid transparent;
   border-radius: var(--ds-radius-sm);
   cursor: pointer;
-  transition: background 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
+  transition:
+    background 140ms ease,
+    box-shadow 140ms ease,
+    opacity 140ms ease;
 
   .material-icons {
     font-size: 18px;

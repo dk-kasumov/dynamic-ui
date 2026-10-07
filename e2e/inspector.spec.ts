@@ -11,7 +11,10 @@ async function loadStory(page: Page) {
 // Leaf cards don't contain a .card__body (only container cards do).
 // Targeting a container's Configure button would match ALL nested buttons.
 async function getLeafCard(page: Page) {
-  return page.locator('.card').filter({ hasNot: page.locator('.card__body') }).first()
+  return page
+    .locator('.card')
+    .filter({ hasNot: page.locator('.card__body') })
+    .first()
 }
 
 async function openInspector(page: Page) {
@@ -85,12 +88,8 @@ test.describe('Inspector panel', () => {
 
     // Wait for BOTH the inspector animations AND the studio's grid-template-
     // columns transition to finish before measuring final positions.
-    await studio.evaluate((el) =>
-      Promise.all(el.getAnimations({ subtree: false }).map((a) => a.finished))
-    )
-    await inspector.evaluate((el) =>
-      Promise.all(el.getAnimations().map((a) => a.finished))
-    )
+    await studio.evaluate(el => Promise.all(el.getAnimations({ subtree: false }).map(a => a.finished)))
+    await inspector.evaluate(el => Promise.all(el.getAnimations().map(a => a.finished)))
 
     const inspectorBox = await inspector.boundingBox()
     const studioBox = await studio.boundingBox()
@@ -129,7 +128,10 @@ test.describe('Inspector panel', () => {
       await p.goto(STORY_URL)
       await p.waitForSelector('.card', { state: 'visible' })
 
-      const card = p.locator('.card').filter({ hasNot: p.locator('.card__body') }).first()
+      const card = p
+        .locator('.card')
+        .filter({ hasNot: p.locator('.card__body') })
+        .first()
       await card.hover()
       await card.getByLabel('Configure').click()
       await p.waitForSelector('.inspector', { state: 'visible' })

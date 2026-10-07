@@ -36,10 +36,11 @@ export class PropsFormComponent {
   readonly change = output<InspectorFieldChange>()
 
   readonly entries = computed(() =>
-    listify(
-      this.definition().props as Record<string, Primitive>,
-      (key, primitive) => ({ key, primitive, label: primitive.label ?? Studio.humanize(key) })
-    )
+    listify(this.definition().props as Record<string, Primitive>, (key, primitive) => ({
+      key,
+      primitive,
+      label: primitive.label ?? Studio.humanize(key)
+    }))
   )
 
   valueOf(key: string): unknown {

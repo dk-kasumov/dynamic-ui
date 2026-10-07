@@ -115,7 +115,6 @@ export class CanvasNodeComponent {
       .join(' · ')
   })
 
-
   onSelect(event: MouseEvent): void {
     event.stopPropagation()
     if (this.facade.picking()) {
