@@ -121,7 +121,7 @@ test.describe('Inspector panel', () => {
     await expect(page.locator('.inspector')).toHaveCount(0)
   })
 
-  test('inspector on narrow viewport: shows scrim and closes on scrim click', async ({ page, browser }) => {
+  test('inspector on narrow viewport: shows scrim and closes on scrim click', async ({ browser }) => {
     const ctx = await browser.newContext({ viewport: { width: 800, height: 600 } })
     const p = await ctx.newPage()
     try {

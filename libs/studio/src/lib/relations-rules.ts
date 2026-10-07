@@ -60,7 +60,7 @@ function ruleToExpression(rule: RelationRule): RelationExpression {
 export function toExpression(set: RelationRuleSet): RelationExpression | null {
   const parts = set.rules.filter(rule => rule.target).map(ruleToExpression)
   if (parts.length === 0) return null
-  if (parts.length === 1) return parts[0]!
+  if (parts.length === 1) return parts[0]
   return { operator: set.combine, operands: parts }
 }
 

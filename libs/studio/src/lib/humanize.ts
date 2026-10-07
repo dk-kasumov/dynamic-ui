@@ -22,5 +22,5 @@ export function humanize(key: string): string {
 
 function capitalizeWord(word: string): string {
   if (word === word.toUpperCase()) return word
-  return word[0]!.toUpperCase() + word.slice(1)
+  return word[0].toUpperCase() + word.slice(1)
 }

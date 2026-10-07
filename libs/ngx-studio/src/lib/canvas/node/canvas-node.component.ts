@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core'
 import { Studio, describeExpression, type NodeId } from '@dynamic-ui/studio'
 import { StudioFacade } from '../../studio-facade.service'
-import { DsSortableDirective, type DsSortableDropEvent } from '../sortable/sortable.directive'
+import { DsSortableDirective } from '../sortable/sortable.directive'
 
 @Component({
   selector: 'ds-canvas-node',
