@@ -53,6 +53,10 @@
   &__empty-glyph {
     color: var(--ds-accent);
     opacity: 0.9;
+
+    .material-icons {
+      font-size: 36px;
+    }
   }
   &__empty-title {
     font-size: 14px;

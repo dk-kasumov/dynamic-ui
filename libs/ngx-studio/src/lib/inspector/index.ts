@@ -1,6 +1,6 @@
 export { InspectorComponent } from './inspector.component'
-export { PropsFormComponent } from './props-form.component'
-export { MetaFieldsComponent, type InspectorMetaChange } from './meta-fields.component'
+export { PropsFormComponent } from './sections/props-form.component'
+export { MetaFieldsComponent, type InspectorMetaChange } from './sections/meta-fields.component'
 export { FieldHostComponent } from './fields/field-host.component'
 export { TextFieldComponent } from './fields/text-field.component'
 export { DecimalFieldComponent } from './fields/decimal-field.component'

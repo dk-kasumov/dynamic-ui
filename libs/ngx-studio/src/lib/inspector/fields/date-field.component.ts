@@ -16,7 +16,13 @@ import { MatDatepickerModule } from '@angular/material/datepicker'
 import { MatFormFieldModule } from '@angular/material/form-field'
 import { MatInputModule } from '@angular/material/input'
 import type { DatePrimitive, DateRange } from '@dynamic-ui/studio'
-import { dateFormatsFrom, fromIsoDate, provideDateFnsFieldAdapter, toDatePattern, toIsoDate } from './date-format'
+import {
+  dateFormatsFrom,
+  fromIsoDate,
+  provideDateFnsFieldAdapter,
+  toDatePattern,
+  toIsoDate
+} from '../../shared/date-format/date-format'
 
 type DateValue = string | DateRange | null
 
@@ -35,7 +41,6 @@ type DateValue = string | DateRange | null
       }
     }
   ],
-  // Each mode gets its own form field: the range input must be a static child of its field to register as its control.
   template: `
     @if (range()) {
       <mat-form-field appearance="outline" class="ds-field">
@@ -49,6 +54,9 @@ type DateValue = string | DateRange | null
         @if (primitive().hint ?? primitive().description; as hint) {
           <mat-hint>{{ hint }}</mat-hint>
         }
+        @for (message of errors(); track message) {
+          <mat-error>{{ message }}</mat-error>
+        }
       </mat-form-field>
     } @else {
       <mat-form-field appearance="outline" class="ds-field">
@@ -59,6 +67,9 @@ type DateValue = string | DateRange | null
         @if (primitive().hint ?? primitive().description; as hint) {
           <mat-hint>{{ hint }}</mat-hint>
         }
+        @for (message of errors(); track message) {
+          <mat-error>{{ message }}</mat-error>
+        }
       </mat-form-field>
     }
   `
@@ -67,6 +78,7 @@ export class DateFieldComponent {
   readonly label = input.required<string>()
   readonly primitive = input.required<DatePrimitive>()
   readonly value = input<DateValue | undefined>()
+  readonly errors = input<readonly string[]>([])
 
   readonly valueChange = output<DateValue>()
 

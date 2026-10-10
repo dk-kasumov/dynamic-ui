@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, input } from '@angular/core'
 
-/** Frame shared by the read-only views: a slim bar (heading on the left, actions on the right) above the content. */
 @Component({
   selector: 'ds-view-panel',
   standalone: true,
@@ -23,6 +22,5 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core'
 })
 export class ViewPanelComponent {
   readonly heading = input.required<string>()
-  /** Quiet detail next to the heading, e.g. a count. */
   readonly meta = input<string>()
 }

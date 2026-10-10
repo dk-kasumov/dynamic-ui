@@ -30,7 +30,6 @@ const viewerTheme = EditorView.theme({
   }
 })
 
-/** Read-only, syntax-highlighted JSON, with line numbers and folding. */
 @Component({
   selector: 'ds-code-viewer',
   standalone: true,
@@ -52,7 +51,6 @@ export class CodeViewerComponent {
       })
     })
 
-    // Output is replaced wholesale, so swap the document rather than patching it.
     effect(() => {
       const value = this.value()
       const view = this.#view

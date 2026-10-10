@@ -1,5 +1,6 @@
-import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core'
-import type { GroupPrimitive, Primitive } from '@dynamic-ui/studio'
+import { ChangeDetectionStrategy, Component, computed, forwardRef, input, output } from '@angular/core'
+import { ErrorStateMatcher } from '@angular/material/core'
+import type { FieldError, GroupPrimitive, Primitive } from '@dynamic-ui/studio'
 import { Studio } from '@dynamic-ui/studio'
 import { listify } from 'radash'
 import { CheckboxFieldComponent } from './checkbox-field.component'
@@ -28,6 +29,7 @@ type GroupShape = GroupPrimitive<Record<string, Primitive>>
     DateFieldComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  providers: [{ provide: ErrorStateMatcher, useExisting: forwardRef(() => FieldHostComponent) }],
   template: `
     @switch (primitive().kind) {
       @case ('text') {
@@ -35,6 +37,7 @@ type GroupShape = GroupPrimitive<Record<string, Primitive>>
           [label]="label()"
           [primitive]="$any(primitive())"
           [value]="$any(value())"
+          [errors]="messages()"
           (valueChange)="emit($event)"
         />
       }
@@ -43,6 +46,7 @@ type GroupShape = GroupPrimitive<Record<string, Primitive>>
           [label]="label()"
           [primitive]="$any(primitive())"
           [value]="$any(value())"
+          [errors]="messages()"
           (valueChange)="emit($event)"
         />
       }
@@ -51,6 +55,7 @@ type GroupShape = GroupPrimitive<Record<string, Primitive>>
           [label]="label()"
           [primitive]="$any(primitive())"
           [value]="$any(value())"
+          [errors]="messages()"
           (valueChange)="emit($event)"
         />
       }
@@ -59,6 +64,7 @@ type GroupShape = GroupPrimitive<Record<string, Primitive>>
           [label]="label()"
           [primitive]="$any(primitive())"
           [value]="$any(value())"
+          [errors]="messages()"
           (valueChange)="emit($event)"
         />
       }
@@ -67,6 +73,7 @@ type GroupShape = GroupPrimitive<Record<string, Primitive>>
           [label]="label()"
           [primitive]="$any(primitive())"
           [value]="$any(value())"
+          [errors]="messages()"
           (valueChange)="emit($event)"
         />
       }
@@ -75,6 +82,7 @@ type GroupShape = GroupPrimitive<Record<string, Primitive>>
           [label]="label()"
           [primitive]="$any(primitive())"
           [value]="$any(value())"
+          [errors]="messages()"
           (valueChange)="emit($event)"
         />
       }
@@ -83,6 +91,7 @@ type GroupShape = GroupPrimitive<Record<string, Primitive>>
           [label]="label()"
           [primitive]="$any(primitive())"
           [value]="$any(value())"
+          [errors]="messages()"
           (valueChange)="emit($event)"
         />
       }
@@ -91,6 +100,7 @@ type GroupShape = GroupPrimitive<Record<string, Primitive>>
           [label]="label()"
           [primitive]="$any(primitive())"
           [value]="$any(value())"
+          [errors]="messages()"
           (valueChange)="emit($event)"
         />
       }
@@ -104,6 +114,7 @@ type GroupShape = GroupPrimitive<Record<string, Primitive>>
                 [value]="groupValueOf(entry.key)"
                 [label]="entry.label"
                 [path]="[...path(), entry.key]"
+                [errors]="errors()"
                 (change)="change.emit($event)"
               />
             }
@@ -116,14 +127,24 @@ type GroupShape = GroupPrimitive<Record<string, Primitive>>
     }
   `
 })
-export class FieldHostComponent {
+export class FieldHostComponent implements ErrorStateMatcher {
   readonly primitive = input.required<Primitive>()
   readonly value = input<unknown>()
   readonly label = input.required<string>()
   readonly path = input.required<readonly string[]>()
+  readonly errors = input<readonly FieldError[]>([])
 
-  // TODO: rename — native `change` from inner <input> bubbles to the host and reaches the same handler
-  // eslint-disable-next-line @angular-eslint/no-output-native
+  readonly messages = computed(() => {
+    const path = this.path()
+    return this.errors()
+      .filter(error => error.path.length === path.length && error.path.every((key, i) => key === path[i]))
+      .flatMap(error => error.messages)
+  })
+
+  isErrorState(): boolean {
+    return this.messages().length > 0
+  }
+
   readonly change = output<InspectorFieldChange>()
 
   readonly groupEntries = computed(() => {

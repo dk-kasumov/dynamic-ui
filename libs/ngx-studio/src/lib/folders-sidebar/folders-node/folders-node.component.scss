@@ -38,18 +38,13 @@ $row-height: 32px;
   border-radius: 4px;
   cursor: pointer;
 
-  &::before {
-    content: '';
-    width: 6px;
-    height: 6px;
-    border-right: 2px solid currentColor;
-    border-bottom: 2px solid currentColor;
-    transform: rotate(-45deg);
+  .material-icons {
+    font-size: 18px;
     transition: transform 0.15s ease;
   }
 
-  &--open::before {
-    transform: rotate(45deg);
+  &--open .material-icons {
+    transform: rotate(90deg);
   }
   &:focus-visible {
     outline: 2px solid var(--ds-accent, #2f6fed);
@@ -78,8 +73,8 @@ $row-height: 32px;
 
 .icon {
   flex: none;
-  width: 16px;
-  height: 16px;
+  font-size: 16px;
+  line-height: 1;
   color: var(--ds-folder, #8a929b);
 }
 
@@ -111,7 +106,7 @@ $row-height: 32px;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .toggle::before {
+  .toggle .material-icons {
     transition: none;
   }
 }

@@ -1,5 +1,5 @@
 export { StudioViews } from './studio-views.service'
 export type { AdapterResult, StudioView } from './studio-views.service'
-export { StudioPreviewDirective } from './studio-preview.directive'
-export type { StudioPreviewContext } from './studio-preview.directive'
+export { StudioPreviewDirective } from './preview/studio-preview.directive'
+export type { StudioPreviewContext } from './preview/studio-preview.directive'
 export { ViewSwitcherComponent } from './view-switcher.component'

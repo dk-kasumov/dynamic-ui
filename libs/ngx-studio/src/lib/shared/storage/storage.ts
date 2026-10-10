@@ -1,8 +1,3 @@
-/**
- * localStorage access that never throws: a read returns the fallback when the stored
- * value is missing or fails validation, and a write is silently dropped. Storage can
- * be unavailable in private mode or when site data is blocked.
- */
 export function readStored<T>(
   win: Window | null,
   key: string,
@@ -21,6 +16,6 @@ export function writeStored(win: Window | null, key: string, value: string): voi
   try {
     win?.localStorage.setItem(key, value)
   } catch {
-    // Not persisted; the value still applies for this session.
+    return
   }
 }

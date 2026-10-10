@@ -1,21 +1,10 @@
 @use './theme/dark';
 
-// Material Icons font — required for ds-canvas-node / ds-canvas-palette icons.
-// Loaded here so kit consumers get it automatically without extra setup.
 @import url('https://fonts.googleapis.com/icon?family=Material+Icons');
 
-// Single theming root. Override any --ds-* variable on ds-ngx-studio
-// to retheme the entire studio (canvas + palette + sidebar).
 :host {
-  // Always three tracks — the third collapses to 0 when the inspector is
-  // closed. Transitioning grid-template-columns between same-length track
-  // lists animates smoothly in Chrome 115+ (what matters for Material-based
-  // UIs), so canvas shrink and inspector slide-in happen as one motion.
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr) 0px;
-  // Header row (auto) spans all columns; the body row is explicit
-  // `minmax(0, 1fr)` — without it the implicit row grows to match the tallest
-  // item (the inspector), which breaks internal scroll.
   grid-template-rows: auto minmax(0, 1fr);
   transition: grid-template-columns 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
   height: 100%;
@@ -23,8 +12,6 @@
   overflow: hidden;
   position: relative;
   color: var(--ds-text);
-  // Named container so the inspector can switch between docked column
-  // and overlay drawer based on the studio's own width — not the viewport.
   container-type: inline-size;
   container-name: ds-studio;
   font-family:
@@ -34,37 +21,30 @@
     -apple-system,
     sans-serif;
 
-  // Accent
   --ds-accent: #6366f1;
   --ds-accent-soft: rgba(99, 102, 241, 0.1);
   --ds-accent-ring: rgba(99, 102, 241, 0.28);
 
-  // Typography & borders
   --ds-text: #111827;
   --ds-text-muted: #6b7280;
   --ds-border: rgba(16, 24, 40, 0.08);
   --ds-border-dashed: rgba(99, 102, 241, 0.28);
 
-  // Radii
   --ds-radius: 12px;
   --ds-radius-sm: 10px;
 
-  // Canvas
   --ds-canvas-bg: #f4f6fa;
   --ds-grid-dot: rgba(16, 24, 40, 0.08);
 
-  // Cards
   --ds-card-bg: #ffffff;
   --ds-card-bg-container: #fafbfd;
   --ds-card-border: rgba(16, 24, 40, 0.08);
   --ds-card-shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.04);
   --ds-card-shadow-hover: 0 4px 12px rgba(16, 24, 40, 0.08), 0 2px 4px rgba(16, 24, 40, 0.04);
 
-  // Chips & interactive surfaces
   --ds-chip-bg: rgba(16, 24, 40, 0.04);
   --ds-chip-bg-hover: rgba(16, 24, 40, 0.08);
 
-  // Code editor syntax
   --ds-code-key: #4f46e5;
   --ds-code-string: #047857;
   --ds-code-number: #b45309;
@@ -72,20 +52,15 @@
   --ds-code-punctuation: #6b7280;
   --ds-code-error: #dc2626;
 
-  // Dropzone
   --ds-dropzone-bg: rgba(16, 24, 40, 0.02);
   --ds-dropzone-bg-active: rgba(99, 102, 241, 0.06);
 
-  // Sidebar (used by ds-folders-sidebar tokens)
   --ds-sidebar-bg: #ffffff;
   --ds-hover: rgba(16, 24, 40, 0.04);
   --ds-active: rgba(99, 102, 241, 0.1);
   --ds-folder: var(--ds-accent);
   --ds-input-bg: rgba(16, 24, 40, 0.04);
 
-  // Angular Material v22 brand overrides — re-tint the azure-blue prebuilt
-  // theme with our indigo accent so form fields, checkboxes and toggles pick
-  // up the studio's brand color in light mode too.
   --mat-sys-primary: #6366f1;
   --mat-sys-on-primary: #ffffff;
   --mat-sys-primary-container: #e0e7ff;
@@ -93,25 +68,17 @@
   --mat-sys-surface-tint: #6366f1;
 }
 
-// Header spans the full width above the palette/canvas/inspector tracks; the
-// three body elements then auto-flow into row 2.
 ds-studio-header {
   grid-column: 1 / -1;
   grid-row: 1;
 }
 
-// Wide viewport: dock the inspector as a third grid column.
-// NOTE: @container cannot query the element's own container — use @media here.
-// The inspector's internal @container ds-studio queries still work because
-// they query the studio as an ancestor container.
 @media (min-width: 1200px) {
   :host(.ds-studio--inspecting) {
     grid-template-columns: 260px minmax(0, 1fr) 360px;
   }
 }
 
-// Non-canvas views (AST, Preview, Output) take the full width: palette and
-// inspector tracks collapse, reusing the same transition as the inspector.
 :host(.ds-studio--focus) {
   grid-template-columns: 0px minmax(0, 1fr) 0px;
 
@@ -121,9 +88,6 @@ ds-studio-header {
   }
 }
 
-// Hint, divider, and other Material subelements inherit `color` from the
-// studio so they don't fall back to the browser's default canvas text
-// (which was pure black regardless of the --mat-sys-* tokens).
 :host ::ng-deep {
   .mat-mdc-form-field-hint,
   .mat-mdc-form-field-bottom-align::before {
@@ -131,7 +95,6 @@ ds-studio-header {
   }
 }
 
-// Custom scrollbar for all scrollable children
 :host ::ng-deep {
   * {
     scrollbar-width: thin;
@@ -154,8 +117,6 @@ ds-studio-header {
   }
 }
 
-// Dark theme. `data-theme` is always set by the host (resolved from the user's
-// preference or the system), so there is no prefers-color-scheme query here.
 :host([data-theme='dark']) {
   color-scheme: dark;
 
@@ -163,14 +124,12 @@ ds-studio-header {
   @include dark.material-tokens;
 }
 
-// Overlay panels live in the CDK overlay container, outside the host.
 ::ng-deep .cdk-overlay-container[data-ds-theme='dark'] {
   color-scheme: dark;
 
   @include dark.material-tokens;
 }
 
-// Pick-on-canvas hint banner — floats at the bottom while linking a relation target.
 .ds-pick-hint {
   position: absolute;
   left: 50%;

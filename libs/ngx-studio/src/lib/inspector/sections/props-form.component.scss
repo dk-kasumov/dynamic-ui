@@ -18,7 +18,6 @@
   }
 }
 
-// Shared full-width wrapper used by Angular Material form fields in the inspector.
 :host ::ng-deep {
   .ds-field {
     width: 100%;
@@ -58,6 +57,13 @@
     color: var(--ds-text-muted);
   }
 
+  .ds-error {
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 16px;
+    color: #ef4444;
+  }
+
   .ds-field--unknown {
     padding: 8px 10px;
     font-size: 12px;
@@ -67,7 +73,6 @@
   }
 }
 
-// Fieldset group for nested group primitives
 :host ::ng-deep .group {
   margin: 10px 0 0;
   padding: 14px 14px 16px;

@@ -27,20 +27,7 @@ import { DsSortableDirective } from './sortable/sortable.directive'
             } @empty {
               <div class="canvas__empty">
                 <div class="canvas__empty-glyph">
-                  <svg viewBox="0 0 32 32" width="36" height="36" aria-hidden="true">
-                    <rect
-                      x="4"
-                      y="4"
-                      width="24"
-                      height="24"
-                      rx="6"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-dasharray="3 3"
-                    />
-                    <path d="M16 11v10M11 16h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                  </svg>
+                  <span class="material-icons" aria-hidden="true">add_box</span>
                 </div>
                 <div class="canvas__empty-title">Пустой холст</div>
                 <div class="canvas__empty-hint">Перетащите компонент из палитры, чтобы начать</div>

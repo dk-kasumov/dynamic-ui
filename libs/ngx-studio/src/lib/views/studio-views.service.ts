@@ -2,17 +2,14 @@ import { DOCUMENT } from '@angular/common'
 import { Injectable, computed, inject, signal } from '@angular/core'
 import { Studio, type StudioAdapter } from '@dynamic-ui/studio'
 import { StudioFacade } from '../studio-facade.service'
-import { readStored, writeStored } from '../shared/storage'
+import { readStored, writeStored } from '../shared/storage/storage'
 
-/** The ways the studio can show the document: edit it, or look at it through different lenses. */
 export type StudioView = 'canvas' | 'ast' | 'preview' | 'adapter'
 
-/** One adapter's run over the current AST. */
 export interface AdapterResult {
   key: string
   label: string
   output: unknown
-  /** Set when the adapter threw; `output` is then `undefined`. */
   error: string | null
 }
 
@@ -21,18 +18,12 @@ const VIEWS: readonly StudioView[] = ['canvas', 'ast', 'preview', 'adapter']
 
 const isView = (value: unknown): value is StudioView => VIEWS.includes(value as StudioView)
 
-/**
- * Which view the studio is showing, and the extensions that decide which views
- * exist: Preview needs a projected template, Output needs at least one adapter.
- * Canvas and AST are always available. Provided per studio by `ds-ngx-studio`.
- */
 @Injectable()
 export class StudioViews {
   readonly #facade = inject(StudioFacade)
   readonly #window = inject(DOCUMENT).defaultView
   readonly #preferred = signal<StudioView>(readStored(this.#window, STORAGE_KEY, isView, 'canvas'))
 
-  /** Adapters registered by the host, by key. The key doubles as the display name. */
   readonly adapters = signal<Readonly<Record<string, StudioAdapter>>>({})
   readonly hasPreview = signal(false)
 
@@ -44,13 +35,11 @@ export class StudioViews {
     })
   )
 
-  /** The remembered view, falling back to the canvas when it is not available (any more). */
   readonly current = computed<StudioView>(() => {
     const preferred = this.#preferred()
     return this.available().includes(preferred) ? preferred : 'canvas'
   })
 
-  /** Every adapter run over the current AST; computed only while a view reads it. */
   readonly results = computed<AdapterResult[]>(() => {
     const root = this.#facade.root()
     if (!root) return []
@@ -64,7 +53,6 @@ export class StudioViews {
     })
   })
 
-  /** Outputs of the adapters that ran cleanly, by key — what the preview receives. */
   readonly outputs = computed<Record<string, unknown>>(() =>
     Object.fromEntries(
       this.results()

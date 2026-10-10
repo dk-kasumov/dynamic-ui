@@ -6,6 +6,8 @@
  * Extract it in types with {@link ValueOf}.
  */
 
+import type { GenericSchema } from 'valibot'
+
 declare const VALUE: unique symbol
 
 export interface Primitive<Kind extends string = string, Value = unknown> {
@@ -13,6 +15,11 @@ export interface Primitive<Kind extends string = string, Value = unknown> {
   description?: string
   /** Helper text rendered under the field in the inspector. */
   hint?: string
+  /**
+   * Optional valibot schema. The inspector validates the field's value against it
+   * and surfaces any issues; the value is stored either way — validation never blocks.
+   */
+  validation?: GenericSchema
   [VALUE]?: Value
 }
 

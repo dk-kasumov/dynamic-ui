@@ -27,7 +27,6 @@ import { codeEditorTheme, codeHighlightStyle } from '../../code/code-editor-them
 
 const INDENT = 2
 
-/** Field-specific sizing on top of the shared theme: grows with its content up to a cap. */
 const fieldSizing = EditorView.theme({
   '&': { minHeight: '88px' },
   '.cm-scroller': { maxHeight: '320px' }
@@ -40,7 +39,7 @@ const fieldSizing = EditorView.theme({
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './code-field.component.scss',
   template: `
-    <div class="ds-code" [class.ds-code--invalid]="error()" [class.ds-code--focused]="focused()">
+    <div class="ds-code" [class.ds-code--invalid]="error() || errors().length" [class.ds-code--focused]="focused()">
       <div class="ds-code__header">
         <span class="ds-code__label">{{ label() }}</span>
         <span class="ds-code__badge">JSON</span>
@@ -49,7 +48,6 @@ const fieldSizing = EditorView.theme({
           type="button"
           class="ds-code__format"
           matTooltip="Format JSON"
-          aria-label="Format JSON"
           [disabled]="!canFormat()"
           (click)="format()"
         >
@@ -61,6 +59,9 @@ const fieldSizing = EditorView.theme({
         @if (error(); as message) {
           <mat-icon class="ds-code__footer-icon">error</mat-icon>
           <span class="ds-code__error" role="alert">{{ message }}</span>
+        } @else if (errors().length) {
+          <mat-icon class="ds-code__footer-icon">error</mat-icon>
+          <span class="ds-code__error" role="alert">{{ errors().join(', ') }}</span>
         } @else if (primitive().hint ?? primitive().description; as hint) {
           <span class="ds-code__hint">{{ hint }}</span>
         }
@@ -72,6 +73,7 @@ export class CodeFieldComponent {
   readonly label = input.required<string>()
   readonly primitive = input.required<CodePrimitive>()
   readonly value = input<string | undefined>()
+  readonly errors = input<readonly string[]>([])
 
   readonly valueChange = output<string>()
 
@@ -124,7 +126,6 @@ export class CodeFieldComponent {
       })
     })
 
-    // Push external value changes into the editor; skipped for our own echoes so the caret never jumps.
     effect(() => {
       const next = this.#currentValue()
       const view = this.#view

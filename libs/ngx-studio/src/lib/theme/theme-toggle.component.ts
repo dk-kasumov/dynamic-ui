@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core'
-import { SegmentedComponent, type SegmentedOption } from '../shared/segmented.component'
+import { SegmentedComponent, type SegmentedOption } from '../shared/segmented/segmented.component'
 import { StudioTheme, type ThemePreference } from './studio-theme.service'
 
 const OPTIONS: readonly SegmentedOption<ThemePreference>[] = [
@@ -8,7 +8,6 @@ const OPTIONS: readonly SegmentedOption<ThemePreference>[] = [
   { value: 'dark', title: 'Dark theme', icon: 'dark_mode' }
 ]
 
-/** Switch for the studio's color theme: system (default), light or dark. */
 @Component({
   selector: 'ds-theme-toggle',
   standalone: true,

@@ -65,7 +65,6 @@
     border-radius: 6px;
   }
 
-  // Compact icon button so the header stays slim.
   &__format {
     --mat-icon-button-state-layer-size: 28px;
     width: 28px;
@@ -88,7 +87,6 @@
     display: flex;
     flex-direction: column;
 
-    // CodeMirror sizes itself to its content; stretching it keeps the gutter full height.
     ::ng-deep .cm-editor {
       flex: 1;
     }

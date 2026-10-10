@@ -1,11 +1,10 @@
 import { NgTemplateOutlet } from '@angular/common'
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core'
-import { StudioFacade } from '../studio-facade.service'
+import { StudioFacade } from '../../studio-facade.service'
+import { StudioViews } from '../studio-views.service'
 import type { StudioPreviewContext } from './studio-preview.directive'
-import { StudioViews } from './studio-views.service'
 import type { TemplateRef } from '@angular/core'
 
-/** Renders the host's own template with the live AST and adapter outputs, on a clean stage. */
 @Component({
   selector: 'ds-preview-view',
   standalone: true,

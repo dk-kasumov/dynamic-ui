@@ -4,11 +4,12 @@ import { MatFormFieldModule } from '@angular/material/form-field'
 import { MatIconModule } from '@angular/material/icon'
 import { MatInputModule } from '@angular/material/input'
 import type { SelectPrimitive } from '@dynamic-ui/studio'
+import { ControlErrorsDirective } from './control-errors.directive'
 
 @Component({
   selector: 'ds-select-field',
   standalone: true,
-  imports: [MatFormFieldModule, MatInputModule, MatChipsModule, MatIconModule],
+  imports: [MatFormFieldModule, MatInputModule, MatChipsModule, MatIconModule, ControlErrorsDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styles: `
     :host {
@@ -23,11 +24,11 @@ import type { SelectPrimitive } from '@dynamic-ui/studio'
     @if (multiple()) {
       <mat-form-field appearance="outline" class="ds-field" subscriptSizing="dynamic">
         <mat-label>{{ label() }}</mat-label>
-        <mat-chip-grid #chipGrid [attr.aria-label]="label()">
+        <mat-chip-grid #chipGrid [dsControlErrors]="errors()">
           @for (val of values(); track val; let i = $index) {
             <mat-chip-row (removed)="removeAt(i)">
               {{ val }}
-              <button matChipRemove [attr.aria-label]="'Remove ' + val">
+              <button matChipRemove>
                 <mat-icon>cancel</mat-icon>
               </button>
             </mat-chip-row>
@@ -40,6 +41,9 @@ import type { SelectPrimitive } from '@dynamic-ui/studio'
           placeholder="Add value…"
         />
         <mat-hint>{{ primitive().hint ?? primitive().description ?? 'Press Enter or comma to add' }}</mat-hint>
+        @for (message of errors(); track message) {
+          <mat-error>{{ message }}</mat-error>
+        }
       </mat-form-field>
     } @else {
       <mat-form-field appearance="outline" class="ds-field" subscriptSizing="dynamic">
@@ -47,12 +51,16 @@ import type { SelectPrimitive } from '@dynamic-ui/studio'
         <input
           matInput
           type="text"
+          [dsControlErrors]="errors()"
           [value]="singleValue()"
           [placeholder]="defaultText()"
           (input)="onSingleInput($event)"
         />
         @if (primitive().hint ?? primitive().description; as hint) {
           <mat-hint>{{ hint }}</mat-hint>
+        }
+        @for (message of errors(); track message) {
+          <mat-error>{{ message }}</mat-error>
         }
       </mat-form-field>
     }
@@ -62,6 +70,7 @@ export class SelectFieldComponent {
   readonly label = input.required<string>()
   readonly primitive = input.required<SelectPrimitive<string>>()
   readonly value = input<string | string[] | undefined>()
+  readonly errors = input<readonly string[]>([])
 
   readonly valueChange = output<string | string[]>()
 

@@ -1,8 +1,3 @@
-// The inspector sits in the studio's third grid column on wide viewports
-// (the column is 0px wide by default and animates to 320px via a transition
-// on the studio's grid-template-columns). On narrow viewports it becomes
-// an absolutely positioned drawer that slides in from the right.
-
 :host {
   display: contents;
 }
@@ -20,9 +15,7 @@
 .inspector {
   display: flex;
   flex-direction: column;
-  width: 360px; // Fixed width so content layout stays stable while the
-  // grid column transitions open; overflow is clipped by
-  // the studio's `overflow: hidden`.
+  width: 360px;
   height: 100%;
   box-sizing: border-box;
   background: var(--ds-sidebar-bg);
@@ -119,12 +112,6 @@
   }
 }
 
-// Compact density for every Material field inside the inspector drawer.
-// Default Material (56px row height, 16px font) is too chunky for a 320px
-// sidebar. We override Material's own density tokens so the framework
-// recalculates the floating-label notch position + non-floating label `top`
-// correctly — manual transform overrides misalign the label with the outline
-// gap.
 :host ::ng-deep {
   .mat-mdc-form-field {
     --mat-form-field-container-height: 40px;
@@ -141,8 +128,6 @@
   }
 
   .mat-mdc-checkbox {
-    // Use the official token to shrink the state-layer (ripple/hover circle)
-    // instead of fighting mdc-checkbox padding — avoids ripple geometry distortion.
     --mdc-checkbox-state-layer-size: 28px;
 
     display: flex;
@@ -171,9 +156,6 @@
   }
 }
 
-// Narrow studio: inspector floats over canvas with a backdrop. The
-// studio grid stays 2-col (the 3rd 0px track is unused) and the inspector
-// positions itself absolutely with its own slide-in animation.
 @container ds-studio (max-width: 1199px) {
   .scrim {
     display: block;
@@ -187,7 +169,6 @@
   }
 }
 
-// Mobile bottom-sheet: only on very small screens (phones).
 @container ds-studio (max-width: 479px) {
   .inspector {
     inset-block-start: auto;

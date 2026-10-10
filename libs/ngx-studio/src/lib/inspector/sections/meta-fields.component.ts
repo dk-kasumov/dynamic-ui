@@ -3,8 +3,8 @@ import { MatFormFieldModule } from '@angular/material/form-field'
 import { MatIconModule } from '@angular/material/icon'
 import { MatInputModule } from '@angular/material/input'
 import type { ComponentDefinition, Node, NodeMetaPatch } from '@dynamic-ui/studio'
-import { StudioFacade } from '../studio-facade.service'
-import { iconOrDefault } from '../canvas/icon'
+import { StudioFacade } from '../../studio-facade.service'
+import { iconOrDefault } from '../../shared/icon/icon'
 
 export type InspectorMetaChange = NodeMetaPatch
 
@@ -45,9 +45,7 @@ export type InspectorMetaChange = NodeMetaPatch
             autocomplete="off"
             (input)="onIconInput($event)"
           />
-          <mat-hint>
-            Material Icons ligature, e.g. <code>check_box</code>
-          </mat-hint>
+          <mat-hint> Material Icons ligature, e.g. <code>check_box</code> </mat-hint>
         </mat-form-field>
       </div>
     </div>

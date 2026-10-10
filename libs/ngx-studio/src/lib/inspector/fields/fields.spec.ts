@@ -1,16 +1,17 @@
 import { TestBed } from '@angular/core/testing'
-import { Studio, type Primitive } from '@dynamic-ui/studio'
+import { Studio, type FieldError, type Primitive } from '@dynamic-ui/studio'
 import { EditorView } from '@codemirror/view'
 import { FieldHostComponent } from './field-host.component'
 import type { InspectorFieldChange } from '../field-change'
 
-function mount(primitive: Primitive, value?: unknown) {
+function mount(primitive: Primitive, value?: unknown, errors: FieldError[] = []) {
   const fixture = TestBed.createComponent(FieldHostComponent)
   const changes: InspectorFieldChange[] = []
   fixture.componentRef.setInput('primitive', primitive)
   fixture.componentRef.setInput('value', value)
   fixture.componentRef.setInput('label', 'Field')
   fixture.componentRef.setInput('path', ['field'])
+  fixture.componentRef.setInput('errors', errors)
   fixture.componentInstance.change.subscribe(c => changes.push(c))
   fixture.detectChanges()
   return { fixture, el: fixture.nativeElement as HTMLElement, changes }
@@ -37,6 +38,26 @@ describe('field hints', () => {
   it('renders the hint for a checkbox', () => {
     const { el } = mount(Studio.checkbox({ hint: 'Check me' }))
     expect(el.querySelector('.ds-hint')?.textContent).toContain('Check me')
+  })
+})
+
+describe('field validation errors', () => {
+  it('shows the matching messages as native mat-errors', () => {
+    const { fixture, el } = mount(Studio.text(), null, [
+      { path: ['field'], label: 'Field', messages: ['Required', 'Too short'] }
+    ])
+    fixture.detectChanges()
+    const messages = [...el.querySelectorAll('mat-error')].map(e => e.textContent?.trim())
+    expect(messages).toEqual(['Required', 'Too short'])
+  })
+
+  it('stays valid (shows the hint, no mat-error) for errors that belong to a different field', () => {
+    const { fixture, el } = mount(Studio.text({ hint: 'A hint' }), null, [
+      { path: ['other'], label: 'Other', messages: ['nope'] }
+    ])
+    fixture.detectChanges()
+    expect(el.querySelector('mat-error')).toBeNull()
+    expect(el.querySelector('mat-hint')?.textContent).toContain('A hint')
   })
 })
 

@@ -1,5 +1,4 @@
 :host {
-  // Brand | view switcher | actions — equal side tracks keep the switcher centred.
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
@@ -44,4 +43,31 @@
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.header__issues {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 10px 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 120ms ease;
+
+  .material-icons {
+    font-size: 15px;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: rgba(239, 68, 68, 0.18);
+    outline: none;
+  }
 }

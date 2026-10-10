@@ -57,6 +57,37 @@ describe('Studio DSL', () => {
     expect(Studio.date({ hint }).hint).toBe(hint)
   })
 
+  it('seeds a new node with every declared prop: provided wins, else default, else null — recursively for groups', () => {
+    const Widget = Studio.defineComponent({
+      title: 'Controls/Widget',
+      props: {
+        label: Studio.text(),
+        size: Studio.decimal({ default: 3 }),
+        box: Studio.group({ x: Studio.text({ default: 'a' }), y: Studio.text() })
+      }
+    })
+    const studio = new Studio({ components: [Widget] })
+    const id = studio.addNode(studio.root.id, { name: 'Controls/Widget', props: { label: 'Hi' } })
+    expect(studio.findNode(id)?.props).toEqual({ label: 'Hi', size: 3, box: { x: 'a', y: null } })
+  })
+
+  it('materializes props across a whole added subtree and for the constructor root', () => {
+    const Box = Studio.defineComponent({
+      title: 'Containers/Box',
+      props: { title: Studio.text({ default: 'Untitled' }) },
+      container: true
+    })
+    const Leaf = Studio.defineComponent({ title: 'Controls/Leaf', props: { name: Studio.text() } })
+
+    const studio = new Studio({ components: [Box, Leaf], root: { name: 'Containers/Box' } })
+    expect(studio.root.props).toEqual({ title: 'Untitled' })
+
+    const boxId = studio.addNode(studio.root.id, { name: 'Containers/Box', children: [{ name: 'Controls/Leaf' }] })
+    const box = studio.findNode(boxId)
+    expect(box?.props).toEqual({ title: 'Untitled' })
+    expect(box?.children?.[0]?.props).toEqual({ name: null })
+  })
+
   it('stores code, time and date values as plain JSON-safe data', () => {
     const Event = Studio.defineComponent({
       title: 'Controls/Event',

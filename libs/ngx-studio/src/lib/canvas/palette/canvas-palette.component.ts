@@ -4,7 +4,7 @@ import type { Options } from 'sortablejs'
 import type { Folder, FolderItem } from '../../folders-sidebar/folder.model'
 import { FolderItemDirective } from '../../folders-sidebar/folder-item.directive'
 import { FoldersSidebarComponent } from '../../folders-sidebar/folders-sidebar.component'
-import { iconOrDefault } from '../icon'
+import { iconOrDefault } from '../../shared/icon/icon'
 import { StudioFacade } from '../../studio-facade.service'
 import { DsSortableDirective } from '../sortable/sortable.directive'
 
@@ -60,8 +60,6 @@ export class CanvasPaletteComponent {
   }
 }
 
-// Builds a nested Folder tree from flat component titles like 'Controls/TextInput'.
-// Supports arbitrary nesting depth.
 function componentsToFolders(components: readonly ComponentDefinition[]): Folder[] {
   type FolderNode = { children: Record<string, FolderNode>; items: FolderItem[] }
 

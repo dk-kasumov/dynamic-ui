@@ -1,12 +1,8 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core'
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core'
+import { StudioFacade } from '../studio-facade.service'
 import { ThemeToggleComponent } from '../theme/theme-toggle.component'
 import { ViewSwitcherComponent } from '../views/view-switcher.component'
 
-/**
- * Studio toolbar: brand on the left, the view switcher in the middle and global
- * settings (color theme) on the right. The switcher only appears when the studio
- * has more than one view to offer.
- */
 @Component({
   selector: 'ds-studio-header',
   standalone: true,
@@ -22,8 +18,20 @@ import { ViewSwitcherComponent } from '../views/view-switcher.component'
       <ds-view-switcher />
     </div>
     <div class="header__actions">
+      @if (facade.errorCount(); as count) {
+        <button type="button" class="header__issues" (click)="highlightErrors()" (mouseleave)="facade.clearHighlight()">
+          <span class="material-icons" aria-hidden="true">error</span>
+          {{ count }} {{ count === 1 ? 'issue' : 'issues' }}
+        </button>
+      }
       <ds-theme-toggle />
     </div>
   `
 })
-export class StudioHeaderComponent {}
+export class StudioHeaderComponent {
+  readonly facade = inject(StudioFacade)
+
+  highlightErrors(): void {
+    this.facade.highlight(this.facade.nodesWithErrors())
+  }
+}

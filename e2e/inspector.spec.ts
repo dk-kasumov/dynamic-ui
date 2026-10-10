@@ -20,7 +20,7 @@ async function getLeafCard(page: Page) {
 async function openInspector(page: Page) {
   const card = await getLeafCard(page)
   await card.hover()
-  const tuneBtn = card.getByLabel('Configure')
+  const tuneBtn = card.locator('.card__action--edit')
   await expect(tuneBtn).toBeVisible()
   await tuneBtn.click()
   await page.waitForSelector('.inspector', { state: 'visible' })
@@ -40,18 +40,18 @@ test.describe('Inspector panel', () => {
   test('tune button appears on leaf card hover', async ({ page }) => {
     const card = await getLeafCard(page)
     await card.hover()
-    await expect(card.getByLabel('Configure')).toBeVisible()
+    await expect(card.locator('.card__action--edit')).toBeVisible()
   })
 
   test('remove button appears on leaf card hover', async ({ page }) => {
     const card = await getLeafCard(page)
     await card.hover()
-    await expect(card.getByLabel('Remove')).toBeVisible()
+    await expect(card.locator('.card__action--delete')).toBeVisible()
   })
 
   test('inspector opens on clicking Configure', async ({ page }) => {
     await openInspector(page)
-    await expect(page.locator('[aria-label="Component settings"]')).toBeVisible()
+    await expect(page.locator('.inspector')).toBeVisible()
   })
 
   test('inspector contains Appearance and Props sections', async ({ page }) => {
@@ -67,7 +67,7 @@ test.describe('Inspector panel', () => {
     // animation on the inspector itself depending on viewport width).
     const card = await getLeafCard(page)
     await card.hover()
-    await card.getByLabel('Configure').click()
+    await card.locator('.card__action--edit').click()
 
     await page.waitForSelector('.inspector', { state: 'attached' })
     const motion = await page.evaluate(() => {
@@ -111,7 +111,7 @@ test.describe('Inspector panel', () => {
 
   test('close button dismisses the inspector', async ({ page }) => {
     await openInspector(page)
-    await page.locator('.inspector').getByLabel('Close').click()
+    await page.locator('.inspector').locator('.inspector__close').click()
     await expect(page.locator('.inspector')).toHaveCount(0)
   })
 
@@ -133,7 +133,7 @@ test.describe('Inspector panel', () => {
         .filter({ hasNot: p.locator('.card__body') })
         .first()
       await card.hover()
-      await card.getByLabel('Configure').click()
+      await card.locator('.card__action--edit').click()
       await p.waitForSelector('.inspector', { state: 'visible' })
 
       // Scrim must be visible in overlay mode (800 < 1200)
@@ -151,7 +151,7 @@ test.describe('Inspector panel', () => {
     await openInspector(page)
     const card = await getLeafCard(page)
     await card.hover()
-    await card.getByLabel('Remove').click()
+    await card.locator('.card__action--delete').click()
     await expect(page.locator('.inspector')).toHaveCount(0)
   })
 

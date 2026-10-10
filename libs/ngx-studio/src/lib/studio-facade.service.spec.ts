@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing'
+import * as v from 'valibot'
 import { Studio, type NodeId } from '@dynamic-ui/studio'
 import { StudioFacade } from './studio-facade.service'
 
@@ -6,6 +7,11 @@ const TextInput = Studio.defineComponent({
   title: 'Controls/Text Input',
   props: {},
   relations: { required: Studio.relation({ returns: 'boolean' }) }
+})
+
+const RequiredField = Studio.defineComponent({
+  title: 'Controls/Required',
+  props: { label: Studio.text({ validation: v.pipe(v.string('Label is required'), v.nonEmpty('Label is required')) }) }
 })
 
 function setup() {
@@ -57,5 +63,41 @@ describe('StudioFacade — links and highlight', () => {
     facade.highlight([a])
     facade.startPick([a as NodeId], () => undefined)
     expect(facade.isHighlighted(a)).toBe(false)
+  })
+})
+
+describe('StudioFacade — validation', () => {
+  function setup() {
+    const studio = new Studio({ components: [RequiredField] })
+    const facade = TestBed.configureTestingModule({ providers: [StudioFacade] }).inject(StudioFacade)
+    facade.bind(studio)
+    return { studio, facade, add: () => studio.addNode(studio.root.id, { name: 'Controls/Required' }) }
+  }
+
+  it('flags a freshly added node whose required field is still null', () => {
+    const { facade, add } = setup()
+    const id = add()
+    expect(facade.errorsOf(id)).toEqual([{ path: ['label'], label: 'Label', messages: ['Label is required'] }])
+    expect(facade.errorCount()).toBe(1)
+    expect(facade.nodesWithErrors()).toEqual([id])
+  })
+
+  it('clears the error once the field is filled', () => {
+    const { studio, facade, add } = setup()
+    const id = add()
+    studio.setProp(id, ['label'], 'Email')
+    expect(facade.errorsOf(id)).toEqual([])
+    expect(facade.errorCount()).toBe(0)
+    expect(facade.nodesWithErrors()).toEqual([])
+  })
+
+  it('aggregates across nodes and keeps error-free ones out of the map', () => {
+    const { studio, facade, add } = setup()
+    const a = add()
+    const b = add()
+    studio.setProp(a, ['label'], 'Set')
+    expect(facade.errorCount()).toBe(1)
+    expect(facade.nodesWithErrors()).toEqual([b])
+    expect(facade.errorsOf(a)).toEqual([])
   })
 })

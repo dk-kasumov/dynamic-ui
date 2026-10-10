@@ -15,20 +15,12 @@ import { CanvasComponent } from './canvas/canvas.component'
 import { StudioHeaderComponent } from './header/studio-header.component'
 import { InspectorComponent } from './inspector/inspector.component'
 import { StudioTheme } from './theme/studio-theme.service'
-import { AdapterViewComponent } from './views/adapter-view.component'
-import { AstViewComponent } from './views/ast-view.component'
-import { PreviewViewComponent } from './views/preview-view.component'
-import { StudioPreviewDirective } from './views/studio-preview.directive'
+import { AdapterViewComponent } from './views/adapter/adapter-view.component'
+import { AstViewComponent } from './views/ast/ast-view.component'
+import { PreviewViewComponent } from './views/preview/preview-view.component'
+import { StudioPreviewDirective } from './views/preview/studio-preview.directive'
 import { StudioViews } from './views/studio-views.service'
 
-/**
- * Top-level organism. Provides a StudioFacade, binds a Studio instance to it,
- * and lays out the palette sidebar next to the canvas viewport. The other views
- * (AST, Preview, adapter output) replace the canvas and take the full width.
- *
- * All design tokens are defined as CSS custom properties on :host — override
- * any --ds-* variable on ds-ngx-studio to retheme the entire studio.
- */
 @Component({
   selector: 'ds-ngx-studio',
   standalone: true,
@@ -86,14 +78,11 @@ export class NgxStudioComponent implements OnInit {
   protected readonly theme = inject(StudioTheme)
 
   readonly studio = input.required<Studio>()
-  /** Adapters that map the AST for the host, by key; each shows up in the Output view. */
   readonly adapters = input<Readonly<Record<string, StudioAdapter>>>({})
-  /** The host's `<ng-template dsStudioPreview>`, which enables the Preview view. */
   readonly previewSlot = contentChild(StudioPreviewDirective)
 
   readonly paletteComponents = computed<readonly ComponentDefinition[]>(() => this.studio().getComponents())
   readonly view = this.#views.current
-  // The inspector belongs to the canvas; it comes back with it.
   readonly inspecting = computed(() => this.#facade.inspectedId() !== null && this.view() === 'canvas')
   readonly picking = this.#facade.picking
 

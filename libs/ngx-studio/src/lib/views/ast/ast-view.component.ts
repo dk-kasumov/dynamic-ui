@@ -1,11 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core'
 import { walk } from '@dynamic-ui/studio'
-import { CodeViewerComponent } from '../code/code-viewer.component'
-import { StudioFacade } from '../studio-facade.service'
-import { OutputActionsComponent } from './output-actions.component'
-import { ViewPanelComponent } from './view-panel.component'
+import { CodeViewerComponent } from '../../code/code-viewer.component'
+import { StudioFacade } from '../../studio-facade.service'
+import { OutputActionsComponent } from '../shared/output-actions.component'
+import { ViewPanelComponent } from '../shared/view-panel.component'
 
-/** The canonical AST as JSON — exactly what the studio hands to adapters. */
 @Component({
   selector: 'ds-ast-view',
   standalone: true,

@@ -2,16 +2,10 @@ import { ChangeDetectionStrategy, Component, booleanAttribute, computed, input, 
 
 export interface SegmentedOption<Value extends string = string> {
   value: Value
-  /** Accessible name and tooltip; also the visible text unless `iconOnly`. */
   title: string
-  /** Material Icons ligature. */
   icon?: string
 }
 
-/**
- * Pill-shaped single-choice control with a sliding highlight. Segments share one
- * width (the widest), which is what lets the highlight be a plain translate.
- */
 @Component({
   selector: 'ds-segmented',
   standalone: true,
@@ -22,7 +16,6 @@ export interface SegmentedOption<Value extends string = string> {
     <div
       class="segmented"
       role="group"
-      [attr.aria-label]="label()"
       [style.--ds-segmented-count]="options().length"
       [style.--ds-segmented-index]="activeIndex()"
     >
@@ -33,7 +26,6 @@ export interface SegmentedOption<Value extends string = string> {
           class="segmented__btn"
           [class.segmented__btn--active]="option.value === value()"
           [attr.aria-pressed]="option.value === value()"
-          [attr.aria-label]="iconOnly() ? option.title : null"
           [title]="option.title"
           (click)="valueChange.emit(option.value)"
         >
@@ -51,9 +43,7 @@ export interface SegmentedOption<Value extends string = string> {
 export class SegmentedComponent<Value extends string = string> {
   readonly options = input.required<readonly SegmentedOption<Value>[]>()
   readonly value = input.required<Value>()
-  /** Accessible name of the whole group. */
   readonly label = input<string>()
-  /** Show only icons; the title stays as tooltip and accessible name. */
   readonly iconOnly = input(false, { transform: booleanAttribute })
 
   readonly valueChange = output<Value>()

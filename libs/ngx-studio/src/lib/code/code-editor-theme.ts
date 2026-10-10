@@ -2,7 +2,6 @@ import { HighlightStyle } from '@codemirror/language'
 import { EditorView } from '@codemirror/view'
 import { tags as t } from '@lezer/highlight'
 
-/** Colors come from the studio's `--ds-code-*` variables, so light/dark follow the studio theme. */
 export const codeHighlightStyle = HighlightStyle.define([
   { tag: t.propertyName, color: 'var(--ds-code-key)' },
   { tag: t.string, color: 'var(--ds-code-string)' },

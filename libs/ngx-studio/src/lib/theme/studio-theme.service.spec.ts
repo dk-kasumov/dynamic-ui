@@ -3,7 +3,6 @@ import { TestBed } from '@angular/core/testing'
 import { StudioTheme } from './studio-theme.service'
 import { ThemeToggleComponent } from './theme-toggle.component'
 
-/** A controllable stand-in for the OS color scheme. */
 class FakeSystemScheme {
   matches = false
   readonly #listeners = new Set<(event: MediaQueryListEvent) => void>()
@@ -132,7 +131,7 @@ describe('StudioTheme transitions', () => {
 
   it('does not animate when the rendered theme stays the same', () => {
     const theme = configure({ systemDark: true })
-    theme.set('dark') // system is already dark
+    theme.set('dark')
     expect(startViewTransition).not.toHaveBeenCalled()
     expect(theme.preference()).toBe('dark')
   })
@@ -171,7 +170,7 @@ describe('ThemeToggleComponent', () => {
 
   it('offers system, light and dark, with system pressed by default', () => {
     const { buttons } = mount()
-    expect(buttons().map(b => b.getAttribute('aria-label'))).toEqual(['System theme', 'Light theme', 'Dark theme'])
+    expect(buttons().map(b => b.getAttribute('title'))).toEqual(['System theme', 'Light theme', 'Dark theme'])
     expect(buttons().map(b => b.getAttribute('aria-pressed'))).toEqual(['true', 'false', 'false'])
   })
 

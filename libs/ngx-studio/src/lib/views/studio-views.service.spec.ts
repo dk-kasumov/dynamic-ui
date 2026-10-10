@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing'
 import { Studio } from '@dynamic-ui/studio'
 import { NgxStudioComponent } from '../ngx-studio.component'
 import { StudioFacade } from '../studio-facade.service'
-import { StudioPreviewDirective } from './studio-preview.directive'
+import { StudioPreviewDirective } from './preview/studio-preview.directive'
 import { StudioViews } from './studio-views.service'
 
 const Field = Studio.defineComponent({ title: 'Controls/Field', props: {} })

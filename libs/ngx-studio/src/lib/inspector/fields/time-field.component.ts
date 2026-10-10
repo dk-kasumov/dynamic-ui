@@ -5,7 +5,7 @@ import { MatFormFieldModule } from '@angular/material/form-field'
 import { MatInputModule } from '@angular/material/input'
 import { MatTimepickerModule } from '@angular/material/timepicker'
 import type { TimePrimitive } from '@dynamic-ui/studio'
-import { fromIsoTime, provideDateFnsFieldAdapter, toIsoTime } from './date-format'
+import { fromIsoTime, provideDateFnsFieldAdapter, toIsoTime } from '../../shared/date-format/date-format'
 
 @Component({
   selector: 'ds-time-field',
@@ -22,6 +22,9 @@ import { fromIsoTime, provideDateFnsFieldAdapter, toIsoTime } from './date-forma
       @if (primitive().hint ?? primitive().description; as hint) {
         <mat-hint>{{ hint }}</mat-hint>
       }
+      @for (message of errors(); track message) {
+        <mat-error>{{ message }}</mat-error>
+      }
     </mat-form-field>
   `
 })
@@ -29,6 +32,7 @@ export class TimeFieldComponent {
   readonly label = input.required<string>()
   readonly primitive = input.required<TimePrimitive>()
   readonly value = input<string | undefined>()
+  readonly errors = input<readonly string[]>([])
 
   readonly valueChange = output<string | null>()
 

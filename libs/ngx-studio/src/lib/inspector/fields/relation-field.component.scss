@@ -1,5 +1,3 @@
-// Flattened hierarchy: no box per relation or per condition — just a titled group
-// whose conditions hang off a thin left rail, so the narrow panel keeps its width.
 .relation {
   display: flex;
   flex-direction: column;
@@ -17,7 +15,6 @@
   color: var(--ds-text);
 }
 
-// The left rail groups a relation's conditions without a heavy container.
 .relation__conditions {
   display: flex;
   flex-direction: column;
@@ -38,7 +35,6 @@
   gap: 6px;
 }
 
-// Operator and value stack full-width (long operator labels never truncate) with breathing room.
 .relation__rule-body {
   display: flex;
   flex-direction: column;
@@ -75,7 +71,6 @@
   text-overflow: ellipsis;
 }
 
-// The component type stays visible but secondary when a more specific name leads.
 .relation__target-type {
   margin-left: 4px;
   font-weight: 500;
@@ -88,7 +83,6 @@
   width: 100%;
 }
 
-// Clickable AND/OR between conditions — toggles the whole set's combinator.
 .relation__joiner {
   align-self: flex-start;
   padding: 2px 12px;

@@ -4,9 +4,9 @@ import { MatIconModule } from '@angular/material/icon'
 import { MatIconButton } from '@angular/material/button'
 import type { Node, NodeId } from '@dynamic-ui/studio'
 import { StudioFacade } from '../studio-facade.service'
-import { MetaFieldsComponent } from './meta-fields.component'
-import { PropsFormComponent } from './props-form.component'
-import { RelationsFormComponent } from './relations-form.component'
+import { MetaFieldsComponent } from './sections/meta-fields.component'
+import { PropsFormComponent } from './sections/props-form.component'
+import { RelationsFormComponent } from './sections/relations-form.component'
 import type { InspectorFieldChange } from './field-change'
 
 @Component({
@@ -26,7 +26,7 @@ import type { InspectorFieldChange } from './field-change'
     @let n = node();
     @let def = definition();
     <div class="scrim" (click)="close()" aria-hidden="true"></div>
-    <aside class="inspector" role="dialog" aria-label="Component settings">
+    <aside class="inspector" role="dialog">
       <header class="inspector__head">
         <div class="inspector__title-wrap">
           <span class="inspector__icon" aria-hidden="true">
@@ -37,7 +37,7 @@ import type { InspectorFieldChange } from './field-change'
             <span class="inspector__title">{{ def.label }}</span>
           </div>
         </div>
-        <button mat-icon-button class="inspector__close" aria-label="Close" (click)="close()">
+        <button mat-icon-button class="inspector__close" (click)="close()">
           <mat-icon>close</mat-icon>
         </button>
       </header>
@@ -52,7 +52,12 @@ import type { InspectorFieldChange } from './field-change'
 
         <section class="inspector__section">
           <h3 class="inspector__section-title">Props</h3>
-          <ds-props-form [definition]="def" [values]="n.props" (change)="onPropChange(n.id, $event)" />
+          <ds-props-form
+            [definition]="def"
+            [values]="n.props"
+            [errors]="errors()"
+            (change)="onPropChange(n.id, $event)"
+          />
         </section>
 
         @if (hasRelations()) {
@@ -70,14 +75,13 @@ import type { InspectorFieldChange } from './field-change'
 export class InspectorComponent {
   readonly facade = inject(StudioFacade)
 
-  // The studio renders the inspector only while a node is inspected.
   readonly node = this.facade.inspectedNode as Signal<Node>
   readonly definition = computed(() => this.facade.component(this.node().name)!)
   readonly hasRelations = computed(() => Object.keys(this.definition().relations).length > 0)
+  readonly errors = computed(() => this.facade.errorsOf(this.node().id))
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
-    // While picking a relation target, Escape cancels the pick rather than closing the panel.
     if (this.facade.picking()) this.facade.cancelPick()
     else this.close()
   }

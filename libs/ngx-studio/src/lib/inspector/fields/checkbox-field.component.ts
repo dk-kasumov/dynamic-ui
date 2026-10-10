@@ -8,12 +8,14 @@ import type { CheckboxPrimitive } from '@dynamic-ui/studio'
   imports: [MatCheckboxModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <mat-checkbox
-      class="ds-checkbox"
-      [checked]="effective()"
-      (change)="valueChange.emit($event.checked)"
-    >{{ label() }}</mat-checkbox>
-    @if (primitive().hint ?? primitive().description; as hint) {
+    <mat-checkbox class="ds-checkbox" [checked]="effective()" (change)="valueChange.emit($event.checked)">{{
+      label()
+    }}</mat-checkbox>
+    @if (errors().length) {
+      @for (message of errors(); track message) {
+        <div class="ds-error">{{ message }}</div>
+      }
+    } @else if (primitive().hint ?? primitive().description; as hint) {
       <div class="ds-hint">{{ hint }}</div>
     }
   `
@@ -22,6 +24,7 @@ export class CheckboxFieldComponent {
   readonly label = input.required<string>()
   readonly primitive = input.required<CheckboxPrimitive>()
   readonly value = input<boolean | undefined>()
+  readonly errors = input<readonly string[]>([])
 
   readonly valueChange = output<boolean>()
 

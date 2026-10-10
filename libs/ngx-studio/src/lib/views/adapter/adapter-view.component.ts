@@ -1,14 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core'
-import { CodeViewerComponent } from '../code/code-viewer.component'
-import { OutputActionsComponent } from './output-actions.component'
-import { StudioViews } from './studio-views.service'
-import { ViewPanelComponent } from './view-panel.component'
+import { CodeViewerComponent } from '../../code/code-viewer.component'
+import { StudioViews } from '../studio-views.service'
+import { OutputActionsComponent } from '../shared/output-actions.component'
+import { ViewPanelComponent } from '../shared/view-panel.component'
 
-/**
- * What the host's adapters make of the AST, as one JSON document keyed by adapter —
- * the same `outputs` the preview receives. An adapter that throws is reported above
- * it and is left out of the document.
- */
 @Component({
   selector: 'ds-adapter-view',
   standalone: true,

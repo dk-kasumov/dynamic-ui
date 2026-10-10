@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core'
-import { SegmentedComponent, type SegmentedOption } from '../shared/segmented.component'
+import { SegmentedComponent, type SegmentedOption } from '../shared/segmented/segmented.component'
 import { StudioViews, type StudioView } from './studio-views.service'
 
 const OPTIONS: Record<StudioView, SegmentedOption<StudioView>> = {
@@ -9,7 +9,6 @@ const OPTIONS: Record<StudioView, SegmentedOption<StudioView>> = {
   adapter: { value: 'adapter', title: 'Output', icon: 'transform' }
 }
 
-/** Switches between the studio's views; offers exactly the views that are available. */
 @Component({
   selector: 'ds-view-switcher',
   standalone: true,

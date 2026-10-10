@@ -17,11 +17,6 @@ import {
 import { SelectFieldComponent } from './select-field.component'
 import { StudioFacade } from '../../studio-facade.service'
 
-/**
- * Rule builder for one relation slot. The node is the source of truth: it reads
- * the relation straight off the node and writes every edit back through the
- * facade. Targets are linked by clicking a node on the canvas (pick-on-canvas).
- */
 @Component({
   selector: 'ds-relation-field',
   standalone: true,
@@ -63,12 +58,7 @@ import { StudioFacade } from '../../studio-facade.service'
                     }
                   </span>
                 </button>
-                <button
-                  type="button"
-                  class="relation__remove"
-                  aria-label="Remove condition"
-                  (click)="removeAt($index); $event.stopPropagation()"
-                >
+                <button type="button" class="relation__remove" (click)="removeAt($index); $event.stopPropagation()">
                   <span class="material-icons" aria-hidden="true">close</span>
                 </button>
               </div>
@@ -123,7 +113,6 @@ export class RelationFieldComponent {
 
   readonly title = computed(() => this.descriptor().label ?? Studio.humanize(this.name()))
 
-  /** Synthesized primitive so the `is one of` value reuses the existing chips field. */
   readonly listPrimitive = { kind: 'select', multiple: true } as SelectPrimitive<string>
 
   readonly ruleSet = computed<RelationInstance>(
@@ -136,7 +125,6 @@ export class RelationFieldComponent {
     return allowed ? all.filter(op => allowed.includes(op)) : all
   })
 
-  /** Eligible targets for this relation; re-read on tree changes to keep the add button in sync. */
   readonly targets = computed(() => {
     this.facade.root()
     return this.facade.relationTargets(this.node().id, this.descriptor().targetFilter)
@@ -174,7 +162,6 @@ export class RelationFieldComponent {
   }
 
   setOperator(index: number, operator: RuleOperator): void {
-    // Keep the value only when the operator's value shape is unchanged.
     this.#patch(index, rule => {
       const value = this.valueShape(operator) === this.valueShape(rule.operator) ? rule.value : undefined
       return { ...rule, operator, value }

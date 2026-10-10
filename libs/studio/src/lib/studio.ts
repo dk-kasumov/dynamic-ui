@@ -1,7 +1,8 @@
 import { BehaviorSubject, type Observable } from 'rxjs'
 import { defineAdapter } from './adapter'
-import { defineComponent, type ComponentDefinition } from './component'
-import type { Node, NodeId } from './node'
+import { defineComponent, materializeProps, type ComponentDefinition } from './component'
+import { walk, type Node, type NodeId } from './node'
+import { validateProps, type FieldError } from './validation'
 import type { RelationInstance, TargetFilter } from './relations'
 import { checkbox, code, date, decimal, enumeration, group, select, text, time } from './primitives'
 import { relation } from './relations'
@@ -28,14 +29,23 @@ export class Studio {
   #selectedId: NodeId | null = null
 
   constructor({ components, root }: StudioOptions) {
-    this.#tree = new Tree(createNode(root))
-
     for (const def of components) {
       if (this.#components.has(def.title)) throw new StudioError(`Component "${def.title}" is already registered`)
       this.#components.set(def.title, def)
     }
 
+    this.#tree = new Tree(createNode(root && this.#materialize(root)))
     this.#state$ = new BehaviorSubject<StudioSnapshot>(this.#snapshot())
+  }
+
+  /** Fills in every declared prop (recursively) so a new node lands in the tree with a complete prop shape. */
+  #materialize(input: NewNode): NewNode {
+    const def = this.#components.get(input.name)
+    return {
+      ...input,
+      props: def ? materializeProps(def, input.props) : input.props,
+      children: input.children?.map(child => this.#materialize(child))
+    }
   }
 
   // State --------------------------------------------------------------------
@@ -83,8 +93,20 @@ export class Studio {
     return relationTargets(this.#tree, nodeId, filter)
   }
 
+  /** Validation failures for every node, keyed by id; nodes with no failures are omitted. */
+  validate(): Map<NodeId, FieldError[]> {
+    const errors = new Map<NodeId, FieldError[]>()
+    for (const node of walk(this.#tree.root)) {
+      const def = this.#components.get(node.name)
+      if (!def) continue
+      const nodeErrors = validateProps(def, node.props)
+      if (nodeErrors.length) errors.set(node.id, nodeErrors)
+    }
+    return errors
+  }
+
   addNode(parentId: NodeId, input: NewNode, index?: number): NodeId {
-    return this.#commit(tree => tree.add(parentId, input, index))
+    return this.#commit(tree => tree.add(parentId, this.#materialize(input), index))
   }
 
   removeNode(id: NodeId): void {
@@ -167,6 +189,8 @@ export type { StudioAdapter } from './adapter'
 export type { NewNode, NodeMetaPatch } from './tree'
 export { walk } from './node'
 export type { Node, NodeId } from './node'
+export { validateProps } from './validation'
+export type { FieldError } from './validation'
 export type { ComponentDefinition, PropsOf, RelationNamesOf } from './component'
 export type {
   CheckboxPrimitive,

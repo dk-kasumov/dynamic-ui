@@ -1,5 +1,6 @@
 import { Component, input } from '@angular/core'
-import { Studio, walk, type NewNode, type NodeId, type RelationInstance } from '@dynamic-ui/studio'
+import * as v from 'valibot'
+import { Studio, type NewNode, type NodeId, type RelationInstance } from '@dynamic-ui/studio'
 import { componentWrapperDecorator, moduleMetadata, type Meta, type StoryObj } from '@storybook/angular'
 import { NgxStudioComponent } from './ngx-studio.component'
 import { StudioPreviewDirective } from './views'
@@ -10,6 +11,13 @@ const components = [
     icon: 'article',
     description: 'Root form container',
     props: {},
+    container: true
+  }),
+  Studio.defineComponent({
+    title: 'Containers/Fieldset',
+    icon: 'view_agenda',
+    description: 'Groups some fields',
+    props: { title: Studio.text() },
     container: true
   }),
   Studio.defineComponent({
@@ -31,7 +39,10 @@ const components = [
     icon: 'text_fields',
     description: 'Single-line text field',
     props: {
-      label: Studio.text({ hint: 'Name in format Name - Surname' }),
+      label: Studio.text({
+        hint: 'Name in format Name - Surname',
+        validation: v.pipe(v.string('Label is required'), v.nonEmpty('Label is required'))
+      }),
       placeholder: Studio.text(),
       ariaLabel: Studio.text(),
       size: Studio.enum(['sm', 'md', 'lg'], { default: 'md' }),
@@ -178,25 +189,6 @@ function populatedStudio(): Studio {
   return new Studio({ components, root })
 }
 
-function emptyStudio(): Studio {
-  return new Studio({ components })
-}
-
-// Adapters ---------------------------------------------------------------------
-
-const fieldsOf = (root: Parameters<typeof walk>[0]) => Array.from(walk(root)).filter(node => node.fieldName)
-
-/** Fed to the preview below. */
-const formSchema = Studio.defineAdapter({
-  map: root => ({ fields: fieldsOf(root).map(node => ({ name: node.fieldName!, type: node.name.split('/').pop() })) })
-})
-
-/** Any JSON-serialisable value works as an output. */
-const fieldNames = Studio.defineAdapter({ map: root => fieldsOf(root).map(node => node.fieldName!) })
-
-const adapters = { formSchema, fieldNames }
-
-/** A stand-in for the host's own form renderer, driven by an adapter's output. */
 @Component({
   selector: 'demo-form',
   standalone: true,
@@ -239,11 +231,14 @@ const meta: Meta<NgxStudioComponent> = {
 export default meta
 type Story = StoryObj<NgxStudioComponent>
 
-// Adapters and a preview template switch on the Preview and Output views.
+const formSchema = Studio.defineAdapter({
+  map: () => ({})
+})
+
 export const Default: Story = {
   args: { studio: populatedStudio() },
   render: args => ({
-    props: { ...args, adapters },
+    props: { ...args, adapters: { formSchema } },
     template: `
       <ds-ngx-studio [studio]="studio" [adapters]="adapters">
         <ng-template dsStudioPreview let-outputs="outputs">
@@ -252,4 +247,4 @@ export const Default: Story = {
       </ds-ngx-studio>`
   })
 }
-export const Empty: Story = { args: { studio: emptyStudio() } }
+export const Empty: Story = { args: { studio: new Studio({ components }) } }

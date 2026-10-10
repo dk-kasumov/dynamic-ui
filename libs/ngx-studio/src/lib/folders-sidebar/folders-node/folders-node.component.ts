@@ -16,20 +16,16 @@ import { FolderItemContext } from '../folder-item.directive'
           class="toggle"
           [class.toggle--open]="expanded()"
           [attr.aria-expanded]="expanded()"
-          [attr.aria-label]="(expanded() ? 'Свернуть ' : 'Развернуть ') + folder().name"
           (click)="toggle()"
-        ></button>
+        >
+          <span class="material-icons" aria-hidden="true">chevron_right</span>
+        </button>
       } @else {
         <span class="toggle-spacer"></span>
       }
 
       <button type="button" class="label" (click)="select()">
-        <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
-          <path
-            d="M1.5 3.5A1 1 0 0 1 2.5 2.5h3.1l1.4 1.5h6.5a1 1 0 0 1 1 1v7.5a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1z"
-            fill="currentColor"
-          />
-        </svg>
+        <span class="icon material-icons" aria-hidden="true">folder</span>
         <span class="name">{{ folder().name }}</span>
       </button>
     </div>
@@ -61,9 +57,7 @@ import { FolderItemContext } from '../folder-item.directive'
 
     <ng-template #defaultItem let-item>
       <span class="item__default">
-        <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
-          <path d="M3.5 1.5h5l4 4v8a1 1 0 0 1-1 1h-8a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1z" fill="currentColor" />
-        </svg>
+        <span class="icon material-icons" aria-hidden="true">description</span>
         <span class="name">{{ item.name }}</span>
       </span>
     </ng-template>

@@ -30,12 +30,7 @@ interface LinkBadge {
     >
       <header class="card__head ds-sortable-handle">
         <span class="card__grip" aria-hidden="true">
-          <svg viewBox="0 0 12 16" width="10" height="14">
-            @for (y of [3, 8, 13]; track y) {
-              <circle cx="3" [attr.cy]="y" r="1.2" />
-              <circle cx="9" [attr.cy]="y" r="1.2" />
-            }
-          </svg>
+          <span class="material-icons">drag_indicator</span>
         </span>
         <span class="card__icon">
           <span class="material-icons" aria-hidden="true">{{ icon() }}</span>
@@ -51,6 +46,12 @@ interface LinkBadge {
             <span class="card__subtitle">{{ sub }}</span>
           }
         </div>
+        @if (errors().length) {
+          <button type="button" class="card__error" [attr.title]="errorHint()" (click)="onEdit($event)">
+            <span class="material-icons" aria-hidden="true">error</span>
+            {{ errors().length }}
+          </button>
+        }
         @for (badge of linkBadges(); track badge.direction) {
           <span
             class="card__link"
@@ -58,7 +59,6 @@ interface LinkBadge {
             [class.card__link--in]="badge.direction === 'in'"
             tabindex="0"
             [attr.title]="badge.hint"
-            [attr.aria-label]="badge.hint"
             (mouseenter)="facade.highlight(badge.ids)"
             (mouseleave)="facade.clearHighlight()"
             (focus)="facade.highlight(badge.ids)"
@@ -72,15 +72,12 @@ interface LinkBadge {
           type="button"
           class="card__action card__action--edit"
           [class.card__action--active]="isInspected()"
-          aria-label="Configure"
           (click)="onEdit($event)"
         >
           <span class="material-icons" aria-hidden="true">tune</span>
         </button>
-        <button type="button" class="card__action card__action--delete" aria-label="Remove" (click)="onRemove($event)">
-          <svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true">
-            <path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
-          </svg>
+        <button type="button" class="card__action card__action--delete" (click)="onRemove($event)">
+          <span class="material-icons" aria-hidden="true">close</span>
         </button>
       </header>
 
@@ -123,11 +120,15 @@ export class CanvasNodeComponent {
 
   readonly icon = computed(() => this.facade.iconOf(this.node()))
 
-  // Instance-level `title` wins; fall back to the component definition's static
-  // description. Props are never read here — the subtitle is an explicit label.
+  readonly errors = computed(() => this.facade.errorsOf(this.nodeId()))
+  readonly errorHint = computed(() =>
+    this.errors()
+      .map(error => `${error.label}: ${error.messages.join(', ')}`)
+      .join('\n')
+  )
+
   readonly subtitle = computed(() => this.node().title ?? this.component().description)
 
-  /** Relation links as compact badges: what this node depends on, and what depends on it. */
   readonly linkBadges = computed<LinkBadge[]>(() => {
     const { to, from } = this.facade.linksOf(this.nodeId())
     const names = (ids: NodeId[]) => ids.map(id => this.facade.nodeLabel(id)).join(', ')

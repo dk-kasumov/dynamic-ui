@@ -1,7 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, input, signal } from '@angular/core'
-import { copyText, downloadText } from '../shared/file'
+import { copyText, downloadText } from '../../shared/file/file'
 
-/** Copy and download buttons for a piece of generated text. */
 @Component({
   selector: 'ds-output-actions',
   standalone: true,

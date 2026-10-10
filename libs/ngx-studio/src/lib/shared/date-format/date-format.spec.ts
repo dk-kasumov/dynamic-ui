@@ -2,15 +2,15 @@ import { fromIsoDate, fromIsoTime, toDatePattern, toIsoDate, toIsoTime } from '.
 
 describe('toDatePattern', () => {
   it.each([
-    [undefined, 'M/d/yy'], // defaults to shortDate
+    [undefined, 'M/d/yy'],
     ['shortDate', 'M/d/yy'],
     ['mediumDate', 'MMM d, y'],
     ['longDate', 'MMMM d, y'],
     ['fullDate', 'EEEE, MMMM d, y'],
-    ['dd-MM-yyyy', 'dd-MM-yyyy'], // Angular-style custom pattern, passed through
-    ['DD-MM-YYYY', 'dd-MM-yyyy'], // moment-style tokens translated
+    ['dd-MM-yyyy', 'dd-MM-yyyy'],
+    ['DD-MM-YYYY', 'dd-MM-yyyy'],
     ['D/M/YY', 'd/M/yy'],
-    [`'Day' DD`, `'Day' dd`] // quoted literals untouched
+    [`'Day' DD`, `'Day' dd`]
   ])('toDatePattern(%j, en-US) -> %j', (format, expected) => {
     expect(toDatePattern(format, 'en-US')).toBe(expected)
   })

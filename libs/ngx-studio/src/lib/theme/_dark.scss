@@ -1,8 +1,3 @@
-// Dark palette, split in two so it can be applied both to the studio host and
-// to the CDK overlay container (datepicker, select and tooltip panels render
-// there, outside the host, and would otherwise stay light).
-
-// Studio design tokens (--ds-*).
 @mixin studio-tokens {
   --ds-canvas-bg: #0b0e14;
   --ds-card-bg: #171a24;
@@ -31,10 +26,6 @@
 }
 
 @mixin material-tokens {
-  // Angular Material v22 reads from --mat-sys-* system tokens. The prebuilt
-  // azure-blue theme defines LIGHT values on <html>; we override them in the
-  // studio so the inspector's Material inputs/checkboxes/toggles render
-  // correctly on our dark sidebar background.
   --mat-sys-surface: #141821;
   --mat-sys-surface-bright: #1a1f2b;
   --mat-sys-surface-container-lowest: #0b0e14;

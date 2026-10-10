@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core'
-import type { ComponentDefinition, Primitive } from '@dynamic-ui/studio'
+import type { ComponentDefinition, FieldError, Primitive } from '@dynamic-ui/studio'
 import { Studio } from '@dynamic-ui/studio'
 import { listify } from 'radash'
-import { FieldHostComponent } from './fields/field-host.component'
-import type { InspectorFieldChange } from './field-change'
+import { FieldHostComponent } from '../fields/field-host.component'
+import type { InspectorFieldChange } from '../field-change'
 
 @Component({
   selector: 'ds-props-form',
@@ -19,6 +19,7 @@ import type { InspectorFieldChange } from './field-change'
             [value]="valueOf(entry.key)"
             [label]="entry.label"
             [path]="[entry.key]"
+            [errors]="errors()"
             (change)="change.emit($event)"
           />
         }
@@ -32,14 +33,16 @@ import type { InspectorFieldChange } from './field-change'
 export class PropsFormComponent {
   readonly definition = input.required<ComponentDefinition>()
   readonly values = input.required<Record<string, unknown>>()
+  readonly errors = input<readonly FieldError[]>([])
 
   readonly change = output<InspectorFieldChange>()
 
   readonly entries = computed(() =>
-    listify(
-      this.definition().props as Record<string, Primitive>,
-      (key, primitive) => ({ key, primitive, label: Studio.humanize(key) })
-    )
+    listify(this.definition().props as Record<string, Primitive>, (key, primitive) => ({
+      key,
+      primitive,
+      label: Studio.humanize(key)
+    }))
   )
 
   valueOf(key: string): unknown {
