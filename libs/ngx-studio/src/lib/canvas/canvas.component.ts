@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core'
-import { CanvasNodeComponent } from './node/canvas-node.component'
+import { CanvasNodeComponent } from '../folders-sidebar/canvas-node/canvas-node.component'
 import { StudioFacade } from '../studio-facade.service'
 import { DsSortableDirective } from './sortable/sortable.directive'
 

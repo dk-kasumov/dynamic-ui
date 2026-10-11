@@ -96,18 +96,8 @@ $row-height: 32px;
 }
 
 .item {
-  display: flex;
-  align-items: center;
-  padding: 0 0 0 calc(var(--level, 0) * #{$indent} + 4px);
-
-  &__default {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--ds-text, #1f2328);
-  }
+  display: block;
+  padding: 4px 0 4px calc(var(--level, 0) * #{$indent} + 4px);
 }
 
 @media (prefers-reduced-motion: reduce) {

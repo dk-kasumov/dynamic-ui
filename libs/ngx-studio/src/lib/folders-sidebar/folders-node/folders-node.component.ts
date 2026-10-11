@@ -1,12 +1,11 @@
-import { NgTemplateOutlet } from '@angular/common'
-import { Component, TemplateRef, computed, input, output, signal } from '@angular/core'
+import { Component, computed, input, output, signal } from '@angular/core'
 import { Folder } from '../folder.model'
-import { FolderItemContext } from '../folder-item.directive'
+import { CanvasNodeComponent } from '../canvas-node/canvas-node.component'
 
 @Component({
   selector: 'ds-folders-node',
   standalone: true,
-  imports: [NgTemplateOutlet],
+  imports: [CanvasNodeComponent],
   styleUrl: 'folders-node.component.scss',
   template: `
     <div class="row" [class.row--active]="selectedId() === folder().id" [style.--level]="level()">
@@ -43,30 +42,17 @@ import { FolderItemContext } from '../folder-item.directive'
               [level]="level() + 1"
               [selectedId]="selectedId()"
               [forceExpanded]="forceExpanded()"
-              [itemTemplate]="itemTemplate()"
               (selected)="selected.emit($event)"
             />
           </li>
         }
         @for (item of folder().items; track item.id) {
           <li class="item" [style.--level]="level() + 1">
-            <ng-container
-              [ngTemplateOutlet]="itemTemplate() ?? defaultItem"
-              [ngTemplateOutletContext]="{ $implicit: item, folder: folder() }"
-            />
+            <ds-canvas-node [nodeId]="$any(item.id)" />
           </li>
         }
       </ul>
     }
-
-    <ng-template #defaultItem let-item>
-      <span class="item__default">
-        <svg class="icon" viewBox="0 0 16 16" aria-hidden="true">
-          <path d="M3.5 1.5h5l4 4v8a1 1 0 0 1-1 1h-8a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1z" fill="currentColor" />
-        </svg>
-        <span class="name">{{ item.name }}</span>
-      </span>
-    </ng-template>
   `
 })
 export class FoldersNodeComponent {
@@ -74,7 +60,6 @@ export class FoldersNodeComponent {
   level = input(0)
   selectedId = input<Folder['id'] | null>(null)
   forceExpanded = input(false)
-  itemTemplate = input<TemplateRef<FolderItemContext> | null>(null)
 
   selected = output<Folder>()
 

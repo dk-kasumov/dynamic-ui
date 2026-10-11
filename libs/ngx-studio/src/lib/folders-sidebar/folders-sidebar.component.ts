@@ -1,7 +1,6 @@
-import { Component, computed, contentChild, input, output, signal } from '@angular/core'
+import { Component, computed, input, output, signal } from '@angular/core'
 import { Folder } from './folder.model'
 import { filterFolders } from './filter-folders'
-import { FolderItemDirective } from './folder-item.directive'
 import { FoldersSearchComponent } from './folders-search/folders-search.component'
 import { FoldersNodeComponent } from './folders-node/folders-node.component'
 
@@ -23,7 +22,6 @@ import { FoldersNodeComponent } from './folders-node/folders-node.component'
                   [folder]="folder"
                   [selectedId]="selectedId()"
                   [forceExpanded]="isSearching()"
-                  [itemTemplate]="itemTpl()?.template ?? null"
                   (selected)="onSelect($event)"
                 />
               </li>
@@ -39,8 +37,6 @@ import { FoldersNodeComponent } from './folders-node/folders-node.component'
 export class FoldersSidebarComponent {
   folders = input<Folder[]>([])
   folderSelected = output<Folder>()
-
-  itemTpl = contentChild(FolderItemDirective)
 
   query = signal('')
   selectedId = signal<Folder['id'] | null>(null)
