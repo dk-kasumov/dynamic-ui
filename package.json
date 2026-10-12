@@ -13,6 +13,7 @@
     "format": "prettier --write .",
     "lint": "nx run-many -t lint",
     "lint:fix": "nx run-many -t lint --fix",
+    "publish:git": "bash scripts/publish-git-builds.sh",
     "format:check": "prettier --check .",
     "prepare": "husky"
   },

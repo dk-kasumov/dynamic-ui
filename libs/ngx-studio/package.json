@@ -18,5 +18,8 @@
     "@lezer/highlight": "^1.0.0",
     "date-fns": "^4.0.0"
   },
+  "dependencies": {
+    "@dynamic-ui/studio": "0.0.1"
+  },
   "sideEffects": false
 }
