@@ -8,7 +8,7 @@ One canonical DSL on the output, adapters for any framework and any runtime form
 [![status](https://img.shields.io/badge/status-early%20development-orange)](#status)
 [![license](https://img.shields.io/badge/license-MIT-blue)](#license)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)](#)
-[![Angular](https://img.shields.io/badge/Angular-22-dd0031?logo=angular&logoColor=white)](#)
+[![Angular](https://img.shields.io/badge/Angular-20-dd0031?logo=angular&logoColor=white)](#)
 [![Built with Nx](https://img.shields.io/badge/built%20with-Nx-143055?logo=nx&logoColor=white)](https://nx.dev)
 
 [Install](#install) · [Quick start](#quick-start) · [How it works](#how-it-works) · [Packages](#packages) · [Core docs](libs/studio/README.md) · [Angular docs](libs/ngx-studio/README.md)
@@ -32,14 +32,14 @@ Existing visual builders (SurveyJS, FormIO, Builder.io, Plasmic, Puck) are **nai
 - 🔌 **Adapters for any runtime.** An adapter is a single `map(root)` function. Target React Hook Form, Formily, Angular Reactive Forms, a backend schema, generated code — anything.
 - ✅ **Framework-agnostic validation.** Attach a [valibot](https://valibot.dev) schema to any prop; `studio.validate()` reports failures per node. Advisory by design — it never blocks edits or mutates values.
 - 🎨 **Native, stylable UI packages.** No Shadow DOM fights. Style the editor with your framework's normal mechanisms. Angular UI ships light/dark themes that follow the OS.
-- 🅰️ **Angular 22 implementation today.** Standalone components, Angular Material, drag-and-drop canvas, layer tree and a per-node gear panel. React/Vue implementations are planned.
+- 🅰️ **Angular 20 implementation today.** Standalone components, Angular Material, drag-and-drop canvas, layer tree and a per-node gear panel. React/Vue implementations are planned.
 
 ## Packages
 
 | Package                                     | What it is                                                                                                          | Docs                                |
 | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
 | [`@dynamic-ui/studio`](libs/studio)         | Core: registry, node tree, relations, validation, canonical DSL. Pure TypeScript — **no UI, no DOM, no framework**. | [README](libs/studio/README.md)     |
-| [`@dynamic-ui/ngx-studio`](libs/ngx-studio) | Angular 22 editor UI (Material + CDK). Three-panel shell, canvas, inspector, adapter/preview views.                 | [README](libs/ngx-studio/README.md) |
+| [`@dynamic-ui/ngx-studio`](libs/ngx-studio) | Angular 20 editor UI (Material + CDK). Three-panel shell, canvas, inspector, adapter/preview views.                 | [README](libs/ngx-studio/README.md) |
 
 ## Install
 
@@ -181,7 +181,7 @@ Four fields — the entire contract. The core knows nothing beyond this: not "in
 ```
 libs/
 ├── studio/                 # Core: studio logic, DSL, relations, validation. No UI.
-├── ngx-studio/             # Angular 22 UI implementation (Material + CDK)
+├── ngx-studio/             # Angular 20 UI implementation (Material + CDK)
 ├── react-studio/           # (planned) React UI implementation
 ├── vue-studio/             # (planned) Vue UI implementation
 └── adapters/
@@ -194,13 +194,16 @@ libs/
 
 ```bash
 npm install                # install workspace deps
-npm test                   # all unit tests (Jest for core, Vitest for Angular)
-npm run test:core          # core only
-npm run test:ngx           # Angular only
+npm run test:core          # core unit tests (Jest)
 npm run storybook          # Storybook for the Angular UI (port 4400)
 npm run lint               # ESLint across the workspace
 npx nx build ngx-studio    # produce the publishable artifact in dist/
 ```
+
+> **Note:** the Angular unit-test target (`npm run test:ngx`) currently relies on
+> `@nx/angular:unit-test`, which requires Angular ≥ 21. On this Angular 20
+> baseline it is disabled pending a Vitest-for-Angular-20 setup; core tests and
+> both library builds run normally.
 
 The workspace is an [Nx](https://nx.dev) monorepo. Project tags (`type:core` / `type:ui`) enforce that the core never imports a UI framework. Commits follow [Conventional Commits](https://www.conventionalcommits.org/) (checked by commitlint); `pre-commit` runs ESLint + Prettier on staged files.
 

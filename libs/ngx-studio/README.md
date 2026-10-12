@@ -17,41 +17,33 @@ Every component is **standalone** (no NgModules), uses the `ds-` selector prefix
 
 ## Peer dependencies
 
-The package expects the consumer to install:
+The package targets **Angular 20**. It declares only the Angular singletons as peers — they must be the same instance as the host app, so they can never be bundled:
 
 ```json
-"@angular/common": "^22.1.0",
-"@angular/core": "^22.1.0",
-"@angular/forms": "^22.1.0",
-"@angular/cdk": "^22.0.0",
-"@angular/material": "^22.0.0",
-"@angular/material-date-fns-adapter": "^22.0.0",
-"date-fns": "^4.0.0",
-"@codemirror/autocomplete": "^6.0.0",
-"@codemirror/commands": "^6.0.0",
-"@codemirror/lang-json": "^6.0.0",
-"@codemirror/language": "^6.0.0",
-"@codemirror/lint": "^6.0.0",
-"@codemirror/state": "^6.0.0",
-"@codemirror/view": "^6.0.0",
-"@lezer/highlight": "^1.0.0"
+"@angular/common": "^20.3.0",
+"@angular/core": "^20.3.0",
+"@angular/forms": "^20.3.0",
+"@angular/cdk": "^20.2.0",
+"@angular/material": "^20.2.0",
+"@angular/material-date-fns-adapter": "^20.2.0"
 ```
+
+Everything else the fields need — `date-fns`, the `@codemirror/*` packages and `@lezer/highlight` — ships as regular `dependencies`, so a plain `npm install` of this package pulls them automatically. `@dynamic-ui/studio` (the core) is likewise a normal dependency and is installed for you.
 
 The date, time and code fields bring their own date adapter and editor, so no global `provideDateFnsAdapter()` is needed. The Material datepicker, timepicker and tooltip do need animations/overlays, so provide `provideAnimationsAsync()` in the host app.
 
 The consumer sets up Material theming (either prebuilt theme or custom `mat.theme(...)`) in their own styles. This package does not bundle a theme.
 
-
 ## Views
 
 The studio edits on a **Canvas** and can show the same document through other views, switched from the header:
 
-| View        | Shows                                                        | Available                         |
-| ----------- | ------------------------------------------------------------ | --------------------------------- |
-| **Canvas**  | The editor: palette, canvas, inspector                       | Always                            |
-| **AST**     | The canonical AST as JSON, with Copy / Download              | Always                            |
-| **Preview** | Your own UI, rendered from the AST and/or adapter outputs    | When a preview template is given  |
-| **Output**  | What your adapters make of the AST, as one JSON document     | When at least one adapter is given |
+| View        | Shows                                                     | Available                          |
+| ----------- | --------------------------------------------------------- | ---------------------------------- |
+| **Canvas**  | The editor: palette, canvas, inspector                    | Always                             |
+| **AST**     | The canonical AST as JSON, with Copy / Download           | Always                             |
+| **Preview** | Your own UI, rendered from the AST and/or adapter outputs | When a preview template is given   |
+| **Output**  | What your adapters make of the AST, as one JSON document  | When at least one adapter is given |
 
 The switcher only offers the views that exist, and the last choice is remembered (`localStorage`, `ds-studio:view`).
 
