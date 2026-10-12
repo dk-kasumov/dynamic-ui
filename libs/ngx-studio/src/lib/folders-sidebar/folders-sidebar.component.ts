@@ -1,4 +1,4 @@
-import { Component, computed, contentChild, input, output, signal } from '@angular/core'
+import { ChangeDetectionStrategy, Component, computed, contentChild, input, output, signal } from '@angular/core'
 import { Folder } from './folder.model'
 import { filterFolders } from './filter-folders'
 import { FolderItemDirective } from './folder-item.directive'
@@ -8,6 +8,7 @@ import { FoldersNodeComponent } from './folders-node/folders-node.component'
 @Component({
   selector: 'ds-folders-sidebar',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [FoldersSearchComponent, FoldersNodeComponent],
   styleUrl: './folders-sidebar.component.scss',
   template: `

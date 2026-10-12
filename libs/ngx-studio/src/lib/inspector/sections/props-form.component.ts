@@ -20,7 +20,7 @@ import type { InspectorFieldChange } from '../field-change'
             [label]="entry.label"
             [path]="[entry.key]"
             [errors]="errors()"
-            (change)="change.emit($event)"
+            (changed)="changed.emit($event)"
           />
         }
       </div>
@@ -35,7 +35,7 @@ export class PropsFormComponent {
   readonly values = input.required<Record<string, unknown>>()
   readonly errors = input<readonly FieldError[]>([])
 
-  readonly change = output<InspectorFieldChange>()
+  readonly changed = output<InspectorFieldChange>()
 
   readonly entries = computed(() =>
     listify(this.definition().props as Record<string, Primitive>, (key, primitive) => ({

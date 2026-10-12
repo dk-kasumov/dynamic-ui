@@ -1,11 +1,12 @@
 import { NgTemplateOutlet } from '@angular/common'
-import { Component, TemplateRef, computed, input, output, signal } from '@angular/core'
+import { ChangeDetectionStrategy, Component, TemplateRef, computed, input, output, signal } from '@angular/core'
 import { Folder } from '../folder.model'
 import { FolderItemContext } from '../folder-item.directive'
 
 @Component({
   selector: 'ds-folders-node',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgTemplateOutlet],
   styleUrl: 'folders-node.component.scss',
   template: `

@@ -45,7 +45,7 @@ import type { InspectorFieldChange } from './field-change'
       <div class="inspector__body">
         <section class="inspector__section">
           <h3 class="inspector__section-title">Appearance</h3>
-          <ds-meta-fields [node]="n" [definition]="def" (change)="facade.setMeta(n.id, $event)" />
+          <ds-meta-fields [node]="n" [definition]="def" (changed)="facade.setMeta(n.id, $event)" />
         </section>
 
         <mat-divider />
@@ -56,7 +56,7 @@ import type { InspectorFieldChange } from './field-change'
             [definition]="def"
             [values]="n.props"
             [errors]="errors()"
-            (change)="onPropChange(n.id, $event)"
+            (changed)="onPropChange(n.id, $event)"
           />
         </section>
 

@@ -113,9 +113,9 @@ type GroupShape = GroupPrimitive<Record<string, Primitive>>
                 [primitive]="entry.primitive"
                 [value]="groupValueOf(entry.key)"
                 [label]="entry.label"
-                [path]="[...path(), entry.key]"
+                [path]="childPath(entry.key)"
                 [errors]="errors()"
-                (change)="change.emit($event)"
+                (changed)="changed.emit($event)"
               />
             }
           </div>
@@ -145,7 +145,7 @@ export class FieldHostComponent implements ErrorStateMatcher {
     return this.messages().length > 0
   }
 
-  readonly change = output<InspectorFieldChange>()
+  readonly changed = output<InspectorFieldChange>()
 
   readonly groupEntries = computed(() => {
     return listify((this.primitive() as GroupShape).shape, (key, primitive) => ({
@@ -156,10 +156,14 @@ export class FieldHostComponent implements ErrorStateMatcher {
   })
 
   emit(value: unknown): void {
-    this.change.emit({ path: this.path(), value })
+    this.changed.emit({ path: this.path(), value })
   }
 
   groupValueOf(key: string): unknown {
     return (this.value() as Record<string, unknown> | undefined)?.[key]
+  }
+
+  childPath(key: string): string[] {
+    return [...this.path(), key]
   }
 }

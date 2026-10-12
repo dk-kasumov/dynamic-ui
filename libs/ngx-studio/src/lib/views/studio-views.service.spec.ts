@@ -1,4 +1,4 @@
-import { Component } from '@angular/core'
+import { ChangeDetectionStrategy, Component } from '@angular/core'
 import { TestBed } from '@angular/core/testing'
 import { Studio } from '@dynamic-ui/studio'
 import { NgxStudioComponent } from '../ngx-studio.component'
@@ -99,6 +99,7 @@ describe('StudioViews', () => {
 
 @Component({
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [NgxStudioComponent, StudioPreviewDirective],
   template: `
     <ds-ngx-studio [studio]="studio" [adapters]="adapters">

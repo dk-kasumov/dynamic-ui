@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core'
+import { ChangeDetectionStrategy, Component, input } from '@angular/core'
 import * as v from 'valibot'
 import { Studio, type NewNode, type NodeId, type RelationInstance } from '@dynamic-ui/studio'
 import { componentWrapperDecorator, moduleMetadata, type Meta, type StoryObj } from '@storybook/angular'
@@ -192,6 +192,7 @@ function populatedStudio(): Studio {
 @Component({
   selector: 'ds-demo-form',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <form style="display: grid; gap: 14px; font: 14px/1.4 inherit">
       @for (field of schema()?.fields ?? []; track field.name) {

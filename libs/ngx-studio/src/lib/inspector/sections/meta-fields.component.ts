@@ -58,7 +58,7 @@ export class MetaFieldsComponent {
   readonly node = input.required<Node>()
   readonly definition = input.required<ComponentDefinition>()
 
-  readonly change = output<InspectorMetaChange>()
+  readonly changed = output<InspectorMetaChange>()
 
   readonly iconValue = computed(() => this.node().icon ?? '')
   readonly fieldNameValue = computed(() => this.node().fieldName ?? '')
@@ -66,10 +66,10 @@ export class MetaFieldsComponent {
   readonly effectiveIcon = computed(() => this.#facade.iconOf(this.node()))
 
   onIconInput(event: Event): void {
-    this.change.emit({ icon: (event.target as HTMLInputElement).value.trim() })
+    this.changed.emit({ icon: (event.target as HTMLInputElement).value.trim() })
   }
 
   onFieldNameInput(event: Event): void {
-    this.change.emit({ fieldName: (event.target as HTMLInputElement).value })
+    this.changed.emit({ fieldName: (event.target as HTMLInputElement).value })
   }
 }

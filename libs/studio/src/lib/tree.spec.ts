@@ -234,9 +234,7 @@ describe('Tree node edits', () => {
     const tree = make(box('root'))
     expect(() => tree.setProp(id('nope'), ['a'], 1)).toThrow(StudioError)
     expect(() => tree.setMeta(id('nope'), { icon: 'x' })).toThrow(StudioError)
-    expect(() => tree.setRelation(id('nope'), 'r', { combine: 'and', rules: [] })).toThrow(
-      StudioError
-    )
+    expect(() => tree.setRelation(id('nope'), 'r', { combine: 'and', rules: [] })).toThrow(StudioError)
   })
 })
 
@@ -265,7 +263,7 @@ describe('Tree invariants under random edits', () => {
 
   it.each([1, 2, 3, 4, 5])('keeps the tree consistent (seed %i)', seed => {
     const random = rng(seed)
-    const pick = <T>(items: T[]): T => items[Math.floor(random() * items.length)]!
+    const pick = <T>(items: T[]): T => items[Math.floor(random() * items.length)]
     const tree = make(box('root'))
     let next = 0
 

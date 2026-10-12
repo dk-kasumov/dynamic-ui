@@ -1,8 +1,9 @@
-import { Component, model } from '@angular/core'
+import { ChangeDetectionStrategy, Component, model } from '@angular/core'
 
 @Component({
   selector: 'ds-folders-search',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './folders-search.component.scss',
   template: `
     <label class="search">
