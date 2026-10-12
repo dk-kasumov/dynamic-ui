@@ -41,7 +41,7 @@ const components = [
     props: {
       label: Studio.text({
         hint: 'Name in format Name - Surname',
-        validation: v.pipe(v.string('Label is required'), v.nonEmpty('Label is required'))
+        validation: v.pipe(v.string(), v.nonEmpty())
       }),
       placeholder: Studio.text(),
       ariaLabel: Studio.text(),
@@ -190,7 +190,7 @@ function populatedStudio(): Studio {
 }
 
 @Component({
-  selector: 'demo-form',
+  selector: 'ds-demo-form',
   standalone: true,
   template: `
     <form style="display: grid; gap: 14px; font: 14px/1.4 inherit">
@@ -242,7 +242,7 @@ export const Default: Story = {
     template: `
       <ds-ngx-studio [studio]="studio" [adapters]="adapters">
         <ng-template dsStudioPreview let-outputs="outputs">
-          <demo-form [schema]="outputs['formSchema']" />
+          <ds-demo-form [schema]="outputs['formSchema']" />
         </ng-template>
       </ds-ngx-studio>`
   })
