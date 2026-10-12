@@ -54,7 +54,9 @@
     "globals": "^17.13.0",
     "husky": "^9.1.7",
     "jest": "~30.3.0",
+    "jest-environment-jsdom": "^30.5.2",
     "jest-environment-node": "~30.3.0",
+    "jest-preset-angular": "^17.0.2",
     "jest-util": "~30.3.0",
     "jsdom": "^27.1.0",
     "lint-staged": "^17.6.0",
@@ -69,7 +71,8 @@
     "typescript": "~5.8.0",
     "typescript-eslint": "^8.71.1",
     "verdaccio": "^6.3.2",
-    "vitest": "^4.0.8"
+    "vitest": "^4.0.8",
+    "zone.js": "^0.15.1"
   },
   "dependencies": {
     "@angular/cdk": "^20.2.0",

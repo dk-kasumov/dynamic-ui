@@ -12,7 +12,7 @@ function mount(primitive: Primitive, value?: unknown, errors: FieldError[] = [])
   fixture.componentRef.setInput('label', 'Field')
   fixture.componentRef.setInput('path', ['field'])
   fixture.componentRef.setInput('errors', errors)
-  fixture.componentInstance.change.subscribe(c => changes.push(c))
+  fixture.componentInstance.changed.subscribe(c => changes.push(c))
   fixture.detectChanges()
   return { fixture, el: fixture.nativeElement as HTMLElement, changes }
 }

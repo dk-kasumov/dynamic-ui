@@ -3,6 +3,22 @@ import { TestBed } from '@angular/core/testing'
 import { StudioTheme } from './studio-theme.service'
 import { ThemeToggleComponent } from './theme-toggle.component'
 
+// Minimal replacement for Vitest's stubGlobal / unstubAllGlobals.
+const globalStubs: { key: string; had: boolean; original: unknown }[] = []
+function stubGlobal(key: string, value: unknown): void {
+  const target = globalThis as Record<string, unknown>
+  globalStubs.push({ key, had: key in target, original: target[key] })
+  target[key] = value
+}
+function unstubAllGlobals(): void {
+  const target = globalThis as Record<string, unknown>
+  for (const { key, had, original } of globalStubs.reverse()) {
+    if (had) target[key] = original
+    else delete target[key]
+  }
+  globalStubs.length = 0
+}
+
 class FakeSystemScheme {
   matches = false
   readonly #listeners = new Set<(event: MediaQueryListEvent) => void>()
@@ -25,7 +41,7 @@ let reducedMotion = false
 function configure(options: { systemDark?: boolean } = {}): StudioTheme {
   system = new FakeSystemScheme()
   system.matches = options.systemDark ?? false
-  vi.stubGlobal('matchMedia', (query: string) => (query.includes('dark') ? system : { matches: reducedMotion }))
+  stubGlobal('matchMedia', (query: string) => (query.includes('dark') ? system : { matches: reducedMotion }))
   return TestBed.inject(StudioTheme)
 }
 
@@ -34,7 +50,7 @@ describe('StudioTheme', () => {
     localStorage.clear()
     reducedMotion = false
   })
-  afterEach(() => vi.unstubAllGlobals())
+  afterEach(() => unstubAllGlobals())
 
   it.each([
     [false, 'light'],
@@ -83,17 +99,17 @@ describe('StudioTheme', () => {
   })
 
   it('keeps working when storage is unavailable', () => {
-    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+    jest.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('blocked')
     })
-    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+    jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
       throw new Error('blocked')
     })
     const theme = configure()
     expect(theme.preference()).toBe('system')
     expect(() => theme.set('dark')).not.toThrow()
     expect(theme.resolved()).toBe('dark')
-    vi.restoreAllMocks()
+    jest.restoreAllMocks()
   })
 
   it('exposes the resolved theme on the overlay container', () => {
@@ -109,16 +125,16 @@ describe('StudioTheme', () => {
 })
 
 describe('StudioTheme transitions', () => {
-  let startViewTransition: ReturnType<typeof vi.fn>
+  let startViewTransition: ReturnType<typeof jest.fn>
 
   beforeEach(() => {
     localStorage.clear()
     reducedMotion = false
-    startViewTransition = vi.fn((update: () => void) => update())
+    startViewTransition = jest.fn((update: () => void) => update())
     Object.assign(document, { startViewTransition })
   })
   afterEach(() => {
-    vi.unstubAllGlobals()
+    unstubAllGlobals()
     Reflect.deleteProperty(document, 'startViewTransition')
   })
 
@@ -158,7 +174,7 @@ describe('StudioTheme transitions', () => {
 
 describe('ThemeToggleComponent', () => {
   beforeEach(() => localStorage.clear())
-  afterEach(() => vi.unstubAllGlobals())
+  afterEach(() => unstubAllGlobals())
 
   function mount() {
     const theme = configure()
