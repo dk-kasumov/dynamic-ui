@@ -81,7 +81,7 @@ The resolved theme is exposed as `data-theme` on `ds-ngx-studio`, and as `data-d
 ## Development
 
 ```bash
-npm run test:ngx           # Vitest unit tests
+npm run test:ngx           # Jest unit tests (jest-preset-angular, zoneless)
 npm run storybook          # Storybook dev server (port 4400)
 npm run storybook:build    # static Storybook build
 npx nx build ngx-studio    # produce the publishable artifact in dist/

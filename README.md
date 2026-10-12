@@ -194,16 +194,15 @@ libs/
 
 ```bash
 npm install                # install workspace deps
-npm run test:core          # core unit tests (Jest)
+npm test                   # all unit tests (Jest)
+npm run test:core          # core only
+npm run test:ngx           # Angular UI only
 npm run storybook          # Storybook for the Angular UI (port 4400)
 npm run lint               # ESLint across the workspace
 npx nx build ngx-studio    # produce the publishable artifact in dist/
 ```
 
-> **Note:** the Angular unit-test target (`npm run test:ngx`) currently relies on
-> `@nx/angular:unit-test`, which requires Angular ≥ 21. On this Angular 20
-> baseline it is disabled pending a Vitest-for-Angular-20 setup; core tests and
-> both library builds run normally.
+Both the core and the Angular UI are tested with **Jest** (`jest-preset-angular`, zoneless `TestBed`).
 
 The workspace is an [Nx](https://nx.dev) monorepo. Project tags (`type:core` / `type:ui`) enforce that the core never imports a UI framework. Commits follow [Conventional Commits](https://www.conventionalcommits.org/) (checked by commitlint); `pre-commit` runs ESLint + Prettier on staged files.
 
