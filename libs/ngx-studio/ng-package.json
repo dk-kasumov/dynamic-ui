@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
   "dest": "../../dist/libs/ngx-studio",
-  "allowedNonPeerDependencies": ["@dynamic-ui/studio"],
+  "allowedNonPeerDependencies": ["@dynamic-ui/studio", "@codemirror/.+", "@lezer/.+", "date-fns"],
   "lib": {
     "entryFile": "src/index.ts"
   }

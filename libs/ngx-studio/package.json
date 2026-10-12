@@ -2,12 +2,15 @@
   "name": "@dynamic-ui/ngx-studio",
   "version": "0.0.1",
   "peerDependencies": {
-    "@angular/cdk": "^22.0.0",
-    "@angular/common": "^22.1.0",
-    "@angular/core": "^22.1.0",
-    "@angular/forms": "^22.1.0",
-    "@angular/material": "^22.0.0",
-    "@angular/material-date-fns-adapter": "^22.0.0",
+    "@angular/cdk": "^20.2.0",
+    "@angular/common": "^20.3.0",
+    "@angular/core": "^20.3.0",
+    "@angular/forms": "^20.3.0",
+    "@angular/material": "^20.2.0",
+    "@angular/material-date-fns-adapter": "^20.2.0"
+  },
+  "dependencies": {
+    "@dynamic-ui/studio": "0.0.1",
     "@codemirror/autocomplete": "^6.0.0",
     "@codemirror/commands": "^6.0.0",
     "@codemirror/lang-json": "^6.0.0",
@@ -17,9 +20,6 @@
     "@codemirror/view": "^6.0.0",
     "@lezer/highlight": "^1.0.0",
     "date-fns": "^4.0.0"
-  },
-  "dependencies": {
-    "@dynamic-ui/studio": "0.0.1"
   },
   "sideEffects": false
 }
