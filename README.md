@@ -47,18 +47,22 @@ Existing visual builders (SurveyJS, FormIO, Builder.io, Plasmic, Puck) are **nai
 
 ### Angular app
 
-Installing the UI package pulls the core (`@dynamic-ui/studio`) automatically:
+Installing the UI package pulls the core (`@dynamic-ui/studio`) **and** its
+runtime dependencies (CodeMirror, `date-fns`, `@lezer/highlight`) automatically:
 
 ```bash
 npm i github:dk-kasumov/dynamic-ui#builds/ngx-studio
 ```
 
-Then add its peer dependencies to your app:
+> If your package manager complains about peer ranges, add `--legacy-peer-deps`.
+
+The only things you add yourself are the Angular singletons it shares with your
+app (these can't be bundled — they must be the same instance as the host).
+`@angular/core`, `@angular/common` and `@angular/forms` are already in any
+Angular app, so in practice you only install the Material packages:
 
 ```bash
-npm i @angular/cdk @angular/material @angular/material-date-fns-adapter date-fns \
-  @codemirror/autocomplete @codemirror/commands @codemirror/lang-json \
-  @codemirror/language @codemirror/lint @codemirror/state @codemirror/view @lezer/highlight
+npm i @angular/cdk @angular/material @angular/material-date-fns-adapter
 ```
 
 The host app provides animations and a Material theme (the package bundles neither):
