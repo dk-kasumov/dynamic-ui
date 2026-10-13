@@ -31,7 +31,7 @@ import { FoldersNodeComponent } from './folders-node/folders-node.component'
             }
           </ul>
         } @else {
-          <p class="empty">{{ isSearching() ? 'Ничего не найдено' : 'Папок пока нет' }}</p>
+          <p class="empty">{{ isSearching() ? 'Nothing found' : 'No folders yet' }}</p>
         }
       </div>
     </aside>

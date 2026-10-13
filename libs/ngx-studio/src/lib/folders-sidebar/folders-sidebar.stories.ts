@@ -27,7 +27,7 @@ export const Default: Story = {
           }
         ]
       },
-      { id: 4, name: 'Документы' }
+      { id: 4, name: 'Documents' }
     ]
   }
 }

@@ -29,8 +29,8 @@ import { DsSortableDirective } from './sortable/sortable.directive'
                 <div class="canvas__empty-glyph">
                   <span class="material-icons" aria-hidden="true">add_box</span>
                 </div>
-                <div class="canvas__empty-title">Пустой холст</div>
-                <div class="canvas__empty-hint">Перетащите компонент из палитры, чтобы начать</div>
+                <div class="canvas__empty-title">Empty canvas</div>
+                <div class="canvas__empty-hint">Drag a component from the palette to start</div>
               </div>
             }
           </div>
