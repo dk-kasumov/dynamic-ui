@@ -16,8 +16,8 @@ const SEGMENTED_THRESHOLD = 4
     @if (useSegmented()) {
       <div class="ds-enum-label">{{ label() }}</div>
       <mat-button-toggle-group class="ds-toggle-group" [value]="effective()" (change)="valueChange.emit($event.value)">
-        @for (opt of primitive().options; track opt) {
-          <mat-button-toggle [value]="opt">{{ opt }}</mat-button-toggle>
+        @for (opt of optionViews(); track opt.value) {
+          <mat-button-toggle [value]="opt.value">{{ opt.label }}</mat-button-toggle>
         }
       </mat-button-toggle-group>
       @if (errors().length) {
@@ -35,8 +35,8 @@ const SEGMENTED_THRESHOLD = 4
           [value]="effective() ?? ''"
           (selectionChange)="valueChange.emit($event.value)"
         >
-          @for (opt of primitive().options; track opt) {
-            <mat-option [value]="opt">{{ opt }}</mat-option>
+          @for (opt of optionViews(); track opt.value) {
+            <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
           }
         </mat-select>
         @if (hint(); as text) {
@@ -58,6 +58,10 @@ export class EnumFieldComponent {
   readonly valueChange = output<string>()
 
   readonly effective = computed(() => this.value() ?? this.primitive().default ?? null)
+  /** Options paired with a display label — blank values get a visible placeholder so the control isn't empty. */
+  readonly optionViews = computed(() =>
+    this.primitive().options.map(value => ({ value, label: value.trim() === '' ? '—' : value }))
+  )
   readonly hint = computed(() => this.primitive().hint ?? this.primitive().description)
   readonly useSegmented = computed(() => this.primitive().options.length <= SEGMENTED_THRESHOLD)
 }

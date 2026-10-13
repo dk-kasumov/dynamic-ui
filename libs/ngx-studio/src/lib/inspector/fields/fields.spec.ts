@@ -61,6 +61,14 @@ describe('field validation errors', () => {
   })
 })
 
+describe('ds-enum-field', () => {
+  it('shows a placeholder label for a blank option instead of an empty control', () => {
+    const { el } = mount(Studio.enum(['', 'md', 'lg']))
+    const labels = [...el.querySelectorAll('mat-button-toggle')].map(e => e.textContent?.trim())
+    expect(labels).toEqual(['—', 'md', 'lg'])
+  })
+})
+
 describe('ds-date-field', () => {
   it('shows a single date input by default', () => {
     const { el } = mount(Studio.date(), '2026-10-06')
