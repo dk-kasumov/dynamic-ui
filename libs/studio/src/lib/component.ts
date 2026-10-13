@@ -9,7 +9,8 @@ import type { RelationDescriptor } from './relations'
 export interface ComponentDefinition<
   Title extends string = string,
   Props extends Record<string, Primitive> = Record<string, Primitive>,
-  Relations extends Record<string, RelationDescriptor> = Record<string, RelationDescriptor>
+  Relations extends Record<string, RelationDescriptor> = Record<string, RelationDescriptor>,
+  Meta extends Record<string, unknown> = Record<string, unknown>
 > {
   /** Registered identity and palette path, e.g. `Controls/TextInput`. */
   title: Title
@@ -25,6 +26,12 @@ export interface ComponentDefinition<
   container?: ContainerRule
   props: Props
   relations: Relations
+  /**
+   * Free-form bag the studio never reads or validates — a place for developers to
+   * attach their own hints (adapter mappings, codegen tags, docs links, …). The
+   * shape is inferred by `defineComponent`, so reading it back stays typed.
+   */
+  metadata?: Meta
 }
 
 /**
@@ -75,10 +82,11 @@ export const materializeProps = (
 export function defineComponent<
   const Title extends string,
   const Props extends Record<string, Primitive>,
-  const Relations extends Record<string, RelationDescriptor> = Record<string, never>
+  const Relations extends Record<string, RelationDescriptor> = Record<string, never>,
+  const Meta extends Record<string, unknown> = Record<string, never>
 >(
-  def: Omit<ComponentDefinition<Title, Props, Relations>, 'label' | 'relations'> & { relations?: Relations }
-): ComponentDefinition<Title, Props, Relations> {
+  def: Omit<ComponentDefinition<Title, Props, Relations, Meta>, 'label' | 'relations'> & { relations?: Relations }
+): ComponentDefinition<Title, Props, Relations, Meta> {
   return { ...def, label: labelFor(def.title), relations: (def.relations ?? EMPTY_RELATIONS) as Relations }
 }
 
@@ -89,3 +97,6 @@ export type PropsOf<C extends ComponentDefinition> = {
 
 /** The names of relations declared on this component. */
 export type RelationNamesOf<C extends ComponentDefinition> = keyof C['relations'] & string
+
+/** The metadata shape attached to this component (the `metadata` bag, or `undefined` when none). */
+export type MetadataOf<C extends ComponentDefinition> = C['metadata']

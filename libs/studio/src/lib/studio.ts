@@ -194,7 +194,7 @@ export type { Node, NodeId } from './node'
 export { validateProps } from './validation'
 export type { FieldError } from './validation'
 export { isContainer, acceptsChild } from './component'
-export type { ComponentDefinition, ContainerRule, PropsOf, RelationNamesOf } from './component'
+export type { ComponentDefinition, ContainerRule, MetadataOf, PropsOf, RelationNamesOf } from './component'
 export type {
   CheckboxPrimitive,
   CodePrimitive,
