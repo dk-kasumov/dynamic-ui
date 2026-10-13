@@ -1,6 +1,6 @@
 import { BehaviorSubject, type Observable } from 'rxjs'
 import { defineAdapter } from './adapter'
-import { defineComponent, materializeProps, type ComponentDefinition } from './component'
+import { acceptsChild, defineComponent, isContainer, materializeProps, type ComponentDefinition } from './component'
 import { walk, type Node, type NodeId } from './node'
 import { validateProps, type FieldError } from './validation'
 import type { RelationInstance, TargetFilter } from './relations'
@@ -175,6 +175,8 @@ export class Studio {
   static group = group
   static relation = relation
   static humanize = humanize
+  static isContainer = isContainer
+  static acceptsChild = acceptsChild
 }
 
 // Public exports -------------------------------------------------------------
@@ -191,7 +193,8 @@ export { walk } from './node'
 export type { Node, NodeId } from './node'
 export { validateProps } from './validation'
 export type { FieldError } from './validation'
-export type { ComponentDefinition, PropsOf, RelationNamesOf } from './component'
+export { isContainer, acceptsChild } from './component'
+export type { ComponentDefinition, ContainerRule, PropsOf, RelationNamesOf } from './component'
 export type {
   CheckboxPrimitive,
   CodePrimitive,

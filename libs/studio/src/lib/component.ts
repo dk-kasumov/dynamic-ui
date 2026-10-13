@@ -18,10 +18,29 @@ export interface ComponentDefinition<
   description?: string
   /** Opaque icon token; the UI library decides how to render it and what to fall back to. */
   icon?: string
-  /** Whether instances of this component can hold child nodes. */
-  container?: boolean
+  /**
+   * Whether instances of this component can hold child nodes. `true` accepts any
+   * component; `{ kind }` accepts only the listed component titles.
+   */
+  container?: ContainerRule
   props: Props
   relations: Relations
+}
+
+/**
+ * Describes what a component may hold as children: `true` for any component,
+ * or `{ kind }` to allow only the named component titles.
+ */
+export type ContainerRule = boolean | { kind: string[] }
+
+/** Whether a component can hold children at all. */
+export const isContainer = (def: ComponentDefinition): boolean => Boolean(def.container)
+
+/** Whether a component accepts a child of the given component title. */
+export const acceptsChild = (def: ComponentDefinition, childTitle: string): boolean => {
+  const rule = def.container
+  if (!rule) return false
+  return rule === true || rule.kind.includes(childTitle)
 }
 
 const EMPTY_RELATIONS = Object.freeze({})
@@ -37,7 +56,7 @@ function materialize(shape: Record<string, Primitive>, provided: Record<string, 
       const { shape: nested } = primitive as GroupPrimitive<Record<string, Primitive>>
       out[key] = materialize(nested, (provided[key] ?? {}) as Record<string, unknown>)
     } else {
-      out[key] = key in provided ? provided[key] : (primitive as { default?: unknown }).default ?? null
+      out[key] = key in provided ? provided[key] : ((primitive as { default?: unknown }).default ?? null)
     }
   }
   return out
@@ -48,8 +67,10 @@ function materialize(shape: Record<string, Primitive>, provided: Record<string, 
  * seeded from `provided` where given and from the primitive's `default` (else `null`) otherwise.
  * This keeps the AST shape complete and predictable for adapters, even for untouched fields.
  */
-export const materializeProps = (def: ComponentDefinition, provided: Record<string, unknown> = {}): Record<string, unknown> =>
-  materialize(def.props, provided)
+export const materializeProps = (
+  def: ComponentDefinition,
+  provided: Record<string, unknown> = {}
+): Record<string, unknown> => materialize(def.props, provided)
 
 export function defineComponent<
   const Title extends string,

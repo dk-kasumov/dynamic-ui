@@ -120,6 +120,20 @@ const stepper = Studio.defineComponent({
 })
 ```
 
+To restrict what a container accepts, pass `{ kind }` instead of `true` — only the listed component titles may be dropped in:
+
+```ts
+const row = Studio.defineComponent({
+  title: 'Containers/Row',
+
+  container: { kind: ['Controls/Text Input', 'Controls/Select'] },
+
+  props: {}
+})
+```
+
+`container: true` accepts any component; `{ kind: [...] }` accepts only the named titles; omitting `container` makes the component a leaf. The rule is advisory UI guidance — the editor refuses disallowed drops, and `Studio.acceptsChild(def, title)` / `Studio.isContainer(def)` expose the same checks to any consumer.
+
 There is no concept of "slot" or "named region". If you need a container with structurally distinct child positions (e.g., an accordion with multiple panels), you register the composition explicitly: a parent container with its own dedicated child components, which in turn accept their own children. See [Composition patterns](#composition-patterns) below.
 
 ---
@@ -282,7 +296,7 @@ Any structural pattern reduces to composition:
 
 **Accordion:** an `Accordion` container that accepts `AccordionPanel` children. `AccordionPanel` is a container that accepts arbitrary content.
 
-**Card with header / body / footer:** a `Card` container that accepts a `CardHeader`, a `CardBody`, and a `CardFooter` (each registered as its own component).
+**Card with header / body / footer:** a `Card` container that accepts a `CardHeader`, a `CardBody`, and a `CardFooter` (each registered as its own component) — expressed with `container: { kind: ['Containers/CardHeader', 'Containers/CardBody', 'Containers/CardFooter'] }`.
 
 **If/Else:** an `IfCondition` component with a boolean relation, whose children are rendered only when the condition holds. A sibling `ElseBranch` component captures the fallback.
 
@@ -400,7 +414,7 @@ The DSL may describe behaviors that a particular runtime cannot express declarat
 
 ### 4. "Everything is a component"
 
-No special categories: no inputs, no containers-as-a-separate-concept, no slots, no validator primitives, no form-level magic. Any such concept is expressed by a developer-registered component (plus its props, relations, and the `container` flag).
+No special categories: no inputs, no containers-as-a-separate-concept, no slots, no validator primitives, no form-level magic. Any such concept is expressed by a developer-registered component (plus its props, relations, and the `container` rule).
 
 ---
 

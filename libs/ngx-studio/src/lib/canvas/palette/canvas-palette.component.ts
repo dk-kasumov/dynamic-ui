@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core'
-import type { ComponentDefinition } from '@dynamic-ui/studio'
+import { isContainer, type ComponentDefinition } from '@dynamic-ui/studio'
 import type { Options } from 'sortablejs'
 import type { Folder, FolderItem } from '../../folders-sidebar/folder.model'
 import { FolderItemDirective } from '../../folders-sidebar/folder-item.directive'
@@ -29,8 +29,8 @@ import { DsSortableDirective } from '../sortable/sortable.directive'
                 <span class="chip__sub">{{ def.description }}</span>
               }
             </div>
-            @if (def.container) {
-              <span class="chip__badge" title="Контейнер">
+            @if (isContainer(def)) {
+              <span class="chip__badge" title="Container">
                 <span class="material-icons" aria-hidden="true">account_tree</span>
               </span>
             }
@@ -48,6 +48,7 @@ export class CanvasPaletteComponent {
   readonly folders = computed<Folder[]>(() => componentsToFolders(this.components()))
 
   readonly iconOrDefault = iconOrDefault
+  readonly isContainer = isContainer
 
   readonly sortOptions: Partial<Options> = {
     group: { name: 'ds-canvas', pull: 'clone', put: false },

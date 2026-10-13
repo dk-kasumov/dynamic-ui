@@ -32,7 +32,9 @@ const components = [
     icon: 'table_rows',
     description: 'Lays fields in a single row',
     props: {},
-    container: true
+    container: {
+      kind: ['Controls/Text Input']
+    }
   }),
   Studio.defineComponent({
     title: 'Controls/Text Input',

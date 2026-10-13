@@ -1,6 +1,6 @@
 import { Injectable, computed, signal } from '@angular/core'
 import { toSignal } from '@angular/core/rxjs-interop'
-import { buildLinkIndex } from '@dynamic-ui/studio'
+import { acceptsChild, buildLinkIndex } from '@dynamic-ui/studio'
 import type {
   ComponentDefinition,
   FieldError,
@@ -66,10 +66,12 @@ export class StudioFacade {
     draggable: '.ds-sortable-item',
     handle: '.ds-sortable-handle',
     onMove: evt => {
-      const to = (evt.to as HTMLElement).dataset['dsContainerId']
-      const draggedId = evt.dragged.dataset['dsNodeId']
-      if (!to || !draggedId) return true
-      return !this.#studio().isDescendant(draggedId as NodeId, to as NodeId)
+      const to = (evt.to as HTMLElement).dataset['dsContainerId'] as NodeId | undefined
+      if (!to) return true
+      const nodeId = evt.dragged.dataset['dsNodeId'] as NodeId | undefined
+      if (nodeId && this.#studio().isDescendant(nodeId, to)) return false
+      const title = this.#draggedTitle(evt.dragged as HTMLElement)
+      return title === null || this.#accepts(to, title)
     }
   }
 
@@ -198,6 +200,7 @@ export class StudioFacade {
 
     const paletteName = evt.item.dataset['dsPaletteName']
     if (paletteName) {
+      if (!this.#accepts(targetId, paletteName)) return false
       this.addNode(targetId, { name: paletteName }, evt.newIndex)
       return true
     }
@@ -205,9 +208,26 @@ export class StudioFacade {
     const nodeId = evt.item.dataset['dsNodeId'] as NodeId | undefined
     if (!nodeId) return false
     if (this.#studio().isDescendant(nodeId, targetId)) return false
+    const title = this.#studio().findNode(nodeId)?.name
+    if (title && !this.#accepts(targetId, title)) return false
 
     this.moveNode(nodeId, targetId, evt.newIndex)
     return true
+  }
+
+  /** The component title of a dragged element — a palette chip or an existing node. */
+  #draggedTitle(el: HTMLElement): string | null {
+    const paletteName = el.dataset['dsPaletteName']
+    if (paletteName) return paletteName
+    const nodeId = el.dataset['dsNodeId'] as NodeId | undefined
+    return nodeId ? (this.#studio().findNode(nodeId)?.name ?? null) : null
+  }
+
+  /** Whether the container node accepts a child of the given component title. */
+  #accepts(containerId: NodeId, childTitle: string): boolean {
+    const node = this.#studio().findNode(containerId)
+    const def = node && this.component(node.name)
+    return def ? acceptsChild(def, childTitle) : true
   }
 
   #studio(): Studio {

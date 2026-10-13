@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core'
-import type { NodeId } from '@dynamic-ui/studio'
+import { isContainer, type NodeId } from '@dynamic-ui/studio'
 import { StudioFacade } from '../../studio-facade.service'
 import { DsSortableDirective } from '../sortable/sortable.directive'
 
@@ -113,7 +113,7 @@ export class CanvasNodeComponent {
   readonly node = this.facade.nodeSignal(() => this.nodeId())
   readonly component = computed(() => this.facade.component(this.node().name)!)
 
-  readonly container = computed(() => !!this.component().container)
+  readonly container = computed(() => isContainer(this.component()))
   readonly isSelected = computed(() => this.facade.selectedId() === this.nodeId())
   readonly isInspected = computed(() => this.facade.inspectedId() === this.nodeId())
   readonly pickable = computed(() => this.facade.pickable(this.nodeId()))
