@@ -10,6 +10,12 @@ interface LinkBadge {
   hint: string
 }
 
+/** Joins labels into a readable list: `a`, `a or b`, `a, b or c`. */
+function formatList(labels: string[]): string {
+  if (labels.length <= 1) return labels.join('')
+  return `${labels.slice(0, -1).join(', ')} or ${labels[labels.length - 1]}`
+}
+
 @Component({
   selector: 'ds-canvas-node',
   standalone: true,
@@ -97,7 +103,7 @@ interface LinkBadge {
             } @empty {
               <div class="dropzone__empty">
                 <span class="material-icons dropzone__empty-icon" aria-hidden="true">add</span>
-                <span>Drop a component here</span>
+                <span>{{ dropHint() }}</span>
               </div>
             }
           </div>
@@ -114,6 +120,12 @@ export class CanvasNodeComponent {
   readonly component = computed(() => this.facade.component(this.node().name)!)
 
   readonly container = computed(() => isContainer(this.component()))
+  readonly dropHint = computed(() => {
+    const rule = this.component().container
+    if (!rule || rule === true) return 'Drop a component here'
+    const labels = rule.kind.map(title => this.facade.component(title)?.label ?? title)
+    return labels.length ? `Drop ${formatList(labels)} here` : 'Drop a component here'
+  })
   readonly isSelected = computed(() => this.facade.selectedId() === this.nodeId())
   readonly isInspected = computed(() => this.facade.inspectedId() === this.nodeId())
   readonly pickable = computed(() => this.facade.pickable(this.nodeId()))
