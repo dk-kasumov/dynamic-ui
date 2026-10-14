@@ -40,8 +40,19 @@ describe('Studio DSL', () => {
       range: true,
       format: 'DD-MM-YYYY'
     })
-    expect(Studio.relation()).toEqual({ kind: 'relation', returns: 'boolean' })
+    expect(Studio.relation()).toEqual({ kind: 'relation', variant: 'builtin', returns: 'boolean' })
     expect(Studio.relation({ returns: 'value' }).returns).toBe('value')
+  })
+
+  it('builds a custom relation with developer-declared fields and no operators', () => {
+    const descriptor = Studio.relation.custom({
+      props: { weight: Studio.decimal({ default: 1 }), note: Studio.text() },
+      metadata: { adapter: 'score' }
+    })
+    expect(descriptor).toMatchObject({ kind: 'relation', variant: 'custom', returns: 'boolean' })
+    expect(descriptor.props['weight'].kind).toBe('decimal')
+    expect(descriptor.metadata).toEqual({ adapter: 'score' })
+    expect('operators' in descriptor).toBe(false)
   })
 
   it('accepts a hint on every primitive', () => {
@@ -270,6 +281,18 @@ describe('buildLinkIndex', () => {
     const index = buildLinkIndex(studio.root)
     expect(index.get(lonely)).toEqual({ to: [], from: [] })
     expect(index.get(field)).toEqual({ to: [], from: [] })
+  })
+
+  it('indexes and prunes custom-relation rules by their target, like built-in ones', () => {
+    const studio = makeStudio()
+    const email = studio.addNode(studio.root.id, { name: 'Controls/TextInput' })
+    const field = studio.addNode(studio.root.id, { name: 'Controls/TextInput' })
+    // A custom rule carries no operator — only a target and its custom props.
+    studio.setRelation(field, 'visible', { combine: 'and', rules: [{ target: email, props: { weight: 2 } }] })
+
+    expect(buildLinkIndex(studio.root).get(field)?.to).toEqual([email])
+    studio.removeNode(email)
+    expect(studio.findNode(field)?.relations['visible']).toBeUndefined()
   })
 })
 

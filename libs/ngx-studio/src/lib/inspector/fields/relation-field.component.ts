@@ -5,8 +5,11 @@ import { MatSelectModule } from '@angular/material/select'
 import {
   RELATION_OPERATORS,
   Studio,
+  materializeShape,
+  setIn,
   type JsonValue,
   type Node,
+  type NodeId,
   type OperatorValue,
   type RelationDescriptor,
   type RelationInstance,
@@ -14,13 +17,16 @@ import {
   type RuleOperator,
   type SelectPrimitive
 } from '@dynamic-ui/studio'
+import { listify } from 'radash'
+import { FieldHostComponent } from './field-host.component'
 import { SelectFieldComponent } from './select-field.component'
 import { StudioFacade } from '../../studio-facade.service'
+import type { InspectorFieldChange } from '../field-change'
 
 @Component({
   selector: 'ds-relation-field',
   standalone: true,
-  imports: [MatFormFieldModule, MatInputModule, MatSelectModule, SelectFieldComponent],
+  imports: [MatFormFieldModule, MatInputModule, MatSelectModule, SelectFieldComponent, FieldHostComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrl: './relation-field.component.scss',
   template: `
@@ -63,32 +69,44 @@ import { StudioFacade } from '../../studio-facade.service'
                 </button>
               </div>
               <div class="relation__rule-body">
-                <mat-form-field appearance="outline" class="ds-field relation__op" subscriptSizing="dynamic">
-                  <mat-select [value]="rule.operator" (selectionChange)="setOperator($index, $event.value)">
-                    @for (op of operators(); track op) {
-                      <mat-option [value]="op">{{ labelOf(op) }}</mat-option>
-                    }
-                  </mat-select>
-                </mat-form-field>
-                @switch (valueShape(rule.operator)) {
-                  @case ('single') {
-                    <mat-form-field appearance="outline" class="ds-field relation__value" subscriptSizing="dynamic">
-                      <input
-                        matInput
-                        [value]="asText(rule.value)"
-                        placeholder="Enter a value"
-                        (input)="setValue($index, $any($event.target).value)"
-                      />
-                    </mat-form-field>
-                  }
-                  @case ('list') {
-                    <ds-select-field
-                      class="relation__value"
-                      label="Values"
-                      [primitive]="listPrimitive"
-                      [value]="$any(rule.value)"
-                      (valueChange)="setValue($index, $any($event))"
+                @if (isCustom()) {
+                  @for (field of customFields(); track field.key) {
+                    <ds-field-host
+                      [primitive]="field.primitive"
+                      [value]="ruleProp(rule, field.key)"
+                      [label]="field.label"
+                      [path]="[field.key]"
+                      (changed)="setRuleProp($index, $event)"
                     />
+                  }
+                } @else {
+                  <mat-form-field appearance="outline" class="ds-field relation__op" subscriptSizing="dynamic">
+                    <mat-select [value]="rule.operator" (selectionChange)="setOperator($index, $event.value)">
+                      @for (op of operators(); track op) {
+                        <mat-option [value]="op">{{ labelOf(op) }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                  @switch (valueShape(rule.operator)) {
+                    @case ('single') {
+                      <mat-form-field appearance="outline" class="ds-field relation__value" subscriptSizing="dynamic">
+                        <input
+                          matInput
+                          [value]="asText(rule.value)"
+                          placeholder="Enter a value"
+                          (input)="setValue($index, $any($event.target).value)"
+                        />
+                      </mat-form-field>
+                    }
+                    @case ('list') {
+                      <ds-select-field
+                        class="relation__value"
+                        label="Values"
+                        [primitive]="listPrimitive"
+                        [value]="$any(rule.value)"
+                        (valueChange)="setValue($index, $any($event))"
+                      />
+                    }
                   }
                 }
               </div>
@@ -111,7 +129,7 @@ export class RelationFieldComponent {
   readonly name = input.required<string>()
   readonly descriptor = input.required<RelationDescriptor>()
 
-  readonly title = computed(() => this.descriptor().label ?? Studio.humanize(this.name()))
+  readonly title = computed(() => Studio.humanize(this.name()))
 
   readonly listPrimitive = { kind: 'select', multiple: true } as SelectPrimitive<string>
 
@@ -119,10 +137,21 @@ export class RelationFieldComponent {
     () => this.node().relations[this.name()] ?? { combine: 'and', rules: [] }
   )
 
+  readonly isCustom = computed(() => this.descriptor().variant === 'custom')
+
+  /** The developer-declared fields of a custom relation; empty for the built-in variant. */
+  readonly customFields = computed(() => {
+    const descriptor = this.descriptor()
+    return descriptor.variant === 'custom'
+      ? listify(descriptor.props, (key, primitive) => ({ key, primitive, label: Studio.humanize(key) }))
+      : []
+  })
+
   readonly operators = computed<RuleOperator[]>(() => {
+    const descriptor = this.descriptor()
+    if (descriptor.variant !== 'builtin') return []
     const all = Object.keys(RELATION_OPERATORS) as RuleOperator[]
-    const allowed = this.descriptor().operators
-    return allowed ? all.filter(op => allowed.includes(op)) : all
+    return descriptor.operators ? all.filter(op => descriptor.operators!.includes(op)) : all
   })
 
   readonly targets = computed(() => {
@@ -134,12 +163,16 @@ export class RelationFieldComponent {
     return RELATION_OPERATORS[op].label
   }
 
-  valueShape(op: RuleOperator): OperatorValue {
-    return RELATION_OPERATORS[op].value
+  valueShape(op: RuleOperator | undefined): OperatorValue {
+    return op ? RELATION_OPERATORS[op].value : 'none'
   }
 
   asText(value: JsonValue | undefined): string {
     return value == null ? '' : String(value)
+  }
+
+  ruleProp(rule: RelationRule, key: string): unknown {
+    return rule.props?.[key]
   }
 
   addCondition(): void {
@@ -147,9 +180,24 @@ export class RelationFieldComponent {
       this.targets().map(n => n.id),
       target => {
         const set = this.ruleSet()
-        this.#commit({ ...set, rules: [...set.rules, { target, operator: this.operators()[0]! }] })
+        this.#commit({ ...set, rules: [...set.rules, this.#newRule(target)] })
       }
     )
+  }
+
+  /** Seeds a fresh rule for the active variant: custom rules materialize their declared props. */
+  #newRule(target: NodeId): RelationRule {
+    const descriptor = this.descriptor()
+    return descriptor.variant === 'custom'
+      ? { target, props: materializeShape(descriptor.props) as Record<string, JsonValue> }
+      : { target, operator: this.operators()[0]! }
+  }
+
+  setRuleProp(index: number, change: InspectorFieldChange): void {
+    this.#patch(index, rule => ({
+      ...rule,
+      props: setIn(rule.props ?? {}, change.path, change.value) as Record<string, JsonValue>
+    }))
   }
 
   repick(index: number): void {
