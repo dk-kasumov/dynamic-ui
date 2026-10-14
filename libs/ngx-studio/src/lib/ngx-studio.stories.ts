@@ -57,7 +57,15 @@ const components = [
     },
     relations: {
       required: Studio.relation({ returns: 'boolean' }),
-      visible: Studio.relation({ returns: 'boolean' })
+      visible: Studio.relation({ returns: 'boolean' }),
+      // Custom relation: no operator UI — the developer lays out the per-rule fields.
+      copyValueFrom: Studio.relation.custom({
+        metadata: { adapter: 'mirror' },
+        props: {
+          when: Studio.enum(['always', 'whenEmpty'], { default: 'whenEmpty' }),
+          transform: Studio.text({ hint: 'Optional expression applied to the copied value' })
+        }
+      })
     }
   }),
   Studio.defineComponent({
