@@ -113,6 +113,7 @@ describe('Tree.remove', () => {
 describe('Tree.remove and relations', () => {
   const dependsOn = (...targets: string[]): RelationInstance => ({
     combine: 'and',
+    variant: 'builtin',
     rules: targets.map(target => ({ target: id(target), operator: 'isNotEmpty' }))
   })
   const targetsOf = (tree: Tree, nodeId: string, relation: string) =>
@@ -223,7 +224,11 @@ describe('Tree node edits', () => {
 
   it('sets and removes relations', () => {
     const tree = make(box('root', leaf('a')))
-    const relation: RelationInstance = { combine: 'and', rules: [{ target: id('a'), operator: 'isEmpty' }] }
+    const relation: RelationInstance = {
+      combine: 'and',
+      variant: 'builtin',
+      rules: [{ target: id('a'), operator: 'isEmpty' }]
+    }
     tree.setRelation(id('a'), 'visible', relation)
     expect(tree.find(id('a'))?.relations['visible']).toBe(relation)
     tree.removeRelation(id('a'), 'visible')
@@ -234,7 +239,9 @@ describe('Tree node edits', () => {
     const tree = make(box('root'))
     expect(() => tree.setProp(id('nope'), ['a'], 1)).toThrow(StudioError)
     expect(() => tree.setMeta(id('nope'), { icon: 'x' })).toThrow(StudioError)
-    expect(() => tree.setRelation(id('nope'), 'r', { combine: 'and', rules: [] })).toThrow(StudioError)
+    expect(() => tree.setRelation(id('nope'), 'r', { combine: 'and', variant: 'builtin', rules: [] })).toThrow(
+      StudioError
+    )
   })
 })
 

@@ -37,7 +37,7 @@ import type { InspectorFieldChange } from '../field-change'
 
       @if (ruleSet().rules.length) {
         <div class="relation__conditions">
-          @for (rule of ruleSet().rules; track $index) {
+          @for (rule of ruleSet().rules; track $index; let ruleIndex = $index) {
             @if (!$first) {
               <button type="button" class="relation__joiner" (click)="toggleCombine()" title="Toggle AND / OR">
                 {{ ruleSet().combine }}
@@ -50,7 +50,7 @@ import type { InspectorFieldChange } from '../field-change'
                   type="button"
                   class="relation__target"
                   title="Pick another target on canvas"
-                  (click)="repick($index)"
+                  (click)="repick(ruleIndex)"
                   (mouseenter)="facade.highlight([rule.target])"
                   (mouseleave)="facade.clearHighlight()"
                   (focus)="facade.highlight([rule.target])"
@@ -64,7 +64,7 @@ import type { InspectorFieldChange } from '../field-change'
                     }
                   </span>
                 </button>
-                <button type="button" class="relation__remove" (click)="removeAt($index); $event.stopPropagation()">
+                <button type="button" class="relation__remove" (click)="removeAt(ruleIndex); $event.stopPropagation()">
                   <span class="material-icons" aria-hidden="true">close</span>
                 </button>
               </div>
@@ -76,12 +76,12 @@ import type { InspectorFieldChange } from '../field-change'
                       [value]="ruleProp(rule, field.key)"
                       [label]="field.label"
                       [path]="[field.key]"
-                      (changed)="setRuleProp($index, $event)"
+                      (changed)="setRuleProp(ruleIndex, $event)"
                     />
                   }
                 } @else {
                   <mat-form-field appearance="outline" class="ds-field relation__op" subscriptSizing="dynamic">
-                    <mat-select [value]="rule.operator" (selectionChange)="setOperator($index, $event.value)">
+                    <mat-select [value]="rule.operator" (selectionChange)="setOperator(ruleIndex, $event.value)">
                       @for (op of operators(); track op) {
                         <mat-option [value]="op">{{ labelOf(op) }}</mat-option>
                       }
@@ -94,7 +94,7 @@ import type { InspectorFieldChange } from '../field-change'
                           matInput
                           [value]="asText(rule.value)"
                           placeholder="Enter a value"
-                          (input)="setValue($index, $any($event.target).value)"
+                          (input)="setValue(ruleIndex, $any($event.target).value)"
                         />
                       </mat-form-field>
                     }
@@ -104,7 +104,7 @@ import type { InspectorFieldChange } from '../field-change'
                         label="Values"
                         [primitive]="listPrimitive"
                         [value]="$any(rule.value)"
-                        (valueChange)="setValue($index, $any($event))"
+                        (valueChange)="setValue(ruleIndex, $any($event))"
                       />
                     }
                   }
@@ -134,7 +134,7 @@ export class RelationFieldComponent {
   readonly listPrimitive = { kind: 'select', multiple: true } as SelectPrimitive<string>
 
   readonly ruleSet = computed<RelationInstance>(
-    () => this.node().relations[this.name()] ?? { combine: 'and', rules: [] }
+    () => this.node().relations[this.name()] ?? { combine: 'and', rules: [], variant: this.descriptor().variant }
   )
 
   readonly isCustom = computed(() => this.descriptor().variant === 'custom')
@@ -237,7 +237,7 @@ export class RelationFieldComponent {
 
   #commit(set: RelationInstance): void {
     const id = this.node().id
-    if (set.rules.length) this.facade.setRelation(id, this.name(), set)
+    if (set.rules.length) this.facade.setRelation(id, this.name(), { ...set, variant: this.descriptor().variant })
     else this.facade.removeRelation(id, this.name())
   }
 }

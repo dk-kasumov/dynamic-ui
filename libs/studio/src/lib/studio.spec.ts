@@ -154,6 +154,7 @@ describe('Studio — end-to-end usage', () => {
     // Dynamic relation: submit is disabled while the email is empty.
     studio.setRelation(submitId, 'disabled', {
       combine: 'and',
+      variant: 'builtin',
       rules: [{ target: emailId, operator: 'isEmpty' }]
     })
 
@@ -216,6 +217,7 @@ describe('relation instances', () => {
     const field = studio.addNode(studio.root.id, { name: 'Controls/TextInput' })
     const instance: RelationInstance = {
       combine: 'or',
+      variant: 'builtin',
       rules: [
         { target: a, operator: 'isValid' },
         { target: field, operator: 'equals', value: 'admin' }
@@ -242,6 +244,7 @@ describe('Studio.defineAdapter', () => {
 describe('buildLinkIndex', () => {
   const dependsOn = (...targets: NodeId[]): RelationInstance => ({
     combine: 'and',
+    variant: 'builtin',
     rules: targets.map(target => ({ target, operator: 'isEmpty' }))
   })
 
@@ -288,7 +291,11 @@ describe('buildLinkIndex', () => {
     const email = studio.addNode(studio.root.id, { name: 'Controls/TextInput' })
     const field = studio.addNode(studio.root.id, { name: 'Controls/TextInput' })
     // A custom rule carries no operator — only a target and its custom props.
-    studio.setRelation(field, 'visible', { combine: 'and', rules: [{ target: email, props: { weight: 2 } }] })
+    studio.setRelation(field, 'visible', {
+      combine: 'and',
+      variant: 'custom',
+      rules: [{ target: email, props: { weight: 2 } }]
+    })
 
     expect(buildLinkIndex(studio.root).get(field)?.to).toEqual([email])
     studio.removeNode(email)

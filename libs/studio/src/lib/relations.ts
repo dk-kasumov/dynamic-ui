@@ -39,6 +39,9 @@ export type RuleOperator = keyof typeof RELATION_OPERATORS
 
 // Instance (data on a node) --------------------------------------------------
 
+/** Which editing surface a relation uses: the built-in condition builder, or developer-laid-out fields. */
+export type RelationVariant = 'builtin' | 'custom'
+
 /** One condition: a target node, plus the fields of whichever relation variant declared it. */
 export interface RelationRule {
   target: NodeId
@@ -50,10 +53,14 @@ export interface RelationRule {
   props?: Record<string, JsonValue>
 }
 
-/** A relation on a node: its conditions, and whether they combine with AND or OR. */
+/**
+ * A relation on a node: its conditions, how they combine, and which variant produced them.
+ * `variant` is stamped into the AST so an adapter can read it without the component registry.
+ */
 export interface RelationInstance {
   combine: 'and' | 'or'
   rules: RelationRule[]
+  variant: RelationVariant
 }
 
 // Descriptor (schema) --------------------------------------------------------

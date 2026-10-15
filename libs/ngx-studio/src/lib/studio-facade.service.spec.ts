@@ -41,7 +41,11 @@ describe('StudioFacade — links and highlight', () => {
     const form = add()
     expect(facade.linksOf(form)).toEqual({ to: [], from: [] })
 
-    studio.setRelation(form, 'required', { combine: 'and', rules: [{ target: email, operator: 'isNotEmpty' }] })
+    studio.setRelation(form, 'required', {
+      combine: 'and',
+      variant: 'builtin',
+      rules: [{ target: email, operator: 'isNotEmpty' }]
+    })
     expect(facade.linksOf(form).to).toEqual([email])
     expect(facade.linksOf(email).from).toEqual([form])
   })

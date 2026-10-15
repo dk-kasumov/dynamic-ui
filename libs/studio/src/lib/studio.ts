@@ -219,6 +219,7 @@ export type {
   RelationInstance,
   RelationReturns,
   RelationRule,
+  RelationVariant,
   RuleOperator,
   TargetFilter
 } from './relations'

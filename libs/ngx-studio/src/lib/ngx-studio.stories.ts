@@ -117,6 +117,7 @@ const LAST_NAME = 'last-name' as NodeId
 
 const when = (...targets: NodeId[]): RelationInstance => ({
   combine: 'and',
+  variant: 'builtin',
   rules: targets.map(target => ({ target, operator: 'isNotEmpty' }))
 })
 
