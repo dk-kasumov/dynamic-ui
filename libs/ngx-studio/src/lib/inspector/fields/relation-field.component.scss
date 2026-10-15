@@ -83,6 +83,55 @@
   width: 100%;
 }
 
+// Custom relation fields are rendered through ds-field-host, so their presentation
+// lives behind the field components' encapsulation — pierce it to match props-form.
+.relation__rule-body ::ng-deep {
+  .ds-field {
+    display: block;
+    width: 100%;
+  }
+
+  .ds-enum-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--ds-text-muted);
+  }
+
+  .ds-toggle-group {
+    display: flex;
+    width: 100%;
+    border-radius: var(--ds-radius-sm);
+    overflow: hidden;
+
+    .mat-button-toggle {
+      flex: 1;
+      font-size: 12px;
+    }
+    .mat-button-toggle-label-content {
+      line-height: 32px;
+      padding: 0 10px;
+    }
+  }
+
+  .ds-hint {
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--ds-text-muted);
+  }
+
+  .ds-error {
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 16px;
+    color: #ef4444;
+  }
+}
+
 .relation__joiner {
   align-self: flex-start;
   padding: 2px 12px;
