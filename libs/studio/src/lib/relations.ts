@@ -8,6 +8,7 @@
  */
 
 import type { NodeId } from './node'
+import type { Primitive } from './primitives'
 
 export type JsonValue = string | number | boolean | null | JsonValue[] | { [k: string]: JsonValue }
 
@@ -38,11 +39,15 @@ export type RuleOperator = keyof typeof RELATION_OPERATORS
 
 // Instance (data on a node) --------------------------------------------------
 
-/** One condition: a target node, how to test it, and (unless the operator takes none) a value. */
+/** One condition: a target node, plus the fields of whichever relation variant declared it. */
 export interface RelationRule {
   target: NodeId
-  operator: RuleOperator
+  /** Built-in variant: how to test the target. */
+  operator?: RuleOperator
+  /** Built-in variant: the operator's operand, when it takes one. */
   value?: JsonValue
+  /** Custom variant: the developer-declared field values for this rule. */
+  props?: Record<string, JsonValue>
 }
 
 /** A relation on a node: its conditions, and whether they combine with AND or OR. */
@@ -61,20 +66,53 @@ export interface TargetFilter {
   scope?: 'siblings' | 'any'
 }
 
-/** What a developer declares for a relation slot in `defineComponent`. */
-export interface RelationDescriptor<Returns extends RelationReturns = RelationReturns> {
+/** Shared by both relation variants. The inspector label is always derived from the slot key. */
+interface RelationBase<Returns extends RelationReturns> {
   kind: 'relation'
   returns: Returns
-  /** Display name in the inspector; derived from the slot key when omitted. */
-  label?: string
-  /** Restricts the operators offered; all of them when omitted. */
-  operators?: readonly RuleOperator[]
   targetFilter?: TargetFilter
+  /** Free-form bag the studio never reads — developer hints for adapters/codegen. */
+  metadata?: Record<string, unknown>
 }
 
-export function relation<Returns extends RelationReturns = 'boolean'>(
-  options: Omit<RelationDescriptor<Returns>, 'kind' | 'returns'> & { returns?: Returns } = {}
-): RelationDescriptor<Returns> {
-  const { returns, ...rest } = options
-  return { kind: 'relation', returns: (returns ?? 'boolean') as Returns, ...rest }
+/** A relation the studio renders as a condition builder: target + operator + value. */
+export interface BuiltinRelationDescriptor<
+  Returns extends RelationReturns = RelationReturns
+> extends RelationBase<Returns> {
+  variant: 'builtin'
+  /** Restricts the operators offered; all of them when omitted. */
+  operators?: readonly RuleOperator[]
 }
+
+/** A relation whose per-rule fields the developer lays out via `props`; no built-in operator UI. */
+export interface CustomRelationDescriptor<
+  Returns extends RelationReturns = RelationReturns
+> extends RelationBase<Returns> {
+  variant: 'custom'
+  /** Fields rendered on each rule; their values are stored in {@link RelationRule.props}. */
+  props: Record<string, Primitive>
+}
+
+/** What a developer declares for a relation slot in `defineComponent`, discriminated by `variant`. */
+export type RelationDescriptor<Returns extends RelationReturns = RelationReturns> =
+  BuiltinRelationDescriptor<Returns> | CustomRelationDescriptor<Returns>
+
+function builtinRelation<Returns extends RelationReturns = 'boolean'>(
+  options: Omit<BuiltinRelationDescriptor<Returns>, 'kind' | 'variant' | 'returns'> & { returns?: Returns } = {}
+): BuiltinRelationDescriptor<Returns> {
+  const { returns, ...rest } = options
+  return { kind: 'relation', variant: 'builtin', returns: (returns ?? 'boolean') as Returns, ...rest }
+}
+
+function customRelation<Returns extends RelationReturns = 'boolean'>(
+  options: Omit<CustomRelationDescriptor<Returns>, 'kind' | 'variant' | 'returns'> & { returns?: Returns }
+): CustomRelationDescriptor<Returns> {
+  const { returns, ...rest } = options
+  return { kind: 'relation', variant: 'custom', returns: (returns ?? 'boolean') as Returns, ...rest }
+}
+
+/**
+ * Declares a relation slot. The default builds a condition-builder relation;
+ * `relation.custom` builds one with developer-laid-out fields instead of the operator UI.
+ */
+export const relation = Object.assign(builtinRelation, { custom: customRelation })

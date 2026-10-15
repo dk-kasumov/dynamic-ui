@@ -193,8 +193,9 @@ export { walk } from './node'
 export type { Node, NodeId } from './node'
 export { validateProps } from './validation'
 export type { FieldError } from './validation'
-export { isContainer, acceptsChild } from './component'
+export { isContainer, acceptsChild, materializeShape } from './component'
 export type { ComponentDefinition, ContainerRule, MetadataOf, PropsOf, RelationNamesOf } from './component'
+export { setIn } from './tree'
 export type {
   CheckboxPrimitive,
   CodePrimitive,
@@ -210,6 +211,8 @@ export type {
   ValueOf
 } from './primitives'
 export type {
+  BuiltinRelationDescriptor,
+  CustomRelationDescriptor,
   JsonValue,
   OperatorValue,
   RelationDescriptor,
