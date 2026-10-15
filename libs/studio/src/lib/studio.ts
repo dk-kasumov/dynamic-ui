@@ -1,6 +1,13 @@
 import { BehaviorSubject, type Observable } from 'rxjs'
-import { defineAdapter } from './adapter'
-import { acceptsChild, defineComponent, isContainer, materializeProps, type ComponentDefinition } from './component'
+import { defineAdapter, type AdapterContext, type StudioAdapter } from './adapter'
+import {
+  acceptsChild,
+  defineComponent,
+  isContainer,
+  materializeProps,
+  resolveProps,
+  type ComponentDefinition
+} from './component'
 import { walk, type Node, type NodeId } from './node'
 import { validateProps, type FieldError } from './validation'
 import type { RelationInstance, TargetFilter } from './relations'
@@ -68,6 +75,23 @@ export class Studio {
 
   getComponent(title: string): ComponentDefinition | undefined {
     return this.#components.get(title)
+  }
+
+  /** Runs an adapter over the current AST, lending it a context onto the registry and value projection. */
+  runAdapter<Output>(adapter: StudioAdapter<Output>): Output {
+    return adapter.map(this.#tree.root, this.#adapterContext())
+  }
+
+  #adapterContext(): AdapterContext {
+    return {
+      define: node => this.#components.get(node.name),
+      relation: (node, name) => this.#components.get(node.name)?.relations[name],
+      resolve: node => {
+        const def = this.#components.get(node.name)
+        return def ? resolveProps(def, node.props) : node.props
+      },
+      walk: (from = this.#tree.root) => walk(from)
+    }
   }
 
   findNode(id: NodeId): Node | undefined {
@@ -187,13 +211,13 @@ export { buildLinkIndex } from './relation-graph'
 export type { NodeLinks } from './relation-graph'
 export { RELATION_OPERATORS } from './relations'
 
-export type { StudioAdapter } from './adapter'
+export type { StudioAdapter, AdapterContext } from './adapter'
 export type { NewNode, NodeMetaPatch } from './tree'
 export { walk } from './node'
 export type { Node, NodeId } from './node'
 export { validateProps } from './validation'
 export type { FieldError } from './validation'
-export { isContainer, acceptsChild, materializeShape } from './component'
+export { isContainer, acceptsChild, materializeShape, resolveShape, resolveProps } from './component'
 export type { ComponentDefinition, ContainerRule, MetadataOf, PropsOf, RelationNamesOf } from './component'
 export { setIn } from './tree'
 export type {

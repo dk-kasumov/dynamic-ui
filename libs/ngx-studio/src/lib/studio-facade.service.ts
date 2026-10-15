@@ -11,6 +11,7 @@ import type {
   NodeMetaPatch,
   RelationInstance,
   Studio,
+  StudioAdapter,
   StudioSnapshot,
   TargetFilter
 } from '@dynamic-ui/studio'
@@ -138,6 +139,10 @@ export class StudioFacade {
 
   relationTargets(nodeId: NodeId, filter?: TargetFilter): Node[] {
     return this.#studio().relationTargets(nodeId, filter)
+  }
+
+  runAdapter<Output>(adapter: StudioAdapter<Output>): Output {
+    return this.#studio().runAdapter(adapter)
   }
 
   nodeLabel(id: NodeId): string {

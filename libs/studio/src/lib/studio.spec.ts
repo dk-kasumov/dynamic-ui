@@ -229,7 +229,7 @@ describe('relation instances', () => {
 })
 
 describe('Studio.defineAdapter', () => {
-  it('maps the current AST with the adapter it was given', () => {
+  it('runs the adapter over the current AST', () => {
     const studio = makeStudio()
     studio.addNode(studio.root.id, { name: 'Controls/TextInput', fieldName: 'email' })
     studio.addNode(studio.root.id, { name: 'Controls/Button' })
@@ -237,7 +237,47 @@ describe('Studio.defineAdapter', () => {
     const fieldNames = Studio.defineAdapter({
       map: root => (root.children ?? []).flatMap(child => (child.fieldName ? [child.fieldName] : []))
     })
-    expect(fieldNames.map(studio.root)).toEqual(['email'])
+    expect(studio.runAdapter(fieldNames)).toEqual(['email'])
+  })
+
+  it('lends the adapter a context onto the registry, relations and walk', () => {
+    const studio = makeStudio()
+    const id = studio.addNode(studio.root.id, { name: 'Controls/TextInput' })
+    studio.setRelation(id, 'visible', {
+      combine: 'and',
+      variant: 'builtin',
+      rules: [{ target: id, operator: 'isEmpty' }]
+    })
+
+    const probe = Studio.defineAdapter({
+      map: (_root, ctx) => ({
+        names: [...ctx.walk()].map(n => n.name),
+        fields: [...ctx.walk()]
+          .filter(n => ctx.define(n))
+          .map(n => ({ title: ctx.define(n)?.title, visible: ctx.relation(n, 'visible')?.returns }))
+      })
+    })
+    expect(studio.runAdapter(probe)).toEqual({
+      names: ['$root', 'Controls/TextInput'],
+      fields: [{ title: 'Controls/TextInput', visible: 'boolean' }]
+    })
+  })
+
+  it('resolve applies a primitive transform without changing the stored value', () => {
+    const Widget = Studio.defineComponent({
+      title: 'Widget',
+      props: { config: Studio.code({ transform: raw => JSON.parse(raw as string) as unknown }) }
+    })
+    const studio = new Studio({ components: [Widget] })
+    const id = studio.addNode(studio.root.id, { name: 'Widget' })
+    studio.setProp(id, ['config'], '{ "color": "red" }')
+
+    const resolved = Studio.defineAdapter({
+      map: (_root, ctx) => [...ctx.walk()].filter(n => ctx.define(n)).map(n => ctx.resolve(n))
+    })
+    expect(studio.runAdapter(resolved)).toEqual([{ config: { color: 'red' } }])
+    // The AST keeps the raw source string untouched.
+    expect(studio.findNode(id)?.props['config']).toBe('{ "color": "red" }')
   })
 })
 

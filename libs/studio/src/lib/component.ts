@@ -85,6 +85,32 @@ export const materializeProps = (
   provided: Record<string, unknown> = {}
 ): Record<string, unknown> => materializeShape(def.props, provided)
 
+/**
+ * Projects a stored value tree through each primitive's `transform` (groups recurse);
+ * primitives without one pass their value through unchanged. Nothing is stored — this is
+ * computed on demand for adapters (via `ctx.resolve`), so the AST stays raw and editable.
+ */
+export function resolveShape(
+  shape: Record<string, Primitive>,
+  values: Record<string, unknown> = {}
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {}
+  for (const [key, primitive] of Object.entries(shape)) {
+    const value = values[key]
+    if (primitive.kind === 'group') {
+      const { shape: nested } = primitive as GroupPrimitive<Record<string, Primitive>>
+      out[key] = resolveShape(nested, (value ?? {}) as Record<string, unknown>)
+    } else {
+      out[key] = primitive.transform ? primitive.transform(value) : value
+    }
+  }
+  return out
+}
+
+/** A node's props with every primitive's `transform` applied; see {@link resolveShape}. */
+export const resolveProps = (def: ComponentDefinition, values: Record<string, unknown> = {}): Record<string, unknown> =>
+  resolveShape(def.props, values)
+
 export function defineComponent<
   const Title extends string,
   const Props extends Record<string, Primitive>,

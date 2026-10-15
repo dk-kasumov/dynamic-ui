@@ -41,12 +41,11 @@ export class StudioViews {
   })
 
   readonly results = computed<AdapterResult[]>(() => {
-    const root = this.#facade.root()
-    if (!root) return []
+    if (!this.#facade.root()) return []
     return Object.entries(this.adapters()).map(([key, adapter]) => {
       const label = Studio.humanize(key)
       try {
-        return { key, label, output: adapter.map(root), error: null }
+        return { key, label, output: this.#facade.runAdapter(adapter), error: null }
       } catch (error) {
         return { key, label, output: undefined, error: error instanceof Error ? error.message : String(error) }
       }

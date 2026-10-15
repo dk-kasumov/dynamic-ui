@@ -243,8 +243,14 @@ const meta: Meta<NgxStudioComponent> = {
 export default meta
 type Story = StoryObj<NgxStudioComponent>
 
+// Uses the adapter context to read each node's definition straight off the tree —
+// no closing over the component list.
 const formSchema = Studio.defineAdapter({
-  map: () => ({})
+  map: (_root, ctx) => ({
+    fields: [...ctx.walk()]
+      .filter(node => node.fieldName)
+      .map(node => ({ name: node.fieldName ?? '', type: ctx.define(node)?.label }))
+  })
 })
 
 export const Default: Story = {

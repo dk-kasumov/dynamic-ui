@@ -20,6 +20,13 @@ export interface Primitive<Kind extends string = string, Value = unknown> {
    * and surfaces any issues; the value is stored either way — validation never blocks.
    */
   validation?: GenericSchema
+  /**
+   * Projects the stored value into the shape an adapter wants (e.g. `JSON.parse` a code
+   * field) when it calls `ctx.resolve`. It never changes what is stored or edited — the
+   * AST keeps the raw value; the transform runs on demand, outside the studio. The value
+   * is typed as `unknown` (not `Value`) to keep every primitive assignable to `Primitive`.
+   */
+  transform?: (value: unknown) => unknown
   [VALUE]?: Value
 }
 
